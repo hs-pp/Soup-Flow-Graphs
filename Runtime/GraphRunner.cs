@@ -41,7 +41,7 @@ namespace Soup.Runtime
 
         public GraphRunner(AFlowGraph flowGraph, AGraphProperties graphProperties, Blackboard blackboard)
         {
-            m_nodeCollection = flowGraph.NodeCollection;
+            m_nodeCollection = flowGraph.RootCollection;
             GraphProperties = graphProperties;
             Blackboard = blackboard;
 
