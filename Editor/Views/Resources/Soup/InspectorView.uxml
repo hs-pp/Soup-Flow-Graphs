@@ -1,0 +1,14 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Soup/Editor/Views/Resources/Soup/InspectorView.uss?fileID=7433441132597879392&amp;guid=b0160e2c9fb4944d9b466da84eeba800&amp;type=3#InspectorView"/>
+    <ui:ScrollView name="scrollview">
+        <ui:VisualElement name="root" class="root">
+            <ui:VisualElement name="title-container" class="titleContainer" style="flex-grow: 1;">
+                <ui:Label text="Inspector" name="title" class="title"/>
+            </ui:VisualElement>
+            <Soup.Editor.Views.Inspector.NodeInspectorView name="node-inspector-view"/>
+            <Soup.Editor.Views.Inspector.MultiNodeInspectorView name="multi-node-inspector-view"/>
+            <Soup.Editor.Views.Inspector.GroupInspectorView name="group-inspector-view"/>
+            <Soup.Editor.Views.Inspector.GraphInspectorView name="graph-inspector-view"/>
+        </ui:VisualElement>
+    </ui:ScrollView>
+</ui:UXML>

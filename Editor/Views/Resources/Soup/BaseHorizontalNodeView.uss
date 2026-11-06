@@ -1,0 +1,53 @@
+.nodeTitle {
+    flex-direction: row;
+    justify-content: space-between;
+    height: 28px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.nodeTitleLabel {
+    color: rgb(255, 255, 255);
+    font-size: 12px;
+    margin: 6px;
+    padding-left: 2px;
+    -unity-text-align: middle-left;
+    -unity-font-style: bold;
+    /* Only kicks in when a view's MaxWidth caps the node. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nodeIo {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.nodeIoInput,
+.nodeIoOutput {
+    padding: 4px 0;
+}
+
+.nodeExtensionContainer {
+    border-top-color: rgb(34, 34, 34);
+    border-top-width: 1px;
+    padding-top: 4px;
+    padding-right: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
+}
+
+/* Stacked-cards icon in the sub graph node. The PNG is white on transparent (4x, mipmapped), so the tint sets its color
+   and the node body shows through. */
+.subGraphNodeGlyph {
+    width: 54px;
+    height: 38px;
+    align-self: center;
+    background-image: url("SubGraphNodeGlyph.png");
+    -unity-background-image-tint-color: rgb(185, 189, 196);
+}
+
+/* Amber, like the unreachable-node warnings in the visual direction. */
+.nodeWarningLabel {
+    color: rgb(240, 180, 60);
+}

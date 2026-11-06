@@ -1,0 +1,10 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Soup/Editor/Views/Resources/Soup/GroupInspectorView.uss?fileID=7433441132597879392&amp;guid=d9bb0b53bfbf44a73a859f1dc28280f3&amp;type=3#GroupInspectorView"/>
+    <ui:VisualElement name="header-container" class="headerContainer" style="flex-grow: 0;">
+        <ui:Label text="Group Element" name="title" class="headerTitle"/>
+    </ui:VisualElement>
+    <ui:VisualElement style="flex-grow: 1;">
+        <ui:TextField label="Text Field" placeholder-text="filler text" name="title-field"/>
+        <uie:ColorField label="Color" value="rgb(0, 255, 255)" name="color-field"/>
+    </ui:VisualElement>
+</ui:UXML>

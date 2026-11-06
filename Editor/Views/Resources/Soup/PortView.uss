@@ -1,0 +1,101 @@
+/* The pin is two stacked white chevrons tinted per state: connector-box is the fill, connector-cap the outline. */
+.portView {
+    --port-size: 14;
+    --port-line-width: 1.3;
+    --port-color: rgb(242, 243, 245);
+    /* Matches the node body, so an unconnected pin reads as a hole in the node. */
+    --port-fill-color: rgb(61, 61, 61);
+    --port-stroke-color: rgb(242, 243, 245);
+    --port-connected-stroke-color: rgb(34, 34, 34);
+    height: 22px;
+}
+
+/* Half the pin hangs outside the node so its centre sits on the node edge. */
+.portViewInputHorizontal {
+    margin-left: -7px;
+}
+
+.portViewOutputHorizontal {
+    margin-right: -9px;
+}
+
+.port {
+    flex-grow: 0;
+    flex-direction: row;
+    align-items: center;
+}
+
+.portInputHorizontal {
+    flex-direction: row-reverse;
+    margin-right: auto;
+}
+
+.portOutputHorizontal {
+    flex-direction: row;
+    margin-left: auto;
+}
+
+.portInputVertical {
+    flex-direction: row-reverse;
+    margin-right: auto;
+}
+
+.portOutputVertical {
+    flex-direction: row-reverse;
+    margin-left: auto;
+}
+
+.portLabel {
+    font-size: 11px;
+    color: rgb(185, 189, 196);
+    margin: 0;
+    padding: 0;
+    -unity-text-align: middle-left;
+}
+
+.portInputHorizontal > .portLabel {
+    margin-left: 7px;
+}
+
+.portOutputHorizontal > .portLabel {
+    margin-right: 7px;
+}
+
+.portConnectorBox {
+    flex-shrink: 0;
+    margin: 0;
+    width: 14px;
+    height: 14px;
+    -unity-background-image-tint-color: var(--port-fill-color);
+}
+
+.portConnectorCap {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    -unity-background-image-tint-color: var(--port-stroke-color);
+}
+
+/* Vertical ports point down, along the flow. */
+.portInputVertical > .portConnectorBox,
+.portOutputVertical > .portConnectorBox {
+    rotate: 90deg;
+}
+
+.portViewConnected .portConnectorBox,
+.portViewDropTarget .portConnectorBox,
+.portView:hover .portConnectorBox {
+    -unity-background-image-tint-color: var(--port-color);
+}
+
+.portViewConnected .portConnectorCap,
+.portViewDropTarget .portConnectorCap,
+.portView:hover .portConnectorCap {
+    -unity-background-image-tint-color: var(--port-connected-stroke-color);
+}
+
+.portViewDimmed .portConnectorBox {
+    opacity: 0.3;
+}

@@ -1,0 +1,22 @@
+/* Soft inward shadow along one edge of a panel. The tint sets colour and strength;
+   each edge has its own class so depth and strength can be tuned separately. */
+.panelEdgeShadow {
+    -unity-background-scale-mode: stretch-to-fill;
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0.38);
+}
+
+.panelEdgeShadowTop {
+    height: 12px;
+}
+
+.panelEdgeShadowRight {
+    width: 12px;
+}
+
+.panelEdgeShadowBottom {
+    height: 12px;
+}
+
+.panelEdgeShadowLeft {
+    width: 12px;
+}

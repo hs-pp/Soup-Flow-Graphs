@@ -1,0 +1,31 @@
+.node {
+    color: rgb(178, 178, 178);
+    background-color: rgb(61, 61, 61);
+    border-radius: 6px;
+    border-bottom-color: rgb(38, 38, 38);
+    border-bottom-width: 2px;
+    border-top-color: rgb(38, 38, 38);
+    border-top-width: .5px;
+    border-left-color: rgb(38, 38, 38);
+    border-left-width: .5px;
+    border-right-color: rgb(38, 38, 38);
+    border-right-width: .5px;
+}
+
+/* Sits behind the node body (earlier in BaseNodeView.uxml) so pins straddling the edge draw over it;
+   only the ring outside the node shows. */
+.nodeSelectionOutline {
+    display: none;
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    bottom: -2px;
+    left: -2px;
+    border-width: 2px;
+    border-color: rgb(68, 192, 255);
+    border-radius: 8px;
+}
+
+.nodeSelected > .nodeSelectionOutline {
+    display: flex;
+}

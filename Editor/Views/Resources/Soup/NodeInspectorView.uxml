@@ -1,0 +1,5 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Soup/Editor/Views/Resources/Soup/NodeInspectorView.uss?fileID=7433441132597879392&amp;guid=f508447914ca64fa49528e95403aae1e&amp;type=3#NodeInspectorView"/>
+    <Soup.Editor.Views.Inspector.NodeInspectorHeader name="node-header"/>
+    <ui:VisualElement name="inspector-container" class="nodeInspectorContainer" style="flex-grow: 1;"/>
+</ui:UXML>

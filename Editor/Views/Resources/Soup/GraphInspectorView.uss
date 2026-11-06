@@ -1,0 +1,59 @@
+.graphInspectorHeaderContainer {
+    background-color: rgb(72, 72, 72);
+    padding-top: 2px;
+    padding-right: 6px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+    margin-bottom: 8px;
+}
+
+.graphInspectorTitleRow {
+    flex-direction: row;
+    align-items: center;
+}
+
+.graphInspectorHeaderTitle {
+    flex-shrink: 1;
+    -unity-font-style: bold;
+    font-size: 28px;
+    -unity-text-align: upper-left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.graphInspectorPingIcon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+.graphInspectorPingIcon:hover {
+    opacity: 0.7;
+}
+
+.graphInspectorHeaderTypeLabel {
+    overflow: hidden;
+    -unity-font-style: italic;
+    font-size: 9px;
+    padding-left: 4px;
+}
+
+.graphInspectorSectionCaption {
+    -unity-text-align: upper-center;
+}
+
+.graphInspectorDivider {
+    height: 1px;
+    background-color: rgb(126, 126, 126);
+    margin-top: 2px;
+    margin-right: 16px;
+    margin-bottom: 4px;
+    margin-left: 16px;
+}
+
+.graphInspectorPropertiesContainer {
+    margin-bottom: 20px;
+}

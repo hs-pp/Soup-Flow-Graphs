@@ -1,0 +1,33 @@
+.container {
+    flex-direction: row;
+    height: 54px;
+    flex-grow: 1;
+    justify-content: flex-end;
+}
+
+.titleContainer {
+    flex-grow: 1;
+    justify-content: flex-start;
+    align-items: center;
+    position: absolute;
+}
+
+.title {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    -unity-font-style: bold;
+    font-size: 20px;
+}
+
+.outportContainer {
+    margin-top: 4px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    padding-top: 29px;
+}

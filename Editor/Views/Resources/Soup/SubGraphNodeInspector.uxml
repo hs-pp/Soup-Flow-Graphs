@@ -1,0 +1,24 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Soup/Editor/Views/Resources/Soup/SubGraphNodeInspector.uss?fileID=7433441132597879392&amp;guid=3f1de480a9fb2497191e5340487811bb&amp;type=3#SubGraphNodeInspector"/>
+    <ui:VisualElement name="root" class="subGraphInspector">
+        <Soup.Editor.Views.Inspector.SubGraphPreviewElement name="preview" class="subGraphPreview"/>
+        <ui:VisualElement class="subGraphStats">
+            <ui:VisualElement class="subGraphStatRow">
+                <ui:Label text="Nodes" class="subGraphStatName"/>
+                <ui:Label text="-" name="node-count" class="subGraphStatValue"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="subGraphStatRow">
+                <ui:Label text="Connections" class="subGraphStatName"/>
+                <ui:Label text="-" name="connection-count" class="subGraphStatValue"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="subGraphStatRow">
+                <ui:Label text="Groups" class="subGraphStatName"/>
+                <ui:Label text="-" name="group-count" class="subGraphStatValue"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="subGraphStatRow">
+                <ui:Label text="Sub Graphs" class="subGraphStatName"/>
+                <ui:Label text="-" name="subgraph-count" class="subGraphStatValue"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

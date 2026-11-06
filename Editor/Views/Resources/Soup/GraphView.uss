@@ -1,0 +1,78 @@
+.gridBackground {
+    --grid-spacing: 20;
+    /* Below this on-screen spacing, every other dot is dropped. */
+    --grid-min-dot-spacing: 10;
+    /* Dot size at 100% zoom; it scales with zoom but never drops below the minimum. */
+    --grid-dot-size: 2.5;
+    --grid-min-dot-size: 1;
+    --grid-dot-color: rgba(0, 0, 0, 0.32);
+    background-color: rgb(67, 69, 74);
+}
+
+.graphView {
+    overflow: hidden;
+    flex-direction: column;
+    font-size: 12px;
+    flex-grow: 1;
+}
+
+.contentViewContainer {
+    position: absolute;
+}
+
+.graphElement {
+    position: absolute;
+}
+
+.edge {
+    position: absolute;
+}
+
+.marquee {
+    position: absolute;
+    opacity: 0.25;
+}
+
+.graphAxes {
+    --graph-axis-thickness: 2;
+    --graph-axis-min-tick-spacing: 60;
+    --coordinate-label-width: 50;
+    --coordinate-label-height: 14;
+    /* Space between the axis and its numbers. */
+    --coordinate-label-gap: 3;
+    --coordinate-tick-length: 5;
+    --coordinate-tick-thickness: 1;
+    position: absolute;
+}
+
+.graphAxis {
+    background-color: rgba(0, 0, 0, 0.42);
+}
+
+.coordinateLabelText {
+    color: rgb(180, 184, 192);
+    font-size: 10px;
+    padding: 0;
+    margin: 0;
+}
+
+.coordinateLabelTick {
+    background-color: rgba(0, 0, 0, 0.42);
+}
+
+.minimap {
+    --minimap-node-color: rgba(230, 230, 230, 0.5);
+    --minimap-edge-color: rgba(230, 230, 230, 0.3);
+    --minimap-selected-color: rgba(68, 192, 255, 1);
+    --minimap-viewport-color: rgba(230, 230, 230, 0.8);
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 200px;
+    height: 150px;
+    overflow: hidden;
+    background-color: rgba(25, 25, 25, 0.85);
+    border-width: 1px;
+    border-color: black;
+    border-radius: 6px;
+}

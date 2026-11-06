@@ -1,0 +1,14 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Soup/Editor/Views/Resources/Soup/GraphInspectorView.uss?fileID=7433441132597879392&amp;guid=e8ac5b1c67164700ae2368bf020d86c1&amp;type=3#GraphInspectorView"/>
+    <ui:VisualElement name="header-container" class="graphInspectorHeaderContainer">
+        <ui:VisualElement class="graphInspectorTitleRow">
+            <ui:Image name="ping-icon" tooltip="Ping the graph asset" class="graphInspectorPingIcon"/>
+            <ui:Label text="Graph" name="title" class="graphInspectorHeaderTitle"/>
+        </ui:VisualElement>
+        <ui:Label text="Graph Type" name="type-label" class="graphInspectorHeaderTypeLabel"/>
+    </ui:VisualElement>
+    <ui:Label text="Graph Properties" class="graphInspectorSectionCaption"/>
+    <ui:VisualElement class="graphInspectorDivider"/>
+    <ui:VisualElement name="properties-container" class="graphInspectorPropertiesContainer"/>
+    <Soup.Editor.Views.Inspector.Blackboards.BlackboardView name="blackboard-view"/>
+</ui:UXML>

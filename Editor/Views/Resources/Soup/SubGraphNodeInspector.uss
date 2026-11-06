@@ -1,0 +1,55 @@
+.subGraphPreview {
+    background-color: rgb(43, 43, 43);
+    border-width: 1px;
+    border-color: rgb(25, 25, 25);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    min-height: 80px;
+    margin-top: 8px;
+    margin-right: 8px;
+    margin-left: 8px;
+}
+
+.subGraphPreview:hover {
+    border-color: rgb(120, 120, 120);
+}
+
+.subGraphPreviewOpenLabel {
+    position: absolute;
+    right: 4px;
+    bottom: 2px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.subGraphPreview:hover > .subGraphPreviewOpenLabel {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.subGraphPreviewEmptyLabel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 20%;
+    -unity-text-align: middle-center;
+    -unity-font-style: italic;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.subGraphStats {
+    margin-bottom: 4px;
+}
+
+.subGraphStatRow {
+    flex-direction: row;
+    padding: 1px 3px;
+}
+
+.subGraphStatName {
+    width: 40%;
+    min-width: 90px;
+}
+
+.subGraphStatValue {
+    flex-grow: 1;
+}

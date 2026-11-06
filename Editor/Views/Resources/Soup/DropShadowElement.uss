@@ -1,0 +1,10 @@
+/* Soft drop shadow, matching board H's box-shadow: 0 6px 16px rgba(0, 0, 0, 0.34).
+   Blur and radius are in pixels; the radius should match the shaded element's border-radius. */
+.dropShadow {
+    --drop-shadow-blur: 16;
+    --drop-shadow-radius: 6;
+    --drop-shadow-offset-x: 0;
+    --drop-shadow-offset-y: 6;
+    -unity-background-scale-mode: stretch-to-fill;
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0.34);
+}

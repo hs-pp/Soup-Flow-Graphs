@@ -1,0 +1,28 @@
+using System;
+using Soup.Runtime;
+
+#NAMESPACEBEGIN#
+[Serializable]
+[Outports(OutPort)]
+[NodeMenu("Custom/#NAME#")]
+public class #SCRIPTNAME# : ANode
+{
+    public const string OutPort = "Out";
+
+    // Runs when the graph enters this node.
+    public override void OnNodeEnter(NodeExecutionContext context)
+    {
+    }
+
+    // Runs on each graph tick while this node is current. TraverseEdge moves on at the next tick.
+    public override void OnNodeUpdate(NodeExecutionContext context)
+    {
+        context.TraverseEdge(OutPort);
+    }
+
+    // Runs when the graph leaves this node, or stops while on it.
+    public override void OnNodeExit(NodeExecutionContext context)
+    {
+    }
+}
+#NAMESPACEEND#

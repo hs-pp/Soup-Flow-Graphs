@@ -1,0 +1,45 @@
+using Soup.Editor;
+using Soup.Editor.Core.DataRefs;
+using Soup.Editor.Views.Inspector;
+using UnityEditor.UIElements;
+using UnityEngine.UIElements;
+
+#NAMESPACEBEGIN#
+[CustomNodeInspector(typeof(#NODETYPE#))]
+public class #SCRIPTNAME# : ANodeInspector
+{
+    private VisualElement m_fieldsContainer;
+
+    // Shows Soup's standard header (node type and id) above the custom layout.
+    protected override bool UseDefaultHeader => true;
+
+    // Builds the layout once. The base constructor calls this, so this class's constructor body hasn't run yet.
+    protected override VisualElement CreateCustomLayout()
+    {
+        m_fieldsContainer = new VisualElement();
+        return m_fieldsContainer;
+    }
+
+    // Runs when the inspected node changes, or its property path moves.
+    protected override void OnSetNode(NodeRef nodeRef, NodeMetaDataRef metaDataRef)
+    {
+        m_fieldsContainer.Unbind();
+        m_fieldsContainer.Clear();
+        if (!nodeRef.IsValid)
+        {
+            return;
+        }
+
+        SerializedPropertyUtils.AddVisibleChildFields(m_fieldsContainer, nodeRef.NodeSP);
+    }
+
+    protected override void HandleLoadState(string saveState)
+    {
+    }
+
+    protected override string GetSaveState()
+    {
+        return string.Empty;
+    }
+}
+#NAMESPACEEND#

@@ -1,0 +1,47 @@
+/* Subgraph path in the window toolbar, per board S: earlier levels muted and clickable,
+   the current level bright and bold, separated by a dim chevron. */
+.breadcrumbView {
+    flex-direction: row;
+    align-items: center;
+    padding: 0 4px;
+}
+
+.breadcrumbSegment {
+    font-size: 12px;
+    color: rgb(168, 168, 168);
+    margin: 0;
+    padding: 0;
+    -unity-text-align: middle-left;
+}
+
+.breadcrumbSegmentSeparator {
+    color: rgb(106, 106, 106);
+    padding: 0 2px;
+}
+
+.breadcrumbSegmentName {
+    padding: 1px 4px;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0);
+    transition-property: background-color;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+}
+
+.breadcrumbSegmentName:hover {
+    color: rgb(210, 210, 210);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.breadcrumbSegmentName:active {
+    background-color: rgba(255, 255, 255, 0.16);
+}
+
+.breadcrumbSegmentCurrent .breadcrumbSegmentName {
+    color: rgb(238, 238, 238);
+    -unity-font-style: bold;
+}
+
+.breadcrumbSegmentCurrent .breadcrumbSegmentName:hover {
+    background-color: rgba(255, 255, 255, 0);
+}

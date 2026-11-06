@@ -1,0 +1,10 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Soup/Editor/Views/Resources/Soup/BlackboardView.uss?fileID=7433441132597879392&amp;guid=b1be6c7ec9a143cca2a66df89b4a2b11&amp;type=3#BlackboardView"/>
+    <ui:VisualElement name="header" class="blackboardHeader">
+        <ui:Label text="Blackboard" class="blackboardCaption"/>
+        <ui:Button name="add-button" text="+" tooltip="Add a variable" class="blackboardAddButton"/>
+    </ui:VisualElement>
+    <ui:VisualElement class="blackboardDivider"/>
+    <ui:Label name="empty-label" text="No variables yet." class="blackboardEmptyLabel"/>
+    <ui:VisualElement name="rows" class="blackboardRows"/>
+</ui:UXML>

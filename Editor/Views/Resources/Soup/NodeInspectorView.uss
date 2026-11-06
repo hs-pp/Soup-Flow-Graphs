@@ -1,0 +1,135 @@
+.nodeInspectorContainer {
+    margin-bottom: 10px;
+    margin-left: 6px;
+    margin-right: 6px;
+    margin-top: 4px;
+}
+
+.nodeInspectorHeaderContainer {
+    background-color: rgb(101, 101, 101);
+    padding-top: 6px;
+    padding-right: 6px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+    margin-bottom: 8px;
+}
+
+.nodeInspectorHeaderTitleRow {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.nodeInspectorHeaderTitle {
+    -unity-font-style: bold;
+    font-size: 22px;
+    -unity-text-align: upper-left;
+    overflow: hidden;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.nodeInspectorColorSwatch {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 8px;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 6px;
+}
+
+.nodeInspectorColorSwatch > .unity-color-field__input,
+.nodeInspectorColorSwatch:hover > .unity-color-field__input,
+.nodeInspectorColorSwatch:focus > .unity-color-field__input {
+    min-height: 0;
+    height: 100%;
+    padding-top: 1px;
+    padding-right: 1px;
+    padding-bottom: 1px;
+    padding-left: 1px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-color: rgba(0, 0, 0, 0.6);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.nodeInspectorColorSwatch:hover > .unity-color-field__input {
+    border-color: rgba(0, 0, 0, 0.9);
+}
+
+.nodeInspectorColorSwatch,
+.nodeInspectorColorSwatch * {
+    cursor: link;
+}
+
+.nodeInspectorHeaderIdLabel {
+    overflow: hidden;
+    -unity-font-style: italic;
+    font-size: 9px;
+    padding-left: 4px;
+}
+
+.nodeInspectorComment {
+    margin-top: 2px;
+    margin-right: 6px;
+    margin-bottom: 8px;
+    margin-left: 6px;
+    padding-top: 4px;
+    padding-right: 6px;
+    padding-bottom: 4px;
+    padding-left: 6px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-color: rgba(0, 0, 0, 0);
+    --bubble-fill-color: rgb(92, 95, 102);
+    --bubble-border-color: rgb(112, 116, 124);
+    --bubble-arrow-offset: 10;
+    --bubble-arrow-width: 10;
+    --bubble-arrow-height: 6;
+}
+
+.nodeInspectorComment--empty {
+    --bubble-fill-color: rgb(66, 68, 73);
+    --bubble-border-color: rgb(92, 95, 102);
+}
+
+.nodeInspectorComment--focused {
+    --bubble-border-color: rgb(58, 121, 187);
+}
+
+.nodeInspectorCommentField {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    white-space: normal;
+}
+
+.nodeInspectorCommentField > .unity-base-text-field__input,
+.nodeInspectorCommentField:hover > .unity-base-text-field__input,
+.nodeInspectorCommentField:focus > .unity-base-text-field__input {
+    background-color: rgba(0, 0, 0, 0);
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    -unity-font-style: italic;
+    color: rgb(226, 228, 232);
+}

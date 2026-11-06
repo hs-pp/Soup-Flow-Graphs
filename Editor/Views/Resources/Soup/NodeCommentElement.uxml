@@ -1,0 +1,6 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Soup/Editor/Views/Resources/Soup/NodeCommentElement.uss?fileID=7433441132597879392&amp;guid=e9bcc41c01765487ca0517ec5435feed&amp;type=3#NodeCommentElement"/>
+    <Soup.Editor.Views.Extraneous.SpeechBubbleElement name="comment-container" arrow-side="Bottom" class="commentContainer">
+        <ui:Label text=" Label Label Label Label Label Label Label Label Label Label" name="comment-label" class="commentLabel"/>
+    </Soup.Editor.Views.Extraneous.SpeechBubbleElement>
+</ui:UXML>

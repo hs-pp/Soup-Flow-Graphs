@@ -1,0 +1,84 @@
+.blackboardHeader {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.blackboardCaption {
+    flex-grow: 1;
+    -unity-text-align: middle-center;
+}
+
+.blackboardAddButton {
+    position: absolute;
+    right: 16px;
+    width: 20px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    -unity-font-style: bold;
+}
+
+.blackboardDivider {
+    height: 1px;
+    background-color: rgb(126, 126, 126);
+    margin-top: 2px;
+    margin-right: 16px;
+    margin-bottom: 4px;
+    margin-left: 16px;
+}
+
+.blackboardEmptyLabel {
+    -unity-text-align: upper-center;
+    -unity-font-style: italic;
+    color: rgb(140, 140, 140);
+    margin-top: 2px;
+}
+
+.blackboardRows {
+    margin-bottom: 20px;
+}
+
+.blackboardRow {
+    margin-top: 2px;
+    margin-right: 6px;
+    margin-bottom: 2px;
+    margin-left: 6px;
+    padding-top: 3px;
+    padding-right: 4px;
+    padding-bottom: 3px;
+    padding-left: 6px;
+    border-width: 1px;
+    border-color: rgb(36, 36, 36);
+    border-radius: 3px;
+    background-color: rgb(58, 58, 58);
+}
+
+.blackboardRowHeader {
+    flex-direction: row;
+    align-items: center;
+    min-height: 20px;
+}
+
+.blackboardRowName {
+    flex-grow: 1;
+    flex-shrink: 1;
+    -unity-font-style: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.blackboardRowNameField {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin: 0;
+}
+
+.blackboardRowType {
+    flex-shrink: 0;
+    margin-left: 6px;
+    -unity-font-style: italic;
+    font-size: 10px;
+    color: rgb(150, 150, 150);
+}

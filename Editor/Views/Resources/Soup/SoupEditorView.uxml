@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/Soup/Editor/Views/Resources/Soup/SoupEditorView.uss?fileID=7433441132597879392&amp;guid=f45c769b215ba4eeb963ac87cd2d4ef1&amp;type=3#SoupEditorView"/>
+    <ui:VisualElement name="base" style="display: flex; flex-grow: 1;">
+        <uie:Toolbar name="toolbar"/>
+        <ui:TwoPaneSplitView orientation="Horizontal" name="splitview" fixed-pane-index="1" fixed-pane-initial-dimension="400">
+            <ui:VisualElement name="main-panel-left" style="min-width: auto; min-height: auto;"/>
+            <ui:VisualElement name="main-panel-right"/>
+        </ui:TwoPaneSplitView>
+    </ui:VisualElement>
+</ui:UXML>

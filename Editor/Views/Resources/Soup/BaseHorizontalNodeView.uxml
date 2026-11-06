@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/Soup/Editor/Views/Resources/Soup/BaseHorizontalNodeView.uss?fileID=7433441132597879392&amp;guid=c2190dc5a35749c2b8a460d99b8d1abe&amp;type=3#BaseHorizontalNodeView"/>
+    <ui:VisualElement name="title-container" picking-mode="Ignore" class="nodeTitle">
+        <ui:Label name="title-label" picking-mode="Ignore" class="nodeTitleLabel"/>
+    </ui:VisualElement>
+    <ui:VisualElement name="body" picking-mode="Ignore" class="nodeBody" style="flex-grow: 1;">
+        <ui:VisualElement name="io-container" picking-mode="Ignore" class="nodeIo">
+            <ui:VisualElement name="input-container" picking-mode="Ignore" class="nodeIoInput"/>
+            <ui:VisualElement name="output-container" picking-mode="Ignore" class="nodeIoOutput"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="extension-container" picking-mode="Ignore" class="nodeExtensionContainer"/>
+    </ui:VisualElement>
+</ui:UXML>

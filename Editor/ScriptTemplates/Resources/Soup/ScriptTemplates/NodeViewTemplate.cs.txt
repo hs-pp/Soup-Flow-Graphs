@@ -1,0 +1,21 @@
+using Soup.Editor;
+using Soup.Editor.Core.DataRefs;
+using Soup.Editor.Views.Nodes;
+using UnityEngine.UIElements;
+
+#NAMESPACEBEGIN#
+[CustomNodeView(typeof(#NODETYPE#))]
+public class #SCRIPTNAME# : BaseHorizontalNodeView
+{
+    // Builds the UI under the ports, once per view.
+    protected override void OnAddExtensionsContents(VisualElement extensionsContainer)
+    {
+    }
+
+    // Binds that UI to the node's fields. Runs again whenever the node's property path changes.
+    protected override void OnPropertyBound(NodeRef nodeRef, NodeMetaDataRef metaData)
+    {
+        base.OnPropertyBound(nodeRef, metaData);
+    }
+}
+#NAMESPACEEND#

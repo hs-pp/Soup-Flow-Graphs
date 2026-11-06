@@ -1,0 +1,17 @@
+.root {
+    flex-grow: 1;
+}
+
+.titleContainer {
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(32, 32, 32);
+    padding-top: 3px;
+    padding-right: 3px;
+    padding-bottom: 3px;
+    padding-left: 3px;
+}
+
+.title {
+    -unity-font-style: bold;
+    font-size: 12px;
+}

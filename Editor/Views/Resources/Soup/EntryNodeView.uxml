@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/Soup/Editor/Views/Resources/Soup/EntryNodeView.uss?fileID=7433441132597879392&amp;guid=43511f603b92a4708897dbf1b8e6900a&amp;type=3#EntryNodeView"/>
+    <ui:VisualElement name="title-container" picking-mode="Ignore" class="titleContainer" style="margin-top: 6px; margin-left: 6px;">
+        <ui:Label text="ENTRY" name="title" picking-mode="Ignore" class="title"/>
+    </ui:VisualElement>
+    <ui:VisualElement name="container" picking-mode="Ignore" class="container">
+        <ui:VisualElement name="outport-container" picking-mode="Ignore" class="outportContainer" style="flex-grow: 0;"/>
+    </ui:VisualElement>
+</ui:UXML>

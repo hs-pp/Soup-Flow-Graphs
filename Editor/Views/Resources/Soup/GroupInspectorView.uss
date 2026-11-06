@@ -1,0 +1,15 @@
+.headerContainer {
+    background-color: rgb(101, 101, 101);
+    padding-top: 2px;
+    padding-right: 6px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+    margin-bottom: 8px;
+}
+
+.headerTitle {
+    -unity-font-style: bold;
+    font-size: 28px;
+    -unity-text-align: upper-left;
+    overflow: hidden;
+}
