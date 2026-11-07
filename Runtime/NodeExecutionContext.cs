@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace Soup.Runtime
 {
+    /// <summary>
+    /// Context provided to every node while it's actively running. This class provides everything needed for a node to run.
+    /// </summary>
     public sealed class NodeExecutionContext
     {
         private readonly Action<NodeExecutionContext, OutportEdge> m_requestTransition;
@@ -11,25 +14,15 @@ namespace Soup.Runtime
         public ANode Node { get; }
         public NodeRuntimeState RuntimeState { get; }
         public AGraphProperties GraphProperties { get; }
-        public Blackboard Blackboard { get; } // The run's own copy.
+        public Blackboard Blackboard { get; }
 
-        public NodeExecutionContext(ANode node, AGraphProperties graphProperties, Blackboard blackboard, Action<NodeExecutionContext, OutportEdge> requestTransition)
+        internal NodeExecutionContext(ANode node, AGraphProperties graphProperties, Blackboard blackboard, Action<NodeExecutionContext, OutportEdge> requestTransition)
         {
             Node = node;
             RuntimeState = node.CreateRuntimeState() ?? new EmptyNodeRuntimeState();
             GraphProperties = graphProperties;
             Blackboard = blackboard;
             m_requestTransition = requestTransition;
-        }
-
-        public T GetGraphProperties<T>() where T : AGraphProperties
-        {
-            return GraphProperties as T;
-        }
-
-        public T GetNodeRuntimeState<T>() where T : NodeRuntimeState
-        {
-            return RuntimeState as T;
         }
 
         public void TraverseEdge(string outportId)
@@ -47,7 +40,7 @@ namespace Soup.Runtime
 
         public void StopGraph()
         {
-            m_requestTransition.Invoke(this, null);
+            m_requestTransition.Invoke(this, null); // returning null edge stops the graph.
         }
     }
 }

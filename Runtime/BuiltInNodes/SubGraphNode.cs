@@ -18,7 +18,7 @@ namespace Soup.Runtime.BuiltInNodes
 
         public override void OnNodeEnter(NodeExecutionContext context)
         {
-            SubGraphNodeRuntimeState state = context.GetNodeRuntimeState<SubGraphNodeRuntimeState>();
+            SubGraphNodeRuntimeState state = context.RuntimeState as SubGraphNodeRuntimeState;
             if (state == null || m_subGraph == null)
             {
                 context.StopGraph();
@@ -38,7 +38,7 @@ namespace Soup.Runtime.BuiltInNodes
 
         public override void OnNodeUpdate(NodeExecutionContext context)
         {
-            SubGraphNodeRuntimeState state = context.GetNodeRuntimeState<SubGraphNodeRuntimeState>();
+            SubGraphNodeRuntimeState state = context.RuntimeState as SubGraphNodeRuntimeState;
             if (state?.ChildRunner == null)
             {
                 context.StopGraph();
@@ -59,7 +59,7 @@ namespace Soup.Runtime.BuiltInNodes
 
         public override void OnNodeExit(NodeExecutionContext context)
         {
-            SubGraphNodeRuntimeState state = context.GetNodeRuntimeState<SubGraphNodeRuntimeState>();
+            SubGraphNodeRuntimeState state = context.RuntimeState as SubGraphNodeRuntimeState;
             if (state?.ChildRunner != null)
             {
                 state.ChildRunner.StopGraph();
