@@ -14,7 +14,7 @@ namespace Soup.Runtime.BuiltInNodes
 
         public override void OnNodeEnter(NodeExecutionContext context)
         {
-            context.TraverseEdge(DefaultOutport);
+            context.TraverseEdge(DEFAULT_OUTPORT);
         }
     }
 }

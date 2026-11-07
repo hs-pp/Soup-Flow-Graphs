@@ -17,7 +17,7 @@ namespace Soup.Runtime.BuiltInNodes
         public override void OnNodeEnter(NodeExecutionContext context)
         {
             Debug.Log(m_message);
-            context.TraverseEdge(DefaultOutport);
+            context.TraverseEdge(DEFAULT_OUTPORT);
         }
         
         public const string MessageFieldName = nameof(m_message);

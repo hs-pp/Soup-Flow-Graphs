@@ -253,7 +253,7 @@ namespace Soup.Editor.Core
         #region NodeCollections
         public bool TryGetRootCollection(out NodeCollectionRef collection)
         {
-            collection = IsGraphAlive ? new NodeCollectionRef(m_serializedGraph.FindProperty(AFlowGraph.RootCollectionFieldName)) : default;
+            collection = IsGraphAlive ? new NodeCollectionRef(m_serializedGraph.FindProperty(AFlowGraph.ROOT_COLLECTION_FIELD_NAME)) : default;
             return collection.IsValid;
         }
 
@@ -292,7 +292,7 @@ namespace Soup.Editor.Core
         #region GraphProperties
         public bool TryGetGraphProperties(out SerializedProperty graphProperties)
         {
-            graphProperties = IsGraphAlive ? m_serializedGraph.FindProperty(AFlowGraph.GraphPropertiesFieldName) : null;
+            graphProperties = IsGraphAlive ? m_serializedGraph.FindProperty(AFlowGraph.GRAPH_PROPERTIES_FIELD_NAME) : null;
             return graphProperties != null;
         }
         #endregion

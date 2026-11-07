@@ -22,7 +22,7 @@ namespace Soup.Editor.Core.DataRefs
         /// </summary>
         public static BlackboardRef Find(SerializedObject serializedGraph)
         {
-            return new BlackboardRef(serializedGraph?.FindProperty(AFlowGraph.BlackboardFieldName));
+            return new BlackboardRef(serializedGraph?.FindProperty(AFlowGraph.BLACKBOARD_FIELD_NAME));
         }
 
         public bool IsValid => BlackboardSP != null && ElementsSP != null;

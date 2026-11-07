@@ -13,7 +13,7 @@ namespace Soup.Runtime
         private NodeCollection m_rootCollection = new();
         public NodeCollection RootCollection => m_rootCollection;
 
-        /** Implemented by AFlowGraph(TProperties). */
+        /** Implemented by AFlowGraph(TProperties). Only grab this at runtime if you want the default values. */
         public abstract AGraphProperties GraphProperties { get; }
 
         [SerializeField]
@@ -24,9 +24,9 @@ namespace Soup.Runtime
 
         /** For editor use. */
 #if UNITY_EDITOR
-        internal const string RootCollectionFieldName = nameof(m_rootCollection);
-        internal const string BlackboardFieldName = nameof(m_blackboard);
-        internal const string GraphPropertiesFieldName = "m_graphProperties";
+        internal const string ROOT_COLLECTION_FIELD_NAME = nameof(m_rootCollection);
+        internal const string BLACKBOARD_FIELD_NAME = nameof(m_blackboard);
+        internal const string GRAPH_PROPERTIES_FIELD_NAME = "m_graphProperties";
 #endif
     }
 

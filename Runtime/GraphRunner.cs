@@ -1,244 +1,227 @@
 using System;
-using System.Collections.Generic;
 using Soup.Runtime.Blackboards;
+using Soup.Runtime.BuiltInNodes;
 using UnityEngine;
 
 namespace Soup.Runtime
 {
-    public class GraphRunner
+    /// <summary>
+    /// Pure C# class for running a flow graph. Can only run a graph once. Create a fresh GraphRunner for every run.
+    /// Also make sure to call UpdateGraph() on tick.
+    /// </summary>
+    public sealed class GraphRunner
     {
-        private struct PendingTransition
+        private enum RunState
         {
-            public ANode SourceNode;
-            public OutportEdge Edge;
-            public bool Exists;
+            NotStarted,
+            Running,
+            Stopped,
         }
-        
-        private enum NodeStage
-        {
-            None,
-            Enter,
-            Update,
-            Exit,
-        }
-        
-        private NodeCollection m_nodeCollection = null;
-        private readonly Dictionary<string, NodeRuntimeState> m_nodeRuntimeStates = new ();
-        public AGraphProperties GraphProperties { get; private set; }
-        public Blackboard Blackboard { get; private set; }
-        public ANode CurrentNode => m_currentNode;
-        public bool IsRunning => m_currentNode != null;
-        private PendingTransition m_pendingTransition;
-        private NodeStage m_currentStage = NodeStage.None;
 
-        [NonSerialized]
+        public NodeCollection NodeCollection { get; }
+        public AGraphProperties GraphProperties { get; }
+        public Blackboard Blackboard { get; }
+        public ANode ActiveNode { get; private set; }
+
+        private RunState m_state = RunState.NotStarted;
+        public bool IsRunning => m_state == RunState.Running;
+        private NodeExecutionContext m_activeContext;
+        
+        private bool m_operationRunning;
+        private bool m_stopRequested;
+        
+        /** The transition waiting for the next tick. Null when not transitioning, or equals STOP_GRAPH_EDGE if we're at the end of the graph.*/
+        private OutportEdge m_pendingEdge;
+        private static readonly OutportEdge STOP_GRAPH_EDGE = new();
+
         public Action OnGraphStart = null;
-        [NonSerialized]
         public Action OnGraphStop = null;
-        [NonSerialized]
-        public Action<ANode> OnNodeChange = null;
-        private ANode m_currentNode = null;
-
-        public GraphRunner(AFlowGraph flowGraph, AGraphProperties graphProperties, Blackboard blackboard)
-        {
-            m_nodeCollection = flowGraph.RootCollection;
-            GraphProperties = graphProperties;
-            Blackboard = blackboard;
-
-            if (m_nodeCollection == null)
-            {
-                Debug.LogError("No Graph attached to GraphRunner!");
-            }
-        }
+        public Action<ANode> OnActiveNodeChanged = null;
 
         public GraphRunner(NodeCollection nodeCollection, AGraphProperties graphProperties, Blackboard blackboard)
         {
-            m_nodeCollection = nodeCollection;
+            NodeCollection = nodeCollection;
             GraphProperties = graphProperties;
             Blackboard = blackboard;
         }
 
         public void StartGraph()
         {
-            m_pendingTransition = default;
-            m_nodeRuntimeStates.Clear();
-            m_currentNode = null;
-
-            if (m_nodeCollection == null)
+            if (m_state != RunState.NotStarted)
             {
-                Debug.LogError("GraphRunner could not start because no node collection was provided.");
-                OnNodeChange?.Invoke(null);
+                Debug.LogError("A GraphRunner runs once. Create a new one to run again.");
                 return;
             }
 
-            m_currentNode = m_nodeCollection.EntryNode;
-            if (m_currentNode == null)
+            EntryNode entryNode = NodeCollection?.EntryNode;
+            if (entryNode == null)
             {
-                Debug.LogError("GraphRunner could not start because the node collection has no entry node.");
-                OnNodeChange?.Invoke(null);
+                Debug.LogError("GraphRunner could not start because there is no entry node.");
+                m_state = RunState.Stopped;
                 return;
             }
 
+            BeginOperation();
+            m_state = RunState.Running;
             OnGraphStart?.Invoke();
-            OnNodeChange?.Invoke(m_currentNode);
-            ExecuteNodeCallback(m_currentNode, NodeStage.Enter, node => node.OnNodeEnter(CreateNodeExecutionContext(node)));
-        }
-
-        public void StopGraph()
-        {
-            if (m_currentNode == null)
-            {
-                return;
-            }
-
-            ExecuteNodeCallback(m_currentNode, NodeStage.Exit, node => node.OnNodeExit(CreateNodeExecutionContext(node)));
-            Stop();
+            ActivateNode(entryNode);
+            EndOperation();
         }
 
         public void UpdateGraph()
         {
-            if (m_currentNode == null)
+            if (m_state != RunState.Running || m_operationRunning)
             {
                 return;
             }
 
-            if (m_pendingTransition.Exists)
+            BeginOperation();
+            if (m_pendingEdge != null) // Handle the transition to next node and nothing else.
             {
                 CommitPendingTransition();
             }
-            else
+            else // Call node update
             {
-                ExecuteNodeCallback(m_currentNode, NodeStage.Update, node => node.OnNodeUpdate(CreateNodeExecutionContext(node)));
+                try
+                {
+                    ActiveNode.OnNodeUpdate(m_activeContext);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                    m_stopRequested = true;
+                }
             }
+            EndOperation();
         }
 
-        private void RequestTransition(ANode node, OutportEdge edge)
+        public void StopGraph()
         {
-            switch (m_currentStage)
+            if (m_state != RunState.Running)
             {
-                case NodeStage.None:
-                    Debug.LogError("Transitions can only be requested from a node callback.");
-                    return;
-
-                case NodeStage.Exit:
-                    // The graph has already committed to where it is going;
-                    // a node on its way out cannot redirect it. Without this
-                    // guard the request outlives the exiting node, suppresses
-                    // the next node's own transition, and then fires from the
-                    // wrong node on the following tick.
-                    Debug.LogError($"'{node.GetType().Name}' requested a transition from OnNodeExit. Transitions can only be requested from OnNodeEnter or OnNodeUpdate.");
-                    return;
-            }
-
-            if (node != m_currentNode)
-            {
-                Debug.LogError($"'{node.GetType().Name}' requested a transition but is not the current node.");
                 return;
             }
 
-            // A null edge is the stop-the-graph sentinel from NodeExecutionContext.StopGraph.
-            if (edge != null && m_currentNode.GetOutportEdge(edge.Id) == null)
+            if (m_operationRunning)
             {
-                Debug.LogError($"Outport '{edge.Id}' does not belong to '{node.GetType().Name}'.");
+                m_stopRequested = true;
                 return;
             }
 
-            if (m_pendingTransition.Exists)
+            BeginOperation();
+            EndRun();
+            EndOperation();
+        }
+
+        private void RequestTransition(NodeExecutionContext context, OutportEdge edge)
+        {
+            if (context != m_activeContext)
             {
-                Debug.LogWarning("A transition was already requested during this node callback. Ignoring the later request.");
+                Debug.LogError($"'{context.Node.GetType().Name}' requested a transition from an old context. Ignoring.");
                 return;
             }
 
-            m_pendingTransition = new PendingTransition
+            if (m_pendingEdge != null)
             {
-                SourceNode = node,
-                Edge = edge,
-                Exists = true
-            };
+                Debug.LogWarning("A transition was already requested this tick. Ignoring this request.");
+                return;
+            }
+
+            m_pendingEdge = edge;
+            if (m_pendingEdge == null) // if passed in edge was null, we want to stop graph.
+            {
+                m_pendingEdge = STOP_GRAPH_EDGE;
+            }
         }
 
         private void CommitPendingTransition()
         {
-            if (!m_pendingTransition.Exists || m_currentNode == null)
+            ANode nextNode = FindTargetNode(m_pendingEdge);
+
+            DeactivateNode();
+            if (nextNode == null || m_stopRequested)
             {
+                EndRun();
                 return;
             }
 
-            if (m_pendingTransition.SourceNode != m_currentNode)
-            {
-                Debug.LogError("Pending transition belongs to a node that is no longer current. Discarding it.");
-                m_pendingTransition = default;
-                return;
-            }
-
-            PendingTransition transition = m_pendingTransition;
-            m_pendingTransition = default;
-
-            ExecuteNodeCallback(m_currentNode, NodeStage.Exit, node => node.OnNodeExit(CreateNodeExecutionContext(node)));
-            
-            string targetNodeId = transition.Edge?.ConnectedNodeId;
-            if (string.IsNullOrEmpty(targetNodeId)) // we're done.
-            {
-                Stop();
-                return;
-            }
-
-            ANode nextNode = m_nodeCollection.GetNodeById(targetNodeId);
-            if (nextNode == null)
-            {
-                Debug.LogError($"Transition target node '{targetNodeId}' was not found.");
-                Stop();
-                return;
-            }
-
-            m_currentNode = nextNode;
-            OnNodeChange?.Invoke(m_currentNode);
-            ExecuteNodeCallback(m_currentNode, NodeStage.Enter, node => node.OnNodeEnter(CreateNodeExecutionContext(node)));
+            ActivateNode(nextNode);
         }
 
-        private void Stop()
+        private ANode FindTargetNode(OutportEdge edge)
         {
-            m_currentNode = null;
-            m_pendingTransition = default;
-            OnGraphStop?.Invoke();
-            OnNodeChange?.Invoke(null);
-        }
-
-        private NodeExecutionContext CreateNodeExecutionContext(ANode node)
-        {
-            if (node == null)
+            string targetNodeId = edge?.ConnectedNodeId;
+            if (string.IsNullOrEmpty(targetNodeId))
             {
                 return null;
             }
 
-            // Get node state from dictionary
-            if (!m_nodeRuntimeStates.TryGetValue(node.Id, out NodeRuntimeState state))
-            {
-                state = node.CreateRuntimeState() ?? new EmptyNodeRuntimeState();
-                m_nodeRuntimeStates.Add(node.Id, state);
-            }
-            
-            return new NodeExecutionContext(node, GraphProperties, Blackboard, state, RequestTransition);
-        }
-
-        private void ExecuteNodeCallback(ANode node, NodeStage stage, Action<ANode> callback)
-        {
+            ANode node = NodeCollection.GetNodeById(targetNodeId);
             if (node == null)
             {
-                return;
+                Debug.LogError($"Transition target node '{targetNodeId}' was not found.");
             }
 
-            NodeStage previous = m_currentStage;
-            m_currentStage = stage;
+            return node;
+        }
 
+        private void ActivateNode(ANode node)
+        {
+            ActiveNode = node;
+            OnActiveNodeChanged?.Invoke(ActiveNode);
             try
             {
-                callback.Invoke(node);
+                // We create a new context for every node we enter.
+                m_activeContext = new NodeExecutionContext(node, GraphProperties, Blackboard, RequestTransition);
+                node.OnNodeEnter(m_activeContext);
             }
-            finally
+            catch (Exception exception)
             {
-                // Ensure we always get here.
-                m_currentStage = previous; // This should basically always be CallbackPhase.None, but this is probably safer?
+                Debug.LogException(exception);
+                m_stopRequested = true;
+            }
+        }
+
+        private void DeactivateNode()
+        {
+            NodeExecutionContext context = m_activeContext;
+            ActiveNode = null;
+            m_activeContext = null;
+            m_pendingEdge = null;
+
+            if (context != null)
+            {
+                try
+                {
+                    context.Node.OnNodeExit(context);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                    m_stopRequested = true;
+                }
+            }
+        }
+
+        private void EndRun()
+        {
+            DeactivateNode();
+            m_state = RunState.Stopped;
+            OnGraphStop?.Invoke();
+        }
+
+        private void BeginOperation()
+        {
+            m_operationRunning = true;
+        }
+
+        private void EndOperation()
+        {
+            m_operationRunning = false;
+            if (m_stopRequested)
+            {
+                m_stopRequested = false;
+                StopGraph();
             }
         }
     }

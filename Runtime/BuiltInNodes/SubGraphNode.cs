@@ -53,7 +53,7 @@ namespace Soup.Runtime.BuiltInNodes
             if (state.IsComplete || !state.ChildRunner.IsRunning)
             {
                 state.IsComplete = true;
-                context.TraverseEdge(DefaultOutport);
+                context.TraverseEdge(DEFAULT_OUTPORT);
             }
         }
 

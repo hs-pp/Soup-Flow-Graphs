@@ -16,7 +16,7 @@ namespace Soup.Editor.Core.DataRefs
 
         public NodeRef(SerializedProperty nodeSP, int index)
         {
-            Id = nodeSP?.FindPropertyRelative(ANode.IdFieldName)?.stringValue;
+            Id = nodeSP?.FindPropertyRelative(ANode.ID_FIELD_NAME)?.stringValue;
             NodeSP = nodeSP;
             Index = index;
         }
@@ -25,7 +25,7 @@ namespace Soup.Editor.Core.DataRefs
         public bool IsMissingType => string.IsNullOrEmpty(Id);
         public bool IsValid => NodeSP != null;
 
-        public SerializedProperty OutportsSP => NodeSP?.FindPropertyRelative(ANode.OutportsFieldName);
+        public SerializedProperty OutportsSP => NodeSP?.FindPropertyRelative(ANode.OUTPORTS_FIELD_NAME);
 
         public bool TryGetSubGraphCollection(out NodeCollectionRef collection)
         {

@@ -55,11 +55,11 @@ namespace Soup.Runtime
             StopGraph();
 
             AGraphProperties properties = ResolveGraphProperties();
-
-            GraphRunner = new GraphRunner(m_flowGraph, properties, m_flowGraph.Blackboard?.Clone() ?? new Blackboard());
+            Blackboard blackboard = m_flowGraph.Blackboard?.Clone() ?? new Blackboard();
+            GraphRunner = new GraphRunner(m_flowGraph.RootCollection, properties, blackboard);
             GraphRunner.OnGraphStart += () => { OnGraphStart?.Invoke(); };
             GraphRunner.OnGraphStop += () => { OnGraphStop?.Invoke(); };
-            GraphRunner.OnNodeChange += Node => { OnNodeChange?.Invoke(Node); };
+            GraphRunner.OnActiveNodeChanged += Node => { OnNodeChange?.Invoke(Node); };
 
             GraphRunner.StartGraph();
         }

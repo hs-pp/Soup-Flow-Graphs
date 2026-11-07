@@ -32,8 +32,8 @@ namespace Soup.Editor.Core
         }
 
         private const string MANAGED_REFERENCES_PREFIX = "managedReferences[";
-        private const string GRAPH_ROOT_PREFIX = AFlowGraph.RootCollectionFieldName + ".";
-        private const string GRAPH_BLACKBOARD_PREFIX = AFlowGraph.BlackboardFieldName + ".";
+        private const string GRAPH_ROOT_PREFIX = AFlowGraph.ROOT_COLLECTION_FIELD_NAME + ".";
+        private const string GRAPH_BLACKBOARD_PREFIX = AFlowGraph.BLACKBOARD_FIELD_NAME + ".";
         private const string BLACKBOARD_VALUE_PREFIX = ABlackboardElement.ValueFieldName + ".";
         private const string GRAPH_SUBGRAPH_PREFIX = SubGraphNode.SubGraphFieldName + ".";
         private const string METADATA_ROOT_PREFIX = FlowGraphMetaData.RootCollectionFieldName + ".";
@@ -101,7 +101,7 @@ namespace Soup.Editor.Core
             {
                 case SubGraphNode when localPath.StartsWith(GRAPH_SUBGRAPH_PREFIX, StringComparison.Ordinal):
                     return ExternalEditType.Structure; // The subgraph's own lists. Its nodes report under their own references.
-                case ANode when localPath == ANode.IdFieldName:
+                case ANode when localPath == ANode.ID_FIELD_NAME:
                     return ExternalEditType.Structure; // Views are keyed by id, so only a rebuild finds the node under its new one.
                 case ANode node:
                     nodeId = node.Id;
@@ -113,7 +113,7 @@ namespace Soup.Editor.Core
                 default:
                     // Graph properties and blackboard values are plain bindings that nothing on the canvas reads, even through a
                     // reference nested inside them.
-                    if (IsReferenceUnder(AFlowGraph.GraphPropertiesFieldName, referenceId) || IsReferenceUnder(AFlowGraph.BlackboardFieldName, referenceId))
+                    if (IsReferenceUnder(AFlowGraph.GRAPH_PROPERTIES_FIELD_NAME, referenceId) || IsReferenceUnder(AFlowGraph.BLACKBOARD_FIELD_NAME, referenceId))
                     {
                         return ExternalEditType.None;
                     }
@@ -136,7 +136,7 @@ namespace Soup.Editor.Core
 
                 // A fresh SerializedObject: this runs in the middle of a write the document's own may not have read back yet.
                 using SerializedObject serializedGraph = new(m_graphAsset);
-                CollectNestedReferenceOwners(new NodeCollectionRef(serializedGraph.FindProperty(AFlowGraph.RootCollectionFieldName)), m_nestedReferenceOwners);
+                CollectNestedReferenceOwners(new NodeCollectionRef(serializedGraph.FindProperty(AFlowGraph.ROOT_COLLECTION_FIELD_NAME)), m_nestedReferenceOwners);
             }
 
             return m_nestedReferenceOwners.TryGetValue(referenceId, out nodeId) && !string.IsNullOrEmpty(nodeId);

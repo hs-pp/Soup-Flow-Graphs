@@ -35,7 +35,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
                 Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): its setter works on {m_setter.ValueType.Name}, but '{element.Name}' holds a {element.ValueType.Name}. Continuing without setting anything.");
             }
 
-            context.TraverseEdge(DefaultOutport);
+            context.TraverseEdge(DEFAULT_OUTPORT);
         }
 
 #if UNITY_EDITOR

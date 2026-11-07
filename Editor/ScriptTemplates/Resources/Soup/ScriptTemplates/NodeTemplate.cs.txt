@@ -14,7 +14,7 @@ public class #SCRIPTNAME# : ANode
     // Runs on each graph tick while this node is current. TraverseEdge moves on at the next tick.
     public override void OnNodeUpdate(NodeExecutionContext context)
     {
-        context.TraverseEdge(DefaultOutport);
+        context.TraverseEdge(DEFAULT_OUTPORT);
     }
 
     // Runs when the graph leaves this node, or stops while on it.

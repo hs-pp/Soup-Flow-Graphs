@@ -6,20 +6,19 @@ namespace Soup.Runtime
 {
     public sealed class NodeExecutionContext
     {
-        private readonly NodeRuntimeState m_runtimeState;
-        private readonly Action<ANode, OutportEdge> m_requestTransition;
-        
+        private readonly Action<NodeExecutionContext, OutportEdge> m_requestTransition;
+
         public ANode Node { get; }
-        public NodeRuntimeState RuntimeState => m_runtimeState;
+        public NodeRuntimeState RuntimeState { get; }
         public AGraphProperties GraphProperties { get; }
         public Blackboard Blackboard { get; } // The run's own copy.
 
-        public NodeExecutionContext(ANode node, AGraphProperties graphProperties, Blackboard blackboard, NodeRuntimeState runtimeState, Action<ANode, OutportEdge> requestTransition)
+        public NodeExecutionContext(ANode node, AGraphProperties graphProperties, Blackboard blackboard, Action<NodeExecutionContext, OutportEdge> requestTransition)
         {
             Node = node;
+            RuntimeState = node.CreateRuntimeState() ?? new EmptyNodeRuntimeState();
             GraphProperties = graphProperties;
             Blackboard = blackboard;
-            m_runtimeState = runtimeState;
             m_requestTransition = requestTransition;
         }
 
@@ -43,12 +42,12 @@ namespace Soup.Runtime
                 return;
             }
 
-            m_requestTransition.Invoke(Node, edge);
+            m_requestTransition.Invoke(this, edge);
         }
 
         public void StopGraph()
         {
-            m_requestTransition.Invoke(Node, null);
+            m_requestTransition.Invoke(this, null);
         }
     }
 }
