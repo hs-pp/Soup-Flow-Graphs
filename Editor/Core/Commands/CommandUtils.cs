@@ -40,7 +40,7 @@ namespace Soup.Editor.Core.Commands
 
             if (!TrySetOutportTarget(nodeRef, outportId, targetNodeId))
             {
-                Debug.LogError($"[Soup] CommandUtils: Node '{nodeId}' has no outport with key '{outportId}'.");
+                Debug.LogError($"[Soup] CommandUtils: Node '{nodeId}' has no outport with id '{outportId}'.");
                 return false;
             }
 

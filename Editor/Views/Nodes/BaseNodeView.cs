@@ -207,7 +207,7 @@ namespace Soup.Editor.Views.Nodes
         
         private void BuildOutportDefinitions(NodeRef nodeRef)
         {
-            // Null when DefineOutports threw, and then every port is labelled with its key.
+            // Null when DefineOutports threw, and then every port is labelled with its outport id.
             List<OutportDefinition> definitions = NodeUtils.GetOutportDefinitions(nodeRef.GetNodeInstance());
             m_outportDefinitionsFailed = definitions == null;
 

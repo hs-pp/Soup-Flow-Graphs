@@ -5,7 +5,7 @@ namespace Soup.Runtime
 {
     /// <summary>
     /// The base flow graph class. This class holds the root NodeCollection, a GraphProperties instance, and a Blackboard.
-    /// To define a flow graph type, inherit from AFlowGraph/<TProperties/>. 
+    /// To define a flow graph type, inherit from AFlowGraph(TProperties). 
     /// </summary>
     public abstract class AFlowGraph : ScriptableObject
     {
@@ -13,7 +13,8 @@ namespace Soup.Runtime
         private NodeCollection m_rootCollection = new();
         public NodeCollection RootCollection => m_rootCollection;
 
-        public abstract AGraphProperties GraphProperties { get; } // Implemented by AFlowGraph<TProperties>.
+        /** Implemented by AFlowGraph(TProperties). */
+        public abstract AGraphProperties GraphProperties { get; }
 
         [SerializeField]
         private Blackboard m_blackboard = new();

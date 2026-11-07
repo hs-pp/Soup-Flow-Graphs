@@ -9,12 +9,9 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
     /// node with no variable, no setter or a setter of the wrong type logs and continues without changing anything.
     /// </summary>
     [Serializable]
-    [Outports(OutPort)]
     [NodeMenu("Blackboard/Set Variable")]
     public sealed class BlackboardSetterNode : ANode
     {
-        public const string OutPort = "Out";
-
         [SerializeField]
         private BlackboardKey m_element = new();
 
@@ -38,7 +35,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
                 Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): its setter works on {m_setter.ValueType.Name}, but '{element.Name}' holds a {element.ValueType.Name}. Continuing without setting anything.");
             }
 
-            context.TraverseEdge(OutPort);
+            context.TraverseEdge(DefaultOutport);
         }
 
 #if UNITY_EDITOR

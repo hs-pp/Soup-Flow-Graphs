@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace Soup.Runtime
 {
@@ -12,17 +11,6 @@ namespace Soup.Runtime
         {
             Id = id;
             Name = name;
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
-    public sealed class OutportsAttribute : Attribute
-    {
-        public IReadOnlyList<string> Names { get; }
-
-        public OutportsAttribute(params string[] names)
-        {
-            Names = names ?? Array.Empty<string>();
         }
     }
 

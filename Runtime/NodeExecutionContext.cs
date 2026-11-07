@@ -23,20 +23,14 @@ namespace Soup.Runtime
             m_requestTransition = requestTransition;
         }
 
-        public TState GetState<TState>() where TState : NodeRuntimeState
-        {
-            return RuntimeState as TState;
-        }
-
         public T GetGraphProperties<T>() where T : AGraphProperties
         {
-            if (GraphProperties is T properties)
-            {
-                return properties;
-            }
+            return GraphProperties as T;
+        }
 
-            Debug.LogError($"'{Node.GetType().Name}' ({Node.Id}) expected graph properties of type '{typeof(T).Name}', but the graph has '{GraphProperties?.GetType().Name ?? "none"}'.");
-            return null;
+        public T GetNodeRuntimeState<T>() where T : NodeRuntimeState
+        {
+            return RuntimeState as T;
         }
 
         public void TraverseEdge(string outportId)
@@ -44,7 +38,7 @@ namespace Soup.Runtime
             OutportEdge edge = Node.GetOutportEdge(outportId);
             if (edge == null)
             {
-                Debug.LogError($"'{Node.GetType().Name}' has no outport '{outportId}'. It must match a key from DefineOutports. Stopping the graph.");
+                Debug.LogError($"'{Node.GetType().Name}' has no outport '{outportId}'. It must match an outport id from DefineOutports. Stopping the graph.");
                 StopGraph();
                 return;
             }

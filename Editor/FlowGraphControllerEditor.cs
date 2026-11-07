@@ -115,7 +115,7 @@ namespace Soup.Editor
 
         private static AGraphProperties CopyGraphProperties(AFlowGraph graph)
         {
-            return graph != null ? JsonUtility.FromJson(JsonUtility.ToJson(graph.GraphProperties), graph.GraphProperties.GetType()) as AGraphProperties : null;
+            return graph != null ? graph.GraphProperties?.Clone() : null;
         }
 
         private void Refresh()

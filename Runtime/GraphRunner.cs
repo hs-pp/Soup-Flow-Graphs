@@ -214,7 +214,7 @@ namespace Soup.Runtime
             // Get node state from dictionary
             if (!m_nodeRuntimeStates.TryGetValue(node.Id, out NodeRuntimeState state))
             {
-                state = node.CreateRuntimeState() ?? new DefaultNodeRuntimeState();
+                state = node.CreateRuntimeState() ?? new EmptyNodeRuntimeState();
                 m_nodeRuntimeStates.Add(node.Id, state);
             }
             

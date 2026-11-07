@@ -7,7 +7,7 @@ namespace Soup.Runtime
     {
     }
 
-    public sealed class DefaultNodeRuntimeState : NodeRuntimeState
+    public sealed class EmptyNodeRuntimeState : NodeRuntimeState
     {
     }
 }

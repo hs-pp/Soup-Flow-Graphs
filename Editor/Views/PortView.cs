@@ -403,7 +403,7 @@ namespace Soup.Editor.Views
                 outputPort = anchoredPort;
             }
 
-            // An output port must carry an outport key for the model to address it.
+            // An output port must carry an outport id for the model to address it.
             if (outputPort.OutportId == null)
             {
                 e.CancelDrag();

@@ -71,18 +71,13 @@ namespace Soup.Runtime
                 Type graphPropertiesType = m_flowGraph.GraphProperties?.GetType();
                 if (m_overrideProperties != null && m_overrideProperties.GetType() == graphPropertiesType)
                 {
-                    return CloneProperties(m_overrideProperties);
+                    return m_overrideProperties.Clone();
                 }
 
                 Debug.LogError($"[Soup] FlowGraphController: '{name}' has overrides of type '{m_overrideProperties?.GetType().Name ?? "none"}', but '{m_flowGraph.name}' uses '{graphPropertiesType?.Name ?? "none"}'. Running with the graph's own values.", this);
             }
 
-            return CloneProperties(m_flowGraph.GraphProperties);
-        }
-
-        private AGraphProperties CloneProperties(AGraphProperties source)
-        {
-            return source == null ? null : JsonUtility.FromJson(JsonUtility.ToJson(source), source.GetType()) as AGraphProperties;
+            return m_flowGraph.GraphProperties?.Clone();
         }
 
         public void Update()

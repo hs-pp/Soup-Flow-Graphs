@@ -175,27 +175,27 @@ namespace Soup.Editor
                 return null;
             }
 
-            HashSet<string> seenKeys = new();
+            HashSet<string> seenIds = new();
             for (int i = definitions.Count - 1; i >= 0; i--)
             {
-                string key = definitions[i].Id;
-                if (string.IsNullOrEmpty(key))
+                string outportId = definitions[i].Id;
+                if (string.IsNullOrEmpty(outportId))
                 {
-                    Debug.LogError($"[Soup] {node.GetType().Name}: outport definition at {i} has a null/empty Id. Dropping it.");
+                    Debug.LogError($"[Soup] {node.GetType().Name}: outport definition at {i} has a null or empty id. Dropping it.");
                     definitions.RemoveAt(i);
                 }
-                else if (key.Contains('#'))
+                else if (outportId.Contains('#'))
                 {
-                    Debug.LogError($"[Soup] {node.GetType().Name}: outport Id '{key}' contains '#', which is reserved as the edge Id separator. Dropping it.");
+                    Debug.LogError($"[Soup] {node.GetType().Name}: outport id '{outportId}' contains '#', which is reserved as the edge id separator. Dropping it.");
                     definitions.RemoveAt(i);
                 }
             }
 
             for (int i = 0; i < definitions.Count; i++)
             {
-                if (!seenKeys.Add(definitions[i].Id))
+                if (!seenIds.Add(definitions[i].Id))
                 {
-                    Debug.LogError($"[Soup] {node.GetType().Name}: duplicate outport Id '{definitions[i].Id}'. Dropping the duplicate.");
+                    Debug.LogError($"[Soup] {node.GetType().Name}: duplicate outport id '{definitions[i].Id}'. Dropping the duplicate.");
                     definitions.RemoveAt(i);
                     i--;
                 }
