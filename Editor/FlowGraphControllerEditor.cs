@@ -29,9 +29,9 @@ namespace Soup.Editor
 
         public override VisualElement CreateInspectorGUI()
         {
-            m_flowGraphProperty = serializedObject.FindProperty(FlowGraphController.FlowGraphFieldName);
-            m_useOverridesProperty = serializedObject.FindProperty(FlowGraphController.UseOverridesFieldName);
-            m_overridePropertiesProperty = serializedObject.FindProperty(FlowGraphController.OverridePropertiesFieldName);
+            m_flowGraphProperty = serializedObject.FindProperty(FlowGraphController.FLOW_GRAPH_FIELD_NAME);
+            m_useOverridesProperty = serializedObject.FindProperty(FlowGraphController.USE_OVERRIDES_FIELD_NAME);
+            m_overridePropertiesProperty = serializedObject.FindProperty(FlowGraphController.OVERRIDE_PROPERTIES_FIELD_NAME);
             m_boundOverrideTypename = null;
 
             var root = new VisualElement();
@@ -58,7 +58,7 @@ namespace Soup.Editor
             var eventsContainer = new VisualElement { style = { marginTop = 8 } };
             eventsContainer.Add(new PropertyField(serializedObject.FindProperty(nameof(FlowGraphController.OnGraphStart))));
             eventsContainer.Add(new PropertyField(serializedObject.FindProperty(nameof(FlowGraphController.OnGraphStop))));
-            eventsContainer.Add(new PropertyField(serializedObject.FindProperty(nameof(FlowGraphController.OnNodeChange))));
+            eventsContainer.Add(new PropertyField(serializedObject.FindProperty(nameof(FlowGraphController.OnActiveNodeChange))));
             root.Add(eventsContainer);
 
             // Undo, redo and other inspectors reach the unbound graph field and the override's visibility through here.

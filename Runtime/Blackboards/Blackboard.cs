@@ -7,7 +7,7 @@ namespace Soup.Runtime.Blackboards
     /// <summary>
     /// A graph asset's own variables, added and edited in the graph editor. Every run gets its own copy, so the asset's values are
     /// only defaults. Nodes reach the run's copy through NodeExecutionContext.Blackboard and address variables with BlackboardKey
-    /// fields; code outside the graph goes through FlowGraphController.Blackboard and addresses them by name. Data every graph of a
+    /// fields; code outside the graph goes through FlowGraphController.GraphRunner.Blackboard and addresses them by name. Data every graph of a
     /// type needs belongs in its GraphProperties instead: nothing guarantees a variable exists in a particular asset.
     /// </summary>
     [Serializable]

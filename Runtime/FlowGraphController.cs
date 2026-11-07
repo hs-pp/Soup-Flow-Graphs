@@ -5,61 +5,77 @@ using UnityEngine.Events;
 
 namespace Soup.Runtime
 {
+    /// <summary>
+    /// Simple component to run a Soup flow graph.
+    /// </summary>
     public class FlowGraphController : MonoBehaviour
     {
         [SerializeField]
         private AFlowGraph m_flowGraph;
-        
+
         [SerializeField]
         private bool m_useOverrides = false;
         [SerializeReference]
         private AGraphProperties m_overrideProperties = null;
+
+        [SerializeField]
+        private bool m_runOnStart = false;
+
         public GraphRunner GraphRunner { get; private set; }
 
-        /// <summary>
-        /// The current run's blackboard, or null before the first StartGraph.
-        /// </summary>
-        public Blackboard Blackboard => GraphRunner?.Blackboard;
+        public UnityEvent OnGraphStart = new();
+        public UnityEvent OnGraphStop = new();
+        public UnityEvent<ANode> OnActiveNodeChange = new();
 
-        public UnityEvent OnGraphStart = null;
-        public UnityEvent OnGraphStop = null;
-        public UnityEvent<ANode> OnNodeChange = null;
+        private void Start()
+        {
+            if (m_runOnStart)
+            {
+                StartGraph();
+            }
+        }
 
-        public void SetGraph(AFlowGraph flowGraph)
+        private void Update()
+        {
+            GraphRunner?.UpdateGraph();
+        }
+
+        private void OnDestroy()
+        {
+            StopGraph();
+        }
+
+        public void SetGraph(AFlowGraph flowGraph, AGraphProperties overrideProperties = null)
         {
             m_flowGraph = flowGraph;
+            m_useOverrides = overrideProperties != null;
+            m_overrideProperties = overrideProperties;
         }
 
-        /// <summary>
-        /// The current run's graph properties, or null before the first StartGraph or when they aren't a T.
-        /// </summary>
-        public T GetGraphProperties<T>() where T : AGraphProperties
-        {
-            return GraphRunner?.GraphProperties as T;
-        }
-
-        /// <summary>
-        /// Starts a fresh run with its own copies of the graph properties and the blackboard. To run with values from code, write
-        /// them right after this returns: <c>StartGraph(); GetGraphProperties&lt;T&gt;().Speed = 2f; Blackboard.SetValue("Lives", 3);</c>
-        /// Only the entry node has run by then, and it only queues its transition.
-        /// </summary>
         public void StartGraph()
         {
-            if(m_flowGraph == null)
+            if (m_flowGraph == null)
             {
                 Debug.LogError("No flow graph set!", this);
                 return;
             }
 
-            // Tear down any previous run before replacing it.
-            StopGraph();
+            if (GraphRunner != null && GraphRunner.IsRunning)
+            {
+                Debug.LogError("Flow graph is already running!", this);
+                return;
+            }
 
             AGraphProperties properties = ResolveGraphProperties();
-            Blackboard blackboard = m_flowGraph.Blackboard?.Clone() ?? new Blackboard();
+            Blackboard blackboard = m_flowGraph.Blackboard?.Clone();
+            if (blackboard == null)
+            {
+                blackboard = new Blackboard();
+            }
             GraphRunner = new GraphRunner(m_flowGraph.RootCollection, properties, blackboard);
             GraphRunner.OnGraphStart += () => { OnGraphStart?.Invoke(); };
             GraphRunner.OnGraphStop += () => { OnGraphStop?.Invoke(); };
-            GraphRunner.OnActiveNodeChanged += Node => { OnNodeChange?.Invoke(Node); };
+            GraphRunner.OnActiveNodeChanged += node => { OnActiveNodeChange?.Invoke(node); };
 
             GraphRunner.StartGraph();
         }
@@ -74,15 +90,11 @@ namespace Soup.Runtime
                     return m_overrideProperties.Clone();
                 }
 
-                Debug.LogError($"[Soup] FlowGraphController: '{name}' has overrides of type '{m_overrideProperties?.GetType().Name ?? "none"}', but '{m_flowGraph.name}' uses '{graphPropertiesType?.Name ?? "none"}'. Running with the graph's own values.", this);
+                Debug.LogError($"'{name}' has overrides of type '{m_overrideProperties?.GetType().Name ?? "none"}', but '{m_flowGraph.name}' uses '{graphPropertiesType?.Name ?? "none"}'. Running with the graph's own values.", this);
             }
 
+            // Otherwise just clone the defaults from the FlowGraph Asset.
             return m_flowGraph.GraphProperties?.Clone();
-        }
-
-        public void Update()
-        {
-            GraphRunner?.UpdateGraph();
         }
 
         public void StopGraph()
@@ -90,15 +102,12 @@ namespace Soup.Runtime
             GraphRunner?.StopGraph();
         }
 
-        private void OnDestroy()
-        {
-            StopGraph();
-        }
-
+        /** For editor use. */
 #if UNITY_EDITOR
-        internal const string FlowGraphFieldName = nameof(m_flowGraph);
-        internal const string UseOverridesFieldName = nameof(m_useOverrides);
-        internal const string OverridePropertiesFieldName = nameof(m_overrideProperties);
+        internal const string FLOW_GRAPH_FIELD_NAME = nameof(m_flowGraph);
+        internal const string RUN_ON_START_FIELD_NAME = nameof(m_runOnStart);
+        internal const string USE_OVERRIDES_FIELD_NAME = nameof(m_useOverrides);
+        internal const string OVERRIDE_PROPERTIES_FIELD_NAME = nameof(m_overrideProperties);
 #endif
     }
 }
