@@ -55,7 +55,7 @@ namespace Soup.Editor.Core.Commands
                 return false;
             }
 
-            SerializedProperty target = outportRef.OutportSP.FindPropertyRelative(nameof(OutportEdge.ConnectedNodeId));
+            SerializedProperty target = outportRef.ConnectedNodeIdSP;
             if (target == null)
             {
                 return false;

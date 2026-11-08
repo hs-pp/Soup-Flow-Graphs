@@ -123,8 +123,8 @@ namespace Soup.Editor.Core
             for (int i = 0; i < definitions.Count; i++)
             {
                 SerializedProperty element = outports.GetArrayElementAtIndex(i);
-                element.FindPropertyRelative(nameof(OutportEdge.Id)).stringValue = definitions[i].Id;
-                element.FindPropertyRelative(nameof(OutportEdge.ConnectedNodeId)).stringValue = connectionsByKey.TryGetValue(definitions[i].Id, out string target) ? target ?? string.Empty : string.Empty;
+                element.FindPropertyRelative(OutportEdge.OUTPORT_ID_FIELD_NAME).stringValue = definitions[i].Id;
+                element.FindPropertyRelative(OutportEdge.CONNECTED_NODE_ID_FIELD_NAME).stringValue = connectionsByKey.TryGetValue(definitions[i].Id, out string target) ? target ?? string.Empty : string.Empty;
             }
 
             return true;

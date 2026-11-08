@@ -11,12 +11,12 @@ namespace Soup.Editor.Core.DataRefs
 
         public OutportRef(SerializedProperty outportSP, int index)
         {
-            Id = outportSP.FindPropertyRelative(nameof(OutportEdge.Id))?.stringValue;
+            Id = outportSP.FindPropertyRelative(OutportEdge.OUTPORT_ID_FIELD_NAME)?.stringValue;
             OutportSP = outportSP;
             Index = index;
         }
 
-        public SerializedProperty ConnectedNodeIdSP => OutportSP?.FindPropertyRelative(nameof(OutportEdge.ConnectedNodeId));
+        public SerializedProperty ConnectedNodeIdSP => OutportSP?.FindPropertyRelative(OutportEdge.CONNECTED_NODE_ID_FIELD_NAME);
         public string ConnectedNodeId => ConnectedNodeIdSP?.stringValue;
     }
 }

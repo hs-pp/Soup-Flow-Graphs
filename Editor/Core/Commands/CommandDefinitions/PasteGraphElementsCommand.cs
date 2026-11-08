@@ -205,7 +205,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                     continue;
                 }
 
-                outport.ConnectedNodeId = !string.IsNullOrEmpty(outport.ConnectedNodeId) && collectionIdMap.TryGetValue(outport.ConnectedNodeId, out string mapped) ? mapped : string.Empty;
+                outport.SetConnectedNodeId(!string.IsNullOrEmpty(outport.ConnectedNodeId) && collectionIdMap.TryGetValue(outport.ConnectedNodeId, out string mapped) ? mapped : string.Empty);
             }
         }
 
