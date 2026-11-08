@@ -16,8 +16,8 @@ namespace Soup.Editor.Core.DataRefs
         {
             CollectionSP = collectionSP;
             Path = collectionSP?.propertyPath;
-            NodesSP = collectionSP?.FindPropertyRelative(NodeCollection.NodesFieldName);
-            EntryNode = new NodeRef(collectionSP?.FindPropertyRelative(NodeCollection.EntryNodeFieldName), NodeRef.ENTRY_NODE_INDEX);
+            NodesSP = collectionSP?.FindPropertyRelative(NodeCollection.NODES_FIELD_NAME);
+            EntryNode = new NodeRef(collectionSP?.FindPropertyRelative(NodeCollection.ENTRY_NODE_FIELD_NAME), NodeRef.ENTRY_NODE_INDEX);
         }
 
         public bool IsValid => CollectionSP != null && NodesSP != null;

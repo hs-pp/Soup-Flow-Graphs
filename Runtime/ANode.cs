@@ -5,6 +5,21 @@ using UnityEngine;
 namespace Soup.Runtime
 {
     /// <summary>
+    /// Unique outport definition within the scope of a node type.
+    /// </summary>
+    public readonly struct OutportDefinition
+    {
+        public readonly string Id;
+        public readonly string Name;
+
+        public OutportDefinition(string id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+    }
+    
+    /// <summary>
     /// The base class for every node. Inherited classes should define any necessary serialized data as well as implement the virtual functions.
     /// </summary>
     [Serializable]
