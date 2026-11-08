@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Soup.Runtime.BuiltInNodes
 {
     /// <summary>
-    /// Very simple logger node. 
+    /// Very simple logger node. Logs its message to the Unity console when it enters, then leaves.
     /// </summary>
     [Serializable]
     [CustomNode(typeof(AFlowGraph), "Debug/Log Message")]
@@ -19,6 +19,9 @@ namespace Soup.Runtime.BuiltInNodes
             context.TraverseEdge(DEFAULT_OUTPORT);
         }
         
-        public const string MessageFieldName = nameof(m_message);
+        /** For editor use. */
+#if UNITY_EDITOR
+        internal const string MESSAGE_FIELD_NAME = nameof(m_message);
+#endif
     }
 }

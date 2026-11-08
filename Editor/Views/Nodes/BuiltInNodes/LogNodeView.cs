@@ -19,7 +19,7 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
         protected override void OnPropertyBound(NodeRef nodeRef, NodeMetaDataRef metaDataRef)
         {
             base.OnPropertyBound(nodeRef, metaDataRef);
-            m_logLabel.BindProperty(nodeRef.NodeSP.FindPropertyRelative(LogNode.MessageFieldName));
+            m_logLabel.BindProperty(nodeRef.NodeSP.FindPropertyRelative(LogNode.MESSAGE_FIELD_NAME));
         }
     }
 }

@@ -21,6 +21,11 @@ namespace Soup.Runtime
         private List<OutportEdge> m_outports = new();
         
         /// <summary>
+        /// Override this for any necessary runtime data that the node may need to use during OnNodeUpdate.
+        /// </summary>
+        public virtual NodeRuntimeState CreateRuntimeState() => new EmptyNodeRuntimeState();
+        
+        /// <summary>
         /// Called once when the Soup Flow Graph first enters this node. Usually reserved for any setup.
         /// </summary>
         public virtual void OnNodeEnter(NodeExecutionContext context) { }
@@ -36,11 +41,6 @@ namespace Soup.Runtime
         /// The node can indicate that it's finished in either OnNodeEnter or OnNodeUpdate by calling context.TraverseEdge(). 
         /// </summary>
         public virtual void OnNodeExit(NodeExecutionContext context) { }
-        
-        /// <summary>
-        /// Override this for any necessary runtime data that the node may need to use during OnNodeUpdate.
-        /// </summary>
-        public virtual NodeRuntimeState CreateRuntimeState() => new EmptyNodeRuntimeState();
 
         #region Outports
         /// <summary>

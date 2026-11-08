@@ -9,6 +9,7 @@ namespace Soup.Runtime.BuiltInNodes
     [Serializable]
     public sealed class EntryNode : ANode
     {
+        /** This is a very special ID that every entry node shares. */
         public const string ENTRY_NODE_ID = "_Entry_";
 
         public EntryNode()
