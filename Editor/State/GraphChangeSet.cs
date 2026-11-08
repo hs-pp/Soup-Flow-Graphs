@@ -12,7 +12,7 @@ namespace Soup.Editor.State
 
         public bool TopologyDirty { get; set; } // Edges were changed
         public bool GroupsDirty { get; set; } // Groups were edited
-        public bool BlackboardDirty { get; set; } // Blackboard elements were added, removed, renamed or reordered
+        public bool BlackboardDirty { get; set; } // Blackboard variables were added, removed, renamed or reordered
 
         public bool HasChanges => IsStructural
                                   || MovedNodes.Count > 0

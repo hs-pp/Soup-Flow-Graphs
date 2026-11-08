@@ -11,7 +11,7 @@ using UnityEngine.UIElements;
 namespace Soup.Editor.Views.Inspector.Blackboards
 {
     /// <summary>
-    /// The graph's blackboard, one row per element. Adding, renaming, reordering and deleting go through commands; default values
+    /// The graph's blackboard, one row per variable. Adding, renaming, reordering and deleting go through commands; default values
     /// are plain bindings, like graph properties.
     /// </summary>
     [UxmlElement]
@@ -25,7 +25,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         private Button m_addButton;
         private Label m_emptyLabel;
         private VisualElement m_rowsContainer;
-        private readonly List<BlackboardElementRow> m_rows = new();
+        private readonly List<BlackboardVariableRow> m_rows = new();
 
         private SerializedObject m_boundObject;
         private readonly List<string> m_boundRowKeys = new();
@@ -53,19 +53,19 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         {
             m_addButton.SetEnabled(blackboard.IsValid);
 
-            // An element whose class is missing stays in the asset but isn't shown, like a node whose type is missing.
-            List<BlackboardElementRef> elements = new();
+            // A variable whose class is missing stays in the asset but isn't shown, like a node whose type is missing.
+            List<BlackboardVariableRef> variables = new();
             List<string> rowKeys = new();
-            foreach (BlackboardElementRef element in blackboard.GetElements())
+            foreach (BlackboardVariableRef variable in blackboard.GetVariables())
             {
-                if (!element.IsMissingType)
+                if (!variable.IsMissingType)
                 {
-                    elements.Add(element);
-                    rowKeys.Add($"{element.ElementSP.propertyPath}|{element.Id}|{element.ElementSP.managedReferenceFullTypename}");
+                    variables.Add(variable);
+                    rowKeys.Add($"{variable.VariableSP.propertyPath}|{variable.Id}|{variable.VariableSP.managedReferenceFullTypename}");
                 }
             }
 
-            m_emptyLabel.style.display = blackboard.IsValid && elements.Count == 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            m_emptyLabel.style.display = blackboard.IsValid && variables.Count == 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
             // Rebinding steals focus mid-edit, and this runs after every change to the graph. Rows are only rebuilt when the list
             // itself changed. A rename relabels them in place.
@@ -74,7 +74,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             {
                 for (int i = 0; i < m_rows.Count; i++)
                 {
-                    m_rows[i].SetName(elements[i].Name);
+                    m_rows[i].SetName(variables[i].Name);
                 }
 
                 return;
@@ -83,9 +83,9 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             ClearRows();
             m_boundObject = serializedObject;
             m_boundRowKeys.AddRange(rowKeys);
-            for (int i = 0; i < elements.Count; i++)
+            for (int i = 0; i < variables.Count; i++)
             {
-                BlackboardElementRow row = new(elements[i], i > 0, i < elements.Count - 1, RequestCommand);
+                BlackboardVariableRow row = new(variables[i], i > 0, i < variables.Count - 1, RequestCommand);
                 m_rows.Add(row);
                 m_rowsContainer.Add(row);
             }
@@ -112,7 +112,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         private void ClearRows()
         {
             // A name field removed mid-rename loses focus on the way out, which must not commit.
-            foreach (BlackboardElementRow row in m_rows)
+            foreach (BlackboardVariableRow row in m_rows)
             {
                 row.CancelRename();
             }
@@ -127,10 +127,10 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         private void ShowAddMenu()
         {
             GenericMenu menu = new();
-            foreach (Type elementType in EditorTypesFactory.GetBlackboardElementTypes())
+            foreach (Type variableType in EditorTypesFactory.GetBlackboardVariableTypes())
             {
-                Type type = elementType;
-                menu.AddItem(new GUIContent(EditorTypesFactory.GetBlackboardElementDisplayName(type)), false, () => RequestCommand(new AddBlackboardElementCommand(type)));
+                Type type = variableType;
+                menu.AddItem(new GUIContent(EditorTypesFactory.GetBlackboardVariableDisplayName(type)), false, () => RequestCommand(new AddBlackboardVariableCommand(type)));
             }
 
             menu.DropDown(m_addButton.worldBound);

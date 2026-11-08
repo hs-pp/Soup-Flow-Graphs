@@ -12,13 +12,13 @@ namespace Soup.Runtime.Blackboards
     public class BlackboardKey
     {
         [SerializeField]
-        private string m_elementId = string.Empty;
+        private string m_variableId = string.Empty;
 
-        public string ElementId => m_elementId;
-        public bool IsSet => !string.IsNullOrEmpty(m_elementId);
+        public string VariableId => m_variableId;
+        public bool IsSet => !string.IsNullOrEmpty(m_variableId);
 
 #if UNITY_EDITOR
-        internal const string ElementIdFieldName = nameof(m_elementId);
+        internal const string VariableIdFieldName = nameof(m_variableId);
 #endif
     }
 

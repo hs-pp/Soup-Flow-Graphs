@@ -24,9 +24,9 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
             return m_operation == Operation.Toggle ? !currentValue : m_value;
         }
 
-        public override string GetLabel(string elementName)
+        public override string GetLabel(string variableName)
         {
-            return m_operation == Operation.Toggle ? $"Toggle {elementName}" : $"{elementName} = {(m_value ? "true" : "false")}";
+            return m_operation == Operation.Toggle ? $"Toggle {variableName}" : $"{variableName} = {(m_value ? "true" : "false")}";
         }
     }
 
@@ -59,7 +59,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
             }
         }
 
-        public override string GetLabel(string elementName)
+        public override string GetLabel(string variableName)
         {
             string symbol = m_operation switch
             {
@@ -67,7 +67,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
                 Operation.Decrement => "-=",
                 _ => "=",
             };
-            return $"{elementName} {symbol} {m_value.ToString(CultureInfo.InvariantCulture)}";
+            return $"{variableName} {symbol} {m_value.ToString(CultureInfo.InvariantCulture)}";
         }
     }
 
@@ -100,7 +100,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
             }
         }
 
-        public override string GetLabel(string elementName)
+        public override string GetLabel(string variableName)
         {
             string symbol = m_operation switch
             {
@@ -108,7 +108,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
                 Operation.Decrement => "-=",
                 _ => "=",
             };
-            return $"{elementName} {symbol} {m_value.ToString(CultureInfo.InvariantCulture)}";
+            return $"{variableName} {symbol} {m_value.ToString(CultureInfo.InvariantCulture)}";
         }
     }
 
@@ -123,9 +123,9 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
             return m_value;
         }
 
-        public override string GetLabel(string elementName)
+        public override string GetLabel(string variableName)
         {
-            return $"{elementName} = \"{m_value}\"";
+            return $"{variableName} = \"{m_value}\"";
         }
     }
 }

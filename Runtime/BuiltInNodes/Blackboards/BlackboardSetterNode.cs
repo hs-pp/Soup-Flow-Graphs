@@ -13,33 +13,33 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
     public sealed class BlackboardSetterNode : ANode
     {
         [SerializeField]
-        private BlackboardKey m_element = new();
+        private BlackboardKey m_variable = new();
 
         [SerializeReference]
         private ABlackboardSetter m_setter;
 
         public override void OnNodeEnter(NodeExecutionContext context)
         {
-            ABlackboardElement element = context.Blackboard?.GetElement(m_element);
-            if (element == null)
+            ABlackboardVariable variable = context.Blackboard?.GetVariable(m_variable);
+            if (variable == null)
             {
-                string reason = m_element.IsSet ? $"no variable has the id '{m_element.ElementId}'" : "no variable is picked";
+                string reason = m_variable.IsSet ? $"no variable has the id '{m_variable.VariableId}'" : "no variable is picked";
                 Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): {reason}. Continuing without setting anything.");
             }
             else if (m_setter == null)
             {
-                Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): there is no setter for '{element.Name}'. Continuing without setting anything.");
+                Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): there is no setter for '{variable.Name}'. Continuing without setting anything.");
             }
-            else if (!m_setter.TryEvaluate(element))
+            else if (!m_setter.TryEvaluate(variable))
             {
-                Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): its setter works on {m_setter.ValueType.Name}, but '{element.Name}' holds a {element.ValueType.Name}. Continuing without setting anything.");
+                Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): its setter works on {m_setter.ValueType.Name}, but '{variable.Name}' holds a {variable.ValueType.Name}. Continuing without setting anything.");
             }
 
             context.TraverseEdge(DEFAULT_OUTPORT);
         }
 
 #if UNITY_EDITOR
-        internal const string ElementFieldName = nameof(m_element);
+        internal const string VariableFieldName = nameof(m_variable);
         internal const string SetterFieldName = nameof(m_setter);
 #endif
     }

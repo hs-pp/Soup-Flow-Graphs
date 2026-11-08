@@ -9,12 +9,12 @@ namespace Soup.Editor.Core.DataRefs
     public readonly struct BlackboardRef
     {
         public readonly SerializedProperty BlackboardSP;
-        public readonly SerializedProperty ElementsSP;
+        public readonly SerializedProperty VariablesSP;
 
         public BlackboardRef(SerializedProperty blackboardSP)
         {
             BlackboardSP = blackboardSP;
-            ElementsSP = blackboardSP?.FindPropertyRelative(Blackboard.ElementsFieldName);
+            VariablesSP = blackboardSP?.FindPropertyRelative(Blackboard.VariablesFieldName);
         }
 
         /// <summary>
@@ -25,34 +25,34 @@ namespace Soup.Editor.Core.DataRefs
             return new BlackboardRef(serializedGraph?.FindProperty(AFlowGraph.BLACKBOARD_FIELD_NAME));
         }
 
-        public bool IsValid => BlackboardSP != null && ElementsSP != null;
+        public bool IsValid => BlackboardSP != null && VariablesSP != null;
 
-        public IEnumerable<BlackboardElementRef> GetElements()
+        public IEnumerable<BlackboardVariableRef> GetVariables()
         {
             if (!IsValid)
             {
                 yield break;
             }
 
-            for (int i = 0; i < ElementsSP.arraySize; i++)
+            for (int i = 0; i < VariablesSP.arraySize; i++)
             {
-                yield return new BlackboardElementRef(ElementsSP.GetArrayElementAtIndex(i), i);
+                yield return new BlackboardVariableRef(VariablesSP.GetArrayElementAtIndex(i), i);
             }
         }
 
-        public bool TryGetElement(string elementId, out BlackboardElementRef element)
+        public bool TryGetVariable(string variableId, out BlackboardVariableRef variable)
         {
-            element = default;
-            if (!IsValid || string.IsNullOrEmpty(elementId))
+            variable = default;
+            if (!IsValid || string.IsNullOrEmpty(variableId))
             {
                 return false;
             }
 
-            foreach (BlackboardElementRef candidate in GetElements())
+            foreach (BlackboardVariableRef candidate in GetVariables())
             {
-                if (candidate.Id == elementId)
+                if (candidate.Id == variableId)
                 {
-                    element = candidate;
+                    variable = candidate;
                     return true;
                 }
             }
@@ -61,44 +61,44 @@ namespace Soup.Editor.Core.DataRefs
         }
     }
 
-    public readonly struct BlackboardElementRef
+    public readonly struct BlackboardVariableRef
     {
         public readonly string Id;
-        public readonly SerializedProperty ElementSP;
+        public readonly SerializedProperty VariableSP;
         public readonly int Index;
 
-        public BlackboardElementRef(SerializedProperty elementSP, int index)
+        public BlackboardVariableRef(SerializedProperty variableSP, int index)
         {
-            Id = elementSP?.FindPropertyRelative(ABlackboardElement.IdFieldName)?.stringValue;
-            ElementSP = elementSP;
+            Id = variableSP?.FindPropertyRelative(ABlackboardVariable.ID_FIELD_NAME)?.stringValue;
+            VariableSP = variableSP;
             Index = index;
         }
 
-        public bool IsValid => ElementSP != null;
+        public bool IsValid => VariableSP != null;
         public bool IsMissingType => string.IsNullOrEmpty(Id); // Its class was renamed or deleted, so none of its fields resolve.
 
-        public SerializedProperty NameSP => ElementSP?.FindPropertyRelative(ABlackboardElement.NameFieldName);
-        public SerializedProperty ValueSP => ElementSP?.FindPropertyRelative(ABlackboardElement.ValueFieldName);
+        public SerializedProperty NameSP => VariableSP?.FindPropertyRelative(ABlackboardVariable.NAME_FIELD_NAME);
+        public SerializedProperty ValueSP => VariableSP?.FindPropertyRelative(ABlackboardVariable.VALUE_FIELD_NAME);
         public string Name => NameSP?.stringValue;
 
-        public Type GetElementType()
+        public Type GetVariableType()
         {
-            return GetElementInstance()?.GetType();
+            return GetVariableInstance()?.GetType();
         }
 
         public Type GetValueType()
         {
-            return GetElementInstance()?.ValueType;
+            return GetVariableInstance()?.ValueType;
         }
 
-        public ABlackboardElement GetElementInstance()
+        public ABlackboardVariable GetVariableInstance()
         {
-            if (!IsValid || ElementSP.propertyType != SerializedPropertyType.ManagedReference)
+            if (!IsValid || VariableSP.propertyType != SerializedPropertyType.ManagedReference)
             {
                 return null;
             }
 
-            return ElementSP.managedReferenceValue as ABlackboardElement;
+            return VariableSP.managedReferenceValue as ABlackboardVariable;
         }
     }
 
@@ -111,9 +111,9 @@ namespace Soup.Editor.Core.DataRefs
             KeySP = keySP;
         }
 
-        public bool IsValid => ElementIdSP != null;
+        public bool IsValid => VariableIdSP != null;
 
-        public SerializedProperty ElementIdSP => KeySP?.FindPropertyRelative(BlackboardKey.ElementIdFieldName);
-        public string ElementId => ElementIdSP?.stringValue;
+        public SerializedProperty VariableIdSP => KeySP?.FindPropertyRelative(BlackboardKey.VariableIdFieldName);
+        public string VariableId => VariableIdSP?.stringValue;
     }
 }

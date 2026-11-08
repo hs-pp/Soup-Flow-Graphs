@@ -7,41 +7,41 @@ using UnityEngine;
 namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     /// <summary>
-    /// Points a Setter or Conditional node at another blackboard element, or at none. What the node holds follows the element's
+    /// Points a Setter or Conditional node at another blackboard variable, or at none. What the node holds follows the variable's
     /// value type: kept when the type is unchanged, otherwise the Setter gets a new setter for the type and the Conditional loses its
     /// conditions, along with their outports and edges.
     /// </summary>
-    public sealed class SetBlackboardNodeElementCommand : IGraphCommand
+    public sealed class SetBlackboardNodeVariableCommand : IGraphCommand
     {
         public bool IsUndoable => true;
 
         private string m_nodeId;
-        private string m_elementId;
+        private string m_variableId;
 
-        public SetBlackboardNodeElementCommand(string nodeId, string elementId)
+        public SetBlackboardNodeVariableCommand(string nodeId, string variableId)
         {
             m_nodeId = nodeId;
-            m_elementId = elementId ?? string.Empty;
+            m_variableId = variableId ?? string.Empty;
         }
 
         public void ExecuteCommand(LoadedFlowGraph.CommandScope scope)
         {
             if (!scope.Collection.TryGetNode(m_nodeId, out NodeRef nodeRef))
             {
-                Debug.LogError($"[Soup] {nameof(SetBlackboardNodeElementCommand)}: node '{m_nodeId}' not found in the current collection.");
+                Debug.LogError($"[Soup] {nameof(SetBlackboardNodeVariableCommand)}: node '{m_nodeId}' not found in the current collection.");
                 return;
             }
 
             Type valueType = null;
-            if (m_elementId.Length > 0)
+            if (m_variableId.Length > 0)
             {
-                if (!scope.TryGetBlackboard(out BlackboardRef blackboard) || !blackboard.TryGetElement(m_elementId, out BlackboardElementRef element))
+                if (!scope.TryGetBlackboard(out BlackboardRef blackboard) || !blackboard.TryGetVariable(m_variableId, out BlackboardVariableRef variable))
                 {
-                    Debug.LogError($"[Soup] {nameof(SetBlackboardNodeElementCommand)}: no blackboard element has the id '{m_elementId}'.");
+                    Debug.LogError($"[Soup] {nameof(SetBlackboardNodeVariableCommand)}: no blackboard variable has the id '{m_variableId}'.");
                     return;
                 }
 
-                valueType = element.GetValueType();
+                valueType = variable.GetValueType();
             }
 
             // Decided before anything is written: the strategies read here are the live ones, which only change on the final apply.
@@ -51,7 +51,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 SerializedProperty setterSP = nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.SetterFieldName);
                 bool keepSetter = (setterSP.managedReferenceValue as ABlackboardSetter)?.ValueType == valueType;
 
-                new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.ElementFieldName)).ElementIdSP.stringValue = m_elementId;
+                new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.VariableFieldName)).VariableIdSP.stringValue = m_variableId;
                 if (!keepSetter)
                 {
                     setterSP.managedReferenceValue = EditorTypesFactory.CreateBlackboardSetter(valueType);
@@ -62,7 +62,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 SerializedProperty entriesSP = nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.EntriesFieldName);
                 bool keepEntries = AllConditionsWorkOn(entriesSP, valueType);
 
-                new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.ElementFieldName)).ElementIdSP.stringValue = m_elementId;
+                new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.VariableFieldName)).VariableIdSP.stringValue = m_variableId;
                 if (!keepEntries)
                 {
                     entriesSP.ClearArray();
@@ -70,7 +70,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             }
             else
             {
-                Debug.LogError($"[Soup] {nameof(SetBlackboardNodeElementCommand)}: '{nodeType?.Name}' is not a blackboard Setter or Conditional node.");
+                Debug.LogError($"[Soup] {nameof(SetBlackboardNodeVariableCommand)}: '{nodeType?.Name}' is not a blackboard Setter or Conditional node.");
                 return;
             }
 

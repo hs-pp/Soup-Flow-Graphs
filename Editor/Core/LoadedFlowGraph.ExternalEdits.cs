@@ -34,7 +34,7 @@ namespace Soup.Editor.Core
         private const string MANAGED_REFERENCES_PREFIX = "managedReferences[";
         private const string GRAPH_ROOT_PREFIX = AFlowGraph.ROOT_COLLECTION_FIELD_NAME + ".";
         private const string GRAPH_BLACKBOARD_PREFIX = AFlowGraph.BLACKBOARD_FIELD_NAME + ".";
-        private const string BLACKBOARD_VALUE_PREFIX = ABlackboardElement.ValueFieldName + ".";
+        private const string BLACKBOARD_VALUE_PREFIX = ABlackboardVariable.VALUE_FIELD_NAME + ".";
         private const string GRAPH_SUBGRAPH_PREFIX = SubGraphNode.SUBGRAPH_FIELD_NAME + ".";
         private const string METADATA_ROOT_PREFIX = FlowGraphMetaData.RootCollectionFieldName + ".";
         private const string METADATA_SUBGRAPH_PREFIX = SubGraphNodeMetaData.SubGraphFieldName + ".";
@@ -88,7 +88,7 @@ namespace Soup.Editor.Core
                     return ExternalEditType.Structure;
                 }
 
-                // Or the blackboard's element list: an element added, removed, reordered or swapped.
+                // Or the blackboard's variable list: a variable added, removed, reordered or swapped.
                 return path.StartsWith(GRAPH_BLACKBOARD_PREFIX, StringComparison.Ordinal) ? ExternalEditType.Blackboard : ExternalEditType.None;
             }
 
@@ -106,9 +106,9 @@ namespace Soup.Editor.Core
                 case ANode node:
                     nodeId = node.Id;
                     return ExternalEditType.Node;
-                case ABlackboardElement when localPath == ABlackboardElement.ValueFieldName || localPath.StartsWith(BLACKBOARD_VALUE_PREFIX, StringComparison.Ordinal):
+                case ABlackboardVariable when localPath == ABlackboardVariable.VALUE_FIELD_NAME || localPath.StartsWith(BLACKBOARD_VALUE_PREFIX, StringComparison.Ordinal):
                     return ExternalEditType.None; // Default values are plain bindings that nothing on the canvas reads.
-                case ABlackboardElement:
+                case ABlackboardVariable:
                     return ExternalEditType.Blackboard; // Its name or id, which node views show and look up.
                 default:
                     // Graph properties and blackboard values are plain bindings that nothing on the canvas reads, even through a

@@ -10,9 +10,9 @@ using UnityEngine.UIElements;
 namespace Soup.Editor.Views.Inspector.Blackboards
 {
     /// <summary>
-    /// One blackboard element: its name (double-click to rename), its type, and its default value.
+    /// One blackboard variable: its name (double-click to rename), its type, and its default value.
     /// </summary>
-    public class BlackboardElementRow : VisualElement
+    public class BlackboardVariableRow : VisualElement
     {
         private const string ROW_CLASS = "blackboardRow";
         private const string HEADER_CLASS = "blackboardRowHeader";
@@ -20,15 +20,15 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         private const string NAME_FIELD_CLASS = "blackboardRowNameField";
         private const string TYPE_CLASS = "blackboardRowType";
 
-        private readonly string m_elementId;
+        private readonly string m_variableId;
         private readonly Action<ICommand> m_requestCommand;
         private readonly Label m_nameLabel;
         private readonly TextField m_nameField;
         private bool m_isRenaming;
 
-        public BlackboardElementRow(BlackboardElementRef element, bool canMoveUp, bool canMoveDown, Action<ICommand> requestCommand)
+        public BlackboardVariableRow(BlackboardVariableRef variable, bool canMoveUp, bool canMoveDown, Action<ICommand> requestCommand)
         {
-            m_elementId = element.Id;
+            m_variableId = variable.Id;
             m_requestCommand = requestCommand;
             AddToClassList(ROW_CLASS);
 
@@ -36,7 +36,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             header.AddToClassList(HEADER_CLASS);
             Add(header);
 
-            m_nameLabel = new Label(element.Name) { tooltip = "Double-click to rename" };
+            m_nameLabel = new Label(variable.Name) { tooltip = "Double-click to rename" };
             m_nameLabel.AddToClassList(NAME_CLASS);
             m_nameLabel.RegisterCallback<MouseDownEvent>(HandleNameMouseDown);
             header.Add(m_nameLabel);
@@ -48,7 +48,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             m_nameField.RegisterCallback<FocusOutEvent>(HandleNameFocusOut);
             header.Add(m_nameField);
 
-            Label typeLabel = new(EditorTypesFactory.GetBlackboardElementDisplayName(element.GetElementType()));
+            Label typeLabel = new(EditorTypesFactory.GetBlackboardVariableDisplayName(variable.GetVariableType()));
             typeLabel.AddToClassList(TYPE_CLASS);
             header.Add(typeLabel);
 
@@ -57,15 +57,15 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             {
                 evt.menu.AppendAction("Rename", _ => BeginRename());
                 evt.menu.AppendSeparator();
-                evt.menu.AppendAction("Move Up", _ => m_requestCommand(new MoveBlackboardElementCommand(m_elementId, -1)),
+                evt.menu.AppendAction("Move Up", _ => m_requestCommand(new MoveBlackboardVariableCommand(m_variableId, -1)),
                     canMoveUp ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-                evt.menu.AppendAction("Move Down", _ => m_requestCommand(new MoveBlackboardElementCommand(m_elementId, 1)),
+                evt.menu.AppendAction("Move Down", _ => m_requestCommand(new MoveBlackboardVariableCommand(m_variableId, 1)),
                     canMoveDown ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
                 evt.menu.AppendSeparator();
-                evt.menu.AppendAction("Delete", _ => m_requestCommand(new DeleteBlackboardElementCommand(m_elementId)));
+                evt.menu.AppendAction("Delete", _ => m_requestCommand(new DeleteBlackboardVariableCommand(m_variableId)));
             }));
 
-            SerializedProperty valueSP = element.ValueSP;
+            SerializedProperty valueSP = variable.ValueSP;
             if (valueSP != null)
             {
                 PropertyField valueField = new(valueSP, "Default");
@@ -156,7 +156,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             string name = m_nameField.value?.Trim();
             if (commit && !string.IsNullOrEmpty(name) && name != m_nameLabel.text)
             {
-                m_requestCommand(new RenameBlackboardElementCommand(m_elementId, name));
+                m_requestCommand(new RenameBlackboardVariableCommand(m_variableId, name));
             }
         }
     }

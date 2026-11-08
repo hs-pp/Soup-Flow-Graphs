@@ -444,9 +444,9 @@ namespace Soup.Editor
 
         #region Blackboard Types
 
-        private static Dictionary<Type, Type> s_blackboardElementTypesByValueType;
-        private static Dictionary<Type, Type> BlackboardElementTypesByValueType =>
-            s_blackboardElementTypesByValueType ??= FindBlackboardTypes(typeof(ABlackboardElement), typeof(ABlackboardElement<>));
+        private static Dictionary<Type, Type> s_blackboardVariableTypesByValueType;
+        private static Dictionary<Type, Type> BlackboardVariableTypesByValueType =>
+            s_blackboardVariableTypesByValueType ??= FindBlackboardTypes(typeof(ABlackboardVariable), typeof(ABlackboardVariable<>));
 
         private static Dictionary<Type, Type> s_blackboardSetterTypesByValueType;
         private static Dictionary<Type, Type> BlackboardSetterTypesByValueType =>
@@ -506,29 +506,29 @@ namespace Soup.Editor
         }
 
         /// <summary>
-        /// The element type registered for each value type, sorted by display name.
+        /// The variable class registered for each value type, sorted by display name.
         /// </summary>
-        public static List<Type> GetBlackboardElementTypes()
+        public static List<Type> GetBlackboardVariableTypes()
         {
-            List<Type> types = new(BlackboardElementTypesByValueType.Values);
-            types.Sort((a, b) => string.CompareOrdinal(GetBlackboardElementDisplayName(a), GetBlackboardElementDisplayName(b)));
+            List<Type> types = new(BlackboardVariableTypesByValueType.Values);
+            types.Sort((a, b) => string.CompareOrdinal(GetBlackboardVariableDisplayName(a), GetBlackboardVariableDisplayName(b)));
             return types;
         }
 
-        public static bool IsBlackboardElementType(Type type)
+        public static bool IsBlackboardVariableType(Type type)
         {
-            Type valueType = type != null ? GetBlackboardValueType(type, typeof(ABlackboardElement<>)) : null;
-            return valueType != null && BlackboardElementTypesByValueType.TryGetValue(valueType, out Type registered) && registered == type;
+            Type valueType = type != null ? GetBlackboardValueType(type, typeof(ABlackboardVariable<>)) : null;
+            return valueType != null && BlackboardVariableTypesByValueType.TryGetValue(valueType, out Type registered) && registered == type;
         }
 
-        public static string GetBlackboardElementDisplayName(Type elementType)
+        public static string GetBlackboardVariableDisplayName(Type variableType)
         {
-            if (elementType == null)
+            if (variableType == null)
             {
                 return string.Empty;
             }
 
-            return elementType.Name;
+            return variableType.Name;
         }
 
         public static string GetBlackboardValueTypeDisplayName(Type valueType)
@@ -538,7 +538,7 @@ namespace Soup.Editor
                 return string.Empty;
             }
 
-            return BlackboardElementTypesByValueType.TryGetValue(valueType, out Type elementType) ? GetBlackboardElementDisplayName(elementType) : valueType.Name;
+            return BlackboardVariableTypesByValueType.TryGetValue(valueType, out Type variableType) ? GetBlackboardVariableDisplayName(variableType) : valueType.Name;
         }
 
         public static bool HasBlackboardSetter(Type valueType)

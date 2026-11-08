@@ -18,7 +18,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         protected override bool UseDefaultHeader => true;
 
         private VisualElement m_tracker;
-        private BlackboardElementPicker m_picker;
+        private BlackboardVariablePicker m_picker;
         private HelpBox m_helpBox;
         private VisualElement m_setterFieldsContainer;
         private string m_boundSetterPath;
@@ -32,8 +32,8 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             m_tracker = new VisualElement();
             layout.Add(m_tracker);
 
-            m_picker = new BlackboardElementPicker("Variable", EditorTypesFactory.HasBlackboardSetter, showTypes: true);
-            m_picker.OnPicked += HandleElementPicked;
+            m_picker = new BlackboardVariablePicker("Variable", EditorTypesFactory.HasBlackboardSetter, showTypes: true);
+            m_picker.OnPicked += HandleVariablePicked;
             layout.Add(m_picker);
 
             m_helpBox = new HelpBox(string.Empty, HelpBoxMessageType.Warning);
@@ -67,11 +67,11 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
 
             BlackboardRef blackboard = BlackboardRef.Find(m_nodeRef.NodeSP.serializedObject);
-            string elementId = BlackboardInspectorUtils.GetElementId(m_nodeRef, BlackboardSetterNode.ElementFieldName);
-            m_picker.Refresh(blackboard, elementId);
+            string variableId = BlackboardInspectorUtils.GetVariableId(m_nodeRef, BlackboardSetterNode.VariableFieldName);
+            m_picker.Refresh(blackboard, variableId);
 
             SerializedProperty setterSP = m_nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.SetterFieldName);
-            string problem = BlackboardInspectorUtils.GetElementProblem(blackboard, elementId, out BlackboardElementRef element, out Type valueType);
+            string problem = BlackboardInspectorUtils.GetVariableProblem(blackboard, variableId, out BlackboardVariableRef variable, out Type valueType);
             if (problem == null)
             {
                 ABlackboardSetter setter = setterSP?.managedReferenceValue as ABlackboardSetter;
@@ -81,12 +81,12 @@ namespace Soup.Editor.Views.Inspector.Blackboards
                 }
                 else if (setter.ValueType != valueType)
                 {
-                    problem = $"The setter works on {EditorTypesFactory.GetBlackboardValueTypeDisplayName(setter.ValueType)}, but '{element.Name}' holds {EditorTypesFactory.GetBlackboardValueTypeDisplayName(valueType)}. Pick the variable again.";
+                    problem = $"The setter works on {EditorTypesFactory.GetBlackboardValueTypeDisplayName(setter.ValueType)}, but '{variable.Name}' holds {EditorTypesFactory.GetBlackboardValueTypeDisplayName(valueType)}. Pick the variable again.";
                 }
             }
 
             m_helpBox.text = problem ?? string.Empty;
-            m_helpBox.messageType = string.IsNullOrEmpty(elementId) ? HelpBoxMessageType.Info : HelpBoxMessageType.Warning;
+            m_helpBox.messageType = string.IsNullOrEmpty(variableId) ? HelpBoxMessageType.Info : HelpBoxMessageType.Warning;
             m_helpBox.style.display = problem != null ? DisplayStyle.Flex : DisplayStyle.None;
 
             BindSetterFields(setterSP);
@@ -113,11 +113,11 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
         }
 
-        private void HandleElementPicked(string elementId)
+        private void HandleVariablePicked(string variableId)
         {
             if (m_nodeRef.IsValid)
             {
-                RequestCommand(new SetBlackboardNodeElementCommand(m_nodeRef.Id, elementId));
+                RequestCommand(new SetBlackboardNodeVariableCommand(m_nodeRef.Id, variableId));
             }
         }
 

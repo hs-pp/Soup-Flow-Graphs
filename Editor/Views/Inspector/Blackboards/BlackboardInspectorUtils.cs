@@ -5,29 +5,29 @@ namespace Soup.Editor.Views.Inspector.Blackboards
 {
     internal static class BlackboardInspectorUtils
     {
-        public static string GetElementId(NodeRef nodeRef, string keyFieldName)
+        public static string GetVariableId(NodeRef nodeRef, string keyFieldName)
         {
-            return new BlackboardKeyRef(nodeRef.NodeSP?.FindPropertyRelative(keyFieldName)).ElementId;
+            return new BlackboardKeyRef(nodeRef.NodeSP?.FindPropertyRelative(keyFieldName)).VariableId;
         }
 
         /// <summary>
-        /// Why a node's element can't be used, or null when it can. Missing strategy types are reported by the caller.
+        /// Why a node's variable can't be used, or null when it can. Missing strategy types are reported by the caller.
         /// </summary>
-        public static string GetElementProblem(BlackboardRef blackboard, string elementId, out BlackboardElementRef element, out Type valueType)
+        public static string GetVariableProblem(BlackboardRef blackboard, string variableId, out BlackboardVariableRef variable, out Type valueType)
         {
-            element = default;
+            variable = default;
             valueType = null;
-            if (string.IsNullOrEmpty(elementId))
+            if (string.IsNullOrEmpty(variableId))
             {
                 return "Pick a variable.";
             }
 
-            if (!blackboard.TryGetElement(elementId, out element))
+            if (!blackboard.TryGetVariable(variableId, out variable))
             {
                 return "The variable was deleted, or the node came from another graph. Pick another one.";
             }
 
-            valueType = element.GetValueType();
+            valueType = variable.GetValueType();
             return null;
         }
     }

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     /// <summary>
-    /// Appends a condition for the node's element type to a Conditional node, which gives it a new outport before Else.
+    /// Appends a condition for the value type of the node's variable to a Conditional node, which gives it a new outport before Else.
     /// </summary>
     public sealed class AddBlackboardConditionCommand : IGraphCommand
     {
@@ -28,14 +28,14 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 return;
             }
 
-            string elementId = new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.ElementFieldName)).ElementId;
-            if (!scope.TryGetBlackboard(out BlackboardRef blackboard) || !blackboard.TryGetElement(elementId, out BlackboardElementRef element))
+            string variableId = new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.VariableFieldName)).VariableId;
+            if (!scope.TryGetBlackboard(out BlackboardRef blackboard) || !blackboard.TryGetVariable(variableId, out BlackboardVariableRef variable))
             {
                 Debug.LogError($"[Soup] {nameof(AddBlackboardConditionCommand)}: the node has no variable to add a condition for.");
                 return;
             }
 
-            Type valueType = element.GetValueType();
+            Type valueType = variable.GetValueType();
             ABlackboardConditional conditional = EditorTypesFactory.CreateBlackboardConditional(valueType);
             if (conditional == null)
             {

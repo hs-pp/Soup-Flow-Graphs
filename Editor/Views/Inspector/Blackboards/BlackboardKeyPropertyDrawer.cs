@@ -10,7 +10,7 @@ using UnityEngine.UIElements;
 namespace Soup.Editor.Views.Inspector.Blackboards
 {
     /// <summary>
-    /// Picks a key's element from the graph that holds it. A BlackboardKey&lt;T&gt; lists only the elements holding a T. The pick is
+    /// Picks a key's variable from the graph that holds it. A BlackboardKey&lt;T&gt; lists only the variables holding a T. The pick is
     /// written like any binding, so it reaches the canvas as an external edit. Outside a graph there's nothing to pick from, and the
     /// raw id is shown read-only.
     /// </summary>
@@ -23,7 +23,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             SerializedObject serializedObject = property.serializedObject;
             if (!key.IsValid || !BlackboardRef.Find(serializedObject).IsValid)
             {
-                TextField idField = new(property.displayName) { value = key.ElementId, isReadOnly = true };
+                TextField idField = new(property.displayName) { value = key.VariableId, isReadOnly = true };
                 idField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
                 idField.SetEnabled(false);
                 return idField;
@@ -31,13 +31,13 @@ namespace Soup.Editor.Views.Inspector.Blackboards
 
             Type valueType = GetKeyValueType(fieldInfo?.FieldType);
             string path = property.propertyPath;
-            BlackboardElementPicker picker = new(property.displayName, type => valueType == null || type == valueType, showTypes: valueType == null);
-            picker.OnPicked += elementId =>
+            BlackboardVariablePicker picker = new(property.displayName, type => valueType == null || type == valueType, showTypes: valueType == null);
+            picker.OnPicked += variableId =>
             {
-                SerializedProperty idSP = new BlackboardKeyRef(serializedObject.FindProperty(path)).ElementIdSP;
+                SerializedProperty idSP = new BlackboardKeyRef(serializedObject.FindProperty(path)).VariableIdSP;
                 if (idSP != null)
                 {
-                    idSP.stringValue = elementId;
+                    idSP.stringValue = variableId;
                     serializedObject.ApplyModifiedProperties();
                 }
 
@@ -50,9 +50,9 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             return picker;
         }
 
-        private static void RefreshPicker(BlackboardElementPicker picker, SerializedObject serializedObject, string path)
+        private static void RefreshPicker(BlackboardVariablePicker picker, SerializedObject serializedObject, string path)
         {
-            picker.Refresh(BlackboardRef.Find(serializedObject), new BlackboardKeyRef(serializedObject.FindProperty(path)).ElementId);
+            picker.Refresh(BlackboardRef.Find(serializedObject), new BlackboardKeyRef(serializedObject.FindProperty(path)).VariableId);
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -65,7 +65,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             {
                 using (new EditorGUI.DisabledScope(true))
                 {
-                    EditorGUI.TextField(position, label, key.ElementId);
+                    EditorGUI.TextField(position, label, key.VariableId);
                 }
 
                 EditorGUI.EndProperty();
@@ -73,15 +73,15 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
 
             Type valueType = GetKeyValueType(fieldInfo?.FieldType);
-            string selectedId = key.ElementId ?? string.Empty;
+            string selectedId = key.VariableId ?? string.Empty;
             List<string> ids = new() { string.Empty };
             List<GUIContent> labels = new() { new GUIContent("None") };
-            foreach (BlackboardElementRef element in blackboard.GetElements())
+            foreach (BlackboardVariableRef variable in blackboard.GetVariables())
             {
-                if (!element.IsMissingType && (valueType == null || element.GetValueType() == valueType || element.Id == selectedId))
+                if (!variable.IsMissingType && (valueType == null || variable.GetValueType() == valueType || variable.Id == selectedId))
                 {
-                    ids.Add(element.Id);
-                    labels.Add(new GUIContent(element.Name));
+                    ids.Add(variable.Id);
+                    labels.Add(new GUIContent(variable.Name));
                 }
             }
 
@@ -96,13 +96,13 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             int picked = EditorGUI.Popup(position, label, index, labels.ToArray());
             if (picked != index)
             {
-                key.ElementIdSP.stringValue = ids[picked];
+                key.VariableIdSP.stringValue = ids[picked];
             }
 
             EditorGUI.EndProperty();
         }
 
-        // The T of a BlackboardKey<T> field, or of a list or array of them. Null for an untyped key, which matches any element.
+        // The T of a BlackboardKey<T> field, or of a list or array of them. Null for an untyped key, which matches any variable.
         private static Type GetKeyValueType(Type fieldType)
         {
             if (fieldType == null)

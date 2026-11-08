@@ -7,16 +7,16 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
     /// <summary>
     /// An empty name keeps the old one. Names don't have to be unique.
     /// </summary>
-    public sealed class RenameBlackboardElementCommand : IGraphCommand
+    public sealed class RenameBlackboardVariableCommand : IGraphCommand
     {
         public bool IsUndoable => true;
 
-        private string m_elementId;
+        private string m_variableId;
         private string m_name;
 
-        public RenameBlackboardElementCommand(string elementId, string name)
+        public RenameBlackboardVariableCommand(string variableId, string name)
         {
-            m_elementId = elementId;
+            m_variableId = variableId;
             m_name = name?.Trim();
         }
 
@@ -27,13 +27,13 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 return;
             }
 
-            if (!scope.TryGetBlackboard(out BlackboardRef blackboard) || !blackboard.TryGetElement(m_elementId, out BlackboardElementRef element))
+            if (!scope.TryGetBlackboard(out BlackboardRef blackboard) || !blackboard.TryGetVariable(m_variableId, out BlackboardVariableRef variable))
             {
-                Debug.LogError($"[Soup] {nameof(RenameBlackboardElementCommand)}: no blackboard element has the id '{m_elementId}'.");
+                Debug.LogError($"[Soup] {nameof(RenameBlackboardVariableCommand)}: no blackboard variable has the id '{m_variableId}'.");
                 return;
             }
 
-            SerializedProperty nameSP = element.NameSP;
+            SerializedProperty nameSP = variable.NameSP;
             if (nameSP == null || nameSP.stringValue == m_name) // No change: don't dirty the asset.
             {
                 return;

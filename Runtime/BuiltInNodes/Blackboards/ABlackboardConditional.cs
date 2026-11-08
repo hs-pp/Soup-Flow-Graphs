@@ -19,9 +19,9 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
         }
 
         /// <summary>
-        /// Tests the element's value. False, with isTrue false, when the element holds another type.
+        /// Tests the variable's value. False, with isTrue false, when the variable holds another type.
         /// </summary>
-        public abstract bool TryEvaluate(ABlackboardElement element, out bool isTrue);
+        public abstract bool TryEvaluate(ABlackboardVariable variable, out bool isTrue);
 
         /// <summary>
         /// The label of this condition's outport, e.g. "&gt; 10".
@@ -34,15 +34,15 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
     {
         public sealed override Type ValueType => typeof(T);
 
-        public sealed override bool TryEvaluate(ABlackboardElement element, out bool isTrue)
+        public sealed override bool TryEvaluate(ABlackboardVariable variable, out bool isTrue)
         {
-            if (element is not ABlackboardElement<T> typedElement)
+            if (variable is not ABlackboardVariable<T> typedVariable)
             {
                 isTrue = false;
                 return false;
             }
 
-            isTrue = Evaluate(typedElement.Value);
+            isTrue = Evaluate(typedVariable.Value);
             return true;
         }
 

@@ -21,14 +21,14 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
             base.OnNodeDataChanged(nodeRef);
 
             BlackboardRef blackboard = BlackboardRef.Find(nodeRef.NodeSP?.serializedObject);
-            string elementId = new BlackboardKeyRef(nodeRef.NodeSP?.FindPropertyRelative(BlackboardSetterNode.ElementFieldName)).ElementId;
-            if (string.IsNullOrEmpty(elementId))
+            string variableId = new BlackboardKeyRef(nodeRef.NodeSP?.FindPropertyRelative(BlackboardSetterNode.VariableFieldName)).VariableId;
+            if (string.IsNullOrEmpty(variableId))
             {
                 BlackboardNodeViewUtils.SetSummary(m_summaryLabel, "No variable", true);
                 return;
             }
 
-            if (!blackboard.TryGetElement(elementId, out BlackboardElementRef element))
+            if (!blackboard.TryGetVariable(variableId, out BlackboardVariableRef variable))
             {
                 BlackboardNodeViewUtils.SetSummary(m_summaryLabel, BlackboardNodeViewUtils.MISSING_VARIABLE_TEXT, true);
                 return;
@@ -36,8 +36,8 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
 
             // Behaviour, not data: the label is the setter's to make, from fields that match the last apply.
             ABlackboardSetter setter = nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.SetterFieldName)?.managedReferenceValue as ABlackboardSetter;
-            bool usable = setter != null && setter.ValueType == element.GetValueType();
-            BlackboardNodeViewUtils.SetSummary(m_summaryLabel, setter != null ? setter.GetLabel(element.Name) : element.Name, !usable);
+            bool usable = setter != null && setter.ValueType == variable.GetValueType();
+            BlackboardNodeViewUtils.SetSummary(m_summaryLabel, setter != null ? setter.GetLabel(variable.Name) : variable.Name, !usable);
         }
     }
 }

@@ -14,19 +14,19 @@ namespace Soup.Runtime.Blackboards
     public sealed class Blackboard : ISerializationCallbackReceiver
     {
         [SerializeReference]
-        private List<ABlackboardElement> m_elements = new();
+        private List<ABlackboardVariable> m_variables = new();
 
         [NonSerialized]
-        private Dictionary<string, ABlackboardElement> m_elementCacheById;
+        private Dictionary<string, ABlackboardVariable> m_variableCacheById;
 
-        public IReadOnlyList<ABlackboardElement> Elements => m_elements;
+        public IReadOnlyList<ABlackboardVariable> Variables => m_variables;
 
         void ISerializationCallbackReceiver.OnBeforeSerialize() { }
 
-        // Any deserialize (a run's copy, an editor Apply, undo) can add, remove or replace elements, so the lookup is rebuilt on next use.
+        // Any deserialize (a run's copy, an editor Apply, undo) can add, remove or replace variables, so the lookup is rebuilt on next use.
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            m_elementCacheById = null;
+            m_variableCacheById = null;
         }
 
         /// <summary>
@@ -38,57 +38,57 @@ namespace Soup.Runtime.Blackboards
             return JsonUtility.FromJson<Blackboard>(JsonUtility.ToJson(this));
         }
 
-        #region Elements
-        public ABlackboardElement GetElementById(string id)
+        #region Variables
+        public ABlackboardVariable GetVariableById(string id)
         {
             if (string.IsNullOrEmpty(id))
             {
                 return null;
             }
 
-            if (m_elementCacheById == null)
+            if (m_variableCacheById == null)
             {
-                BuildElementCache();
+                BuildVariableCache();
             }
 
-            m_elementCacheById.TryGetValue(id, out ABlackboardElement element);
-            return element;
+            m_variableCacheById.TryGetValue(id, out ABlackboardVariable variable);
+            return variable;
         }
 
         /// <summary>
-        /// Names aren't unique, so this returns the first element with the name.
+        /// Names aren't unique, so this returns the first variable with the name.
         /// </summary>
-        public ABlackboardElement GetElementByName(string name)
+        public ABlackboardVariable GetVariableByName(string name)
         {
-            foreach (ABlackboardElement element in m_elements)
+            foreach (ABlackboardVariable variable in m_variables)
             {
-                if (element != null && element.Name == name)
+                if (variable != null && variable.Name == name)
                 {
-                    return element;
+                    return variable;
                 }
             }
 
             return null;
         }
 
-        public ABlackboardElement GetElement(BlackboardKey key)
+        public ABlackboardVariable GetVariable(BlackboardKey key)
         {
-            return key != null ? GetElementById(key.ElementId) : null;
+            return key != null ? GetVariableById(key.VariableId) : null;
         }
 
-        private void BuildElementCache()
+        private void BuildVariableCache()
         {
-            m_elementCacheById = new Dictionary<string, ABlackboardElement>(m_elements.Count);
-            foreach (ABlackboardElement element in m_elements)
+            m_variableCacheById = new Dictionary<string, ABlackboardVariable>(m_variables.Count);
+            foreach (ABlackboardVariable variable in m_variables)
             {
-                if (element == null || string.IsNullOrEmpty(element.Id))
+                if (variable == null || string.IsNullOrEmpty(variable.Id))
                 {
                     continue;
                 }
 
-                if (!m_elementCacheById.TryAdd(element.Id, element))
+                if (!m_variableCacheById.TryAdd(variable.Id, variable))
                 {
-                    Debug.LogError($"[Soup] Blackboard: duplicate element id '{element.Id}' found.");
+                    Debug.LogError($"[Soup] Blackboard: duplicate variable id '{variable.Id}' found.");
                 }
             }
         }
@@ -97,21 +97,21 @@ namespace Soup.Runtime.Blackboards
         #region Keys
         public T GetValue<T>(BlackboardKey<T> key)
         {
-            ABlackboardElement element = GetElement(key);
-            if (element is ABlackboardElement<T> typedElement)
+            ABlackboardVariable variable = GetVariable(key);
+            if (variable is ABlackboardVariable<T> typedVariable)
             {
-                return typedElement.Value;
+                return typedVariable.Value;
             }
 
-            LogKeyError(key, element, typeof(T));
+            LogKeyError(key, variable, typeof(T));
             return default;
         }
 
         public bool TryGetValue<T>(BlackboardKey<T> key, out T value)
         {
-            if (GetElement(key) is ABlackboardElement<T> typedElement)
+            if (GetVariable(key) is ABlackboardVariable<T> typedVariable)
             {
-                value = typedElement.Value;
+                value = typedVariable.Value;
                 return true;
             }
 
@@ -121,30 +121,30 @@ namespace Soup.Runtime.Blackboards
 
         public bool SetValue<T>(BlackboardKey<T> key, T value)
         {
-            ABlackboardElement element = GetElement(key);
-            if (element is ABlackboardElement<T> typedElement)
+            ABlackboardVariable variable = GetVariable(key);
+            if (variable is ABlackboardVariable<T> typedVariable)
             {
-                typedElement.Value = value;
+                typedVariable.Value = value;
                 return true;
             }
 
-            LogKeyError(key, element, typeof(T));
+            LogKeyError(key, variable, typeof(T));
             return false;
         }
 
-        private static void LogKeyError(BlackboardKey key, ABlackboardElement element, Type valueType)
+        private static void LogKeyError(BlackboardKey key, ABlackboardVariable variable, Type valueType)
         {
             if (key == null || !key.IsSet)
             {
                 Debug.LogError("[Soup] Blackboard: the key has no variable set.");
             }
-            else if (element == null)
+            else if (variable == null)
             {
-                Debug.LogError($"[Soup] Blackboard: no variable has the id '{key.ElementId}'. It was deleted, or the node came from another graph.");
+                Debug.LogError($"[Soup] Blackboard: no variable has the id '{key.VariableId}'. It was deleted, or the node came from another graph.");
             }
             else
             {
-                Debug.LogError($"[Soup] Blackboard: '{element.Name}' holds a {element.ValueType.Name}, not a {valueType.Name}.");
+                Debug.LogError($"[Soup] Blackboard: '{variable.Name}' holds a {variable.ValueType.Name}, not a {valueType.Name}.");
             }
         }
         #endregion
@@ -152,9 +152,9 @@ namespace Soup.Runtime.Blackboards
         #region Names
         public bool TryGetValue<T>(string name, out T value)
         {
-            if (GetElementByName(name) is ABlackboardElement<T> typedElement)
+            if (GetVariableByName(name) is ABlackboardVariable<T> typedVariable)
             {
-                value = typedElement.Value;
+                value = typedVariable.Value;
                 return true;
             }
 
@@ -164,20 +164,20 @@ namespace Soup.Runtime.Blackboards
 
         public bool SetValue<T>(string name, T value)
         {
-            ABlackboardElement element = GetElementByName(name);
-            if (element is ABlackboardElement<T> typedElement)
+            ABlackboardVariable variable = GetVariableByName(name);
+            if (variable is ABlackboardVariable<T> typedVariable)
             {
-                typedElement.Value = value;
+                typedVariable.Value = value;
                 return true;
             }
 
-            if (element == null)
+            if (variable == null)
             {
                 Debug.LogError($"[Soup] Blackboard: no variable is named '{name}'.");
             }
             else
             {
-                Debug.LogError($"[Soup] Blackboard: '{name}' holds a {element.ValueType.Name}, not a {typeof(T).Name}.");
+                Debug.LogError($"[Soup] Blackboard: '{name}' holds a {variable.ValueType.Name}, not a {typeof(T).Name}.");
             }
 
             return false;
@@ -185,7 +185,7 @@ namespace Soup.Runtime.Blackboards
         #endregion
 
 #if UNITY_EDITOR
-        internal const string ElementsFieldName = nameof(m_elements);
+        internal const string VariablesFieldName = nameof(m_variables);
 #endif
     }
 }

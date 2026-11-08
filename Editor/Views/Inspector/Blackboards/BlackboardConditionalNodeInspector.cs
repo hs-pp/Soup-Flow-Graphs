@@ -24,7 +24,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         protected override bool UseDefaultHeader => true;
 
         private VisualElement m_tracker;
-        private BlackboardElementPicker m_picker;
+        private BlackboardVariablePicker m_picker;
         private HelpBox m_helpBox;
         private VisualElement m_entriesContainer;
         private Button m_addButton;
@@ -39,8 +39,8 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             m_tracker = new VisualElement();
             layout.Add(m_tracker);
 
-            m_picker = new BlackboardElementPicker("Variable", EditorTypesFactory.HasBlackboardConditional, showTypes: true);
-            m_picker.OnPicked += HandleElementPicked;
+            m_picker = new BlackboardVariablePicker("Variable", EditorTypesFactory.HasBlackboardConditional, showTypes: true);
+            m_picker.OnPicked += HandleVariablePicked;
             layout.Add(m_picker);
 
             m_helpBox = new HelpBox(string.Empty, HelpBoxMessageType.Warning);
@@ -87,11 +87,11 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
 
             BlackboardRef blackboard = BlackboardRef.Find(m_nodeRef.NodeSP.serializedObject);
-            string elementId = BlackboardInspectorUtils.GetElementId(m_nodeRef, BlackboardConditionalNode.ElementFieldName);
-            m_picker.Refresh(blackboard, elementId);
+            string variableId = BlackboardInspectorUtils.GetVariableId(m_nodeRef, BlackboardConditionalNode.VariableFieldName);
+            m_picker.Refresh(blackboard, variableId);
 
             SerializedProperty entriesSP = m_nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.EntriesFieldName);
-            string problem = BlackboardInspectorUtils.GetElementProblem(blackboard, elementId, out BlackboardElementRef element, out Type valueType);
+            string problem = BlackboardInspectorUtils.GetVariableProblem(blackboard, variableId, out BlackboardVariableRef variable, out Type valueType);
             bool canAdd = problem == null && EditorTypesFactory.HasBlackboardConditional(valueType);
             if (problem == null && !canAdd)
             {
@@ -99,11 +99,11 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
             else if (problem == null && !AllConditionsWorkOn(entriesSP, valueType))
             {
-                problem = $"Some conditions work on another type than '{element.Name}'. They take Else when the graph runs. Pick the variable again to clear them.";
+                problem = $"Some conditions work on another type than '{variable.Name}'. They take Else when the graph runs. Pick the variable again to clear them.";
             }
 
             m_helpBox.text = problem ?? string.Empty;
-            m_helpBox.messageType = string.IsNullOrEmpty(elementId) ? HelpBoxMessageType.Info : HelpBoxMessageType.Warning;
+            m_helpBox.messageType = string.IsNullOrEmpty(variableId) ? HelpBoxMessageType.Info : HelpBoxMessageType.Warning;
             m_helpBox.style.display = problem != null ? DisplayStyle.Flex : DisplayStyle.None;
             m_addButton.SetEnabled(canAdd);
 
@@ -234,11 +234,11 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             return entrySP.FindPropertyRelative(BlackboardConditionalEntry.ConditionalFieldName);
         }
 
-        private void HandleElementPicked(string elementId)
+        private void HandleVariablePicked(string variableId)
         {
             if (m_nodeRef.IsValid)
             {
-                RequestCommand(new SetBlackboardNodeElementCommand(m_nodeRef.Id, elementId));
+                RequestCommand(new SetBlackboardNodeVariableCommand(m_nodeRef.Id, variableId));
             }
         }
 

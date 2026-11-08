@@ -16,7 +16,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
         public const string ElsePort = "Else";
 
         [SerializeField]
-        private BlackboardKey m_element = new();
+        private BlackboardKey m_variable = new();
 
         [SerializeField]
         private List<BlackboardConditionalEntry> m_entries = new();
@@ -36,10 +36,10 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
 
         public override void OnNodeEnter(NodeExecutionContext context)
         {
-            ABlackboardElement element = context.Blackboard?.GetElement(m_element);
-            if (element == null)
+            ABlackboardVariable variable = context.Blackboard?.GetVariable(m_variable);
+            if (variable == null)
             {
-                string reason = m_element.IsSet ? $"no variable has the id '{m_element.ElementId}'" : "no variable is picked";
+                string reason = m_variable.IsSet ? $"no variable has the id '{m_variable.VariableId}'" : "no variable is picked";
                 Debug.LogError($"[Soup] BlackboardConditionalNode ({Id}): {reason}. Taking Else.");
                 context.TraverseEdge(ElsePort);
                 return;
@@ -54,9 +54,9 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
                     continue;
                 }
 
-                if (!conditional.TryEvaluate(element, out bool isTrue))
+                if (!conditional.TryEvaluate(variable, out bool isTrue))
                 {
-                    Debug.LogError($"[Soup] BlackboardConditionalNode ({Id}): condition {i + 1} works on {conditional.ValueType.Name}, but '{element.Name}' holds a {element.ValueType.Name}. Taking Else.");
+                    Debug.LogError($"[Soup] BlackboardConditionalNode ({Id}): condition {i + 1} works on {conditional.ValueType.Name}, but '{variable.Name}' holds a {variable.ValueType.Name}. Taking Else.");
                     context.TraverseEdge(ElsePort);
                     return;
                 }
@@ -72,7 +72,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
         }
 
 #if UNITY_EDITOR
-        internal const string ElementFieldName = nameof(m_element);
+        internal const string VariableFieldName = nameof(m_variable);
         internal const string EntriesFieldName = nameof(m_entries);
 #endif
     }

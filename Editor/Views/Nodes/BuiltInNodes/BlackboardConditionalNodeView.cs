@@ -23,18 +23,18 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
             base.OnNodeDataChanged(nodeRef);
 
             BlackboardRef blackboard = BlackboardRef.Find(nodeRef.NodeSP?.serializedObject);
-            string elementId = new BlackboardKeyRef(nodeRef.NodeSP?.FindPropertyRelative(BlackboardConditionalNode.ElementFieldName)).ElementId;
-            if (string.IsNullOrEmpty(elementId))
+            string variableId = new BlackboardKeyRef(nodeRef.NodeSP?.FindPropertyRelative(BlackboardConditionalNode.VariableFieldName)).VariableId;
+            if (string.IsNullOrEmpty(variableId))
             {
                 BlackboardNodeViewUtils.SetSummary(m_summaryLabel, "No variable", true);
             }
-            else if (!blackboard.TryGetElement(elementId, out BlackboardElementRef element))
+            else if (!blackboard.TryGetVariable(variableId, out BlackboardVariableRef variable))
             {
                 BlackboardNodeViewUtils.SetSummary(m_summaryLabel, BlackboardNodeViewUtils.MISSING_VARIABLE_TEXT, true);
             }
             else
             {
-                BlackboardNodeViewUtils.SetSummary(m_summaryLabel, element.Name, false);
+                BlackboardNodeViewUtils.SetSummary(m_summaryLabel, variable.Name, false);
             }
         }
     }

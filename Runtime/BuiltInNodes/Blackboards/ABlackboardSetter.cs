@@ -18,14 +18,14 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
         }
 
         /// <summary>
-        /// Sets the element's value. False, and nothing changes, when the element holds another type.
+        /// Sets the variable's value. False, and nothing changes, when the variable holds another type.
         /// </summary>
-        public abstract bool TryEvaluate(ABlackboardElement element);
+        public abstract bool TryEvaluate(ABlackboardVariable variable);
 
         /// <summary>
         /// What the node shows on the canvas, e.g. "Speed += 1".
         /// </summary>
-        public abstract string GetLabel(string elementName);
+        public abstract string GetLabel(string variableName);
     }
 
     [Serializable]
@@ -33,14 +33,14 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
     {
         public sealed override Type ValueType => typeof(T);
 
-        public sealed override bool TryEvaluate(ABlackboardElement element)
+        public sealed override bool TryEvaluate(ABlackboardVariable variable)
         {
-            if (element is not ABlackboardElement<T> typedElement)
+            if (variable is not ABlackboardVariable<T> typedVariable)
             {
                 return false;
             }
 
-            typedElement.Value = Evaluate(typedElement.Value);
+            typedVariable.Value = Evaluate(typedVariable.Value);
             return true;
         }
 

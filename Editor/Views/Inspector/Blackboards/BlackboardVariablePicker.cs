@@ -6,10 +6,10 @@ using UnityEngine.UIElements;
 namespace Soup.Editor.Views.Inspector.Blackboards
 {
     /// <summary>
-    /// A popup of the graph's blackboard elements. It always shows what the model holds: a pick is only handed to OnPicked, and the
+    /// A popup of the graph's blackboard variables. It always shows what the model holds: a pick is only handed to OnPicked, and the
     /// owner writes it (a binding or a command) and calls Refresh.
     /// </summary>
-    public class BlackboardElementPicker : VisualElement
+    public class BlackboardVariablePicker : VisualElement
     {
         private const string NONE_ID = "";
         private const string NONE_LABEL = "None";
@@ -23,8 +23,8 @@ namespace Soup.Editor.Views.Inspector.Blackboards
 
         public event Action<string> OnPicked;
 
-        // The filter takes an element's value type and decides whether it is listed. Types are shown when the filter allows several.
-        public BlackboardElementPicker(string label, Func<Type, bool> filter = null, bool showTypes = false)
+        // The filter takes a variable's value type and decides whether it is listed. Types are shown when the filter allows several.
+        public BlackboardVariablePicker(string label, Func<Type, bool> filter = null, bool showTypes = false)
         {
             m_filter = filter;
             m_showTypes = showTypes;
@@ -42,26 +42,26 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             m_labelsById.Clear();
             m_labelsById[NONE_ID] = NONE_LABEL;
             List<string> choices = new() { NONE_ID };
-            foreach (BlackboardElementRef element in blackboard.GetElements())
+            foreach (BlackboardVariableRef variable in blackboard.GetVariables())
             {
-                if (element.IsMissingType || m_labelsById.ContainsKey(element.Id))
+                if (variable.IsMissingType || m_labelsById.ContainsKey(variable.Id))
                 {
                     continue;
                 }
 
-                Type valueType = element.GetValueType();
+                Type valueType = variable.GetValueType();
                 bool isRejected = m_filter != null && !m_filter(valueType);
-                if (isRejected && element.Id != selectedId)
+                if (isRejected && variable.Id != selectedId)
                 {
                     continue;
                 }
 
                 // A pick the filter rejects, like a typed key whose T changed since, stays listed but marked, with its type.
                 string typeName = EditorTypesFactory.GetBlackboardValueTypeDisplayName(valueType);
-                choices.Add(element.Id);
-                m_labelsById[element.Id] = isRejected ? $"{WARNING_PREFIX}{element.Name} ({typeName})"
-                    : m_showTypes ? $"{element.Name} ({typeName})"
-                    : element.Name;
+                choices.Add(variable.Id);
+                m_labelsById[variable.Id] = isRejected ? $"{WARNING_PREFIX}{variable.Name} ({typeName})"
+                    : m_showTypes ? $"{variable.Name} ({typeName})"
+                    : variable.Name;
             }
 
             // A deleted pick stays listed so the field can show it as missing.
