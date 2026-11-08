@@ -40,6 +40,9 @@ namespace Soup.Runtime.Blackboards
 #endif
     }
 
+    /// <summary>
+    /// BlackboardVariable type to inherit from.
+    /// </summary>
     [Serializable]
     public abstract class ABlackboardVariable<T> : ABlackboardVariable
     {

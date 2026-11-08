@@ -23,7 +23,7 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
             base.OnNodeDataChanged(nodeRef);
 
             BlackboardRef blackboard = BlackboardRef.Find(nodeRef.NodeSP?.serializedObject);
-            string variableId = new BlackboardKeyRef(nodeRef.NodeSP?.FindPropertyRelative(BlackboardConditionalNode.VariableFieldName)).VariableId;
+            string variableId = new BlackboardKeyRef(nodeRef.NodeSP?.FindPropertyRelative(BlackboardConditionalNode.VARIABLE_FIELD_NAME)).VariableId;
             if (string.IsNullOrEmpty(variableId))
             {
                 BlackboardNodeViewUtils.SetSummary(m_summaryLabel, "No variable", true);

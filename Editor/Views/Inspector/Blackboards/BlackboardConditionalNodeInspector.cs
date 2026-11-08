@@ -87,10 +87,10 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
 
             BlackboardRef blackboard = BlackboardRef.Find(m_nodeRef.NodeSP.serializedObject);
-            string variableId = BlackboardInspectorUtils.GetVariableId(m_nodeRef, BlackboardConditionalNode.VariableFieldName);
+            string variableId = BlackboardInspectorUtils.GetVariableId(m_nodeRef, BlackboardConditionalNode.VARIABLE_FIELD_NAME);
             m_picker.Refresh(blackboard, variableId);
 
-            SerializedProperty entriesSP = m_nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.EntriesFieldName);
+            SerializedProperty entriesSP = m_nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.ENTRIES_FIELD_NAME);
             string problem = BlackboardInspectorUtils.GetVariableProblem(blackboard, variableId, out BlackboardVariableRef variable, out Type valueType);
             bool canAdd = problem == null && EditorTypesFactory.HasBlackboardConditional(valueType);
             if (problem == null && !canAdd)
@@ -226,12 +226,12 @@ namespace Soup.Editor.Views.Inspector.Blackboards
 
         private static string GetEntryId(SerializedProperty entrySP)
         {
-            return entrySP.FindPropertyRelative(BlackboardConditionalEntry.IdFieldName).stringValue;
+            return entrySP.FindPropertyRelative(BlackboardConditionalEntry.OUTPORT_ID_FIELD_NAME).stringValue;
         }
 
         private static SerializedProperty GetConditionalSP(SerializedProperty entrySP)
         {
-            return entrySP.FindPropertyRelative(BlackboardConditionalEntry.ConditionalFieldName);
+            return entrySP.FindPropertyRelative(BlackboardConditionalEntry.CONDITIONAL_FIELD_NAME);
         }
 
         private void HandleVariablePicked(string variableId)

@@ -72,23 +72,32 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
 
         public override string GetLabel()
         {
-            string symbol = m_comparison switch
+            string symbol;
+            switch (m_comparison)
             {
-                Comparison.DoesNotEqual => "!=",
-                Comparison.LessThan => "<",
-                Comparison.GreaterThan => ">",
-                Comparison.LessThanOrEqualTo => "<=",
-                Comparison.GreaterThanOrEqualTo => ">=",
-                _ => "==",
-            };
+                case Comparison.DoesNotEqual:
+                    symbol = "!=";
+                    break;
+                case Comparison.LessThan:
+                    symbol = "<";
+                    break;
+                case Comparison.GreaterThan:
+                    symbol = ">";
+                    break;
+                case Comparison.LessThanOrEqualTo:
+                    symbol = "<=";
+                    break;
+                case Comparison.GreaterThanOrEqualTo:
+                    symbol = ">=";
+                    break;
+                default:
+                    symbol = "==";
+                    break;
+            }
             return $"{symbol} {m_value.ToString(CultureInfo.InvariantCulture)}";
         }
     }
 
-    /// <summary>
-    /// Equality is approximate (Mathf.Approximately), and the other comparisons agree with it: a value approximately equal to the
-    /// compared one is never less or greater than it.
-    /// </summary>
     [Serializable]
     public sealed class FloatBlackboardConditional : ABlackboardConditional<float>
     {
@@ -132,15 +141,28 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
 
         public override string GetLabel()
         {
-            string symbol = m_comparison switch
+            string symbol;
+            switch (m_comparison)
             {
-                Comparison.DoesNotEqual => "!=",
-                Comparison.LessThan => "<",
-                Comparison.GreaterThan => ">",
-                Comparison.LessThanOrEqualTo => "<=",
-                Comparison.GreaterThanOrEqualTo => ">=",
-                _ => "==",
-            };
+                case Comparison.DoesNotEqual:
+                    symbol = "!=";
+                    break;
+                case Comparison.LessThan:
+                    symbol = "<";
+                    break;
+                case Comparison.GreaterThan:
+                    symbol = ">";
+                    break;
+                case Comparison.LessThanOrEqualTo:
+                    symbol = "<=";
+                    break;
+                case Comparison.GreaterThanOrEqualTo:
+                    symbol = ">=";
+                    break;
+                default:
+                    symbol = "==";
+                    break;
+            }
             return $"{symbol} {m_value.ToString(CultureInfo.InvariantCulture)}";
         }
     }
@@ -162,8 +184,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
 
         protected override bool Evaluate(string value)
         {
-            // Unity serializes a null string as an empty one, so the two are treated as equal.
-            bool equal = string.Equals(value ?? string.Empty, m_value ?? string.Empty, StringComparison.Ordinal);
+            bool equal = string.IsNullOrEmpty(value) ? string.IsNullOrEmpty(m_value) : string.Equals(value, m_value, StringComparison.Ordinal);
             return m_comparison == Comparison.Equals ? equal : !equal;
         }
 

@@ -59,10 +59,10 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             }
             else if (nodeType == typeof(BlackboardConditionalNode))
             {
-                SerializedProperty entriesSP = nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.EntriesFieldName);
+                SerializedProperty entriesSP = nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.ENTRIES_FIELD_NAME);
                 bool keepEntries = AllConditionsWorkOn(entriesSP, valueType);
 
-                new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.VariableFieldName)).VariableIdSP.stringValue = m_variableId;
+                new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.VARIABLE_FIELD_NAME)).VariableIdSP.stringValue = m_variableId;
                 if (!keepEntries)
                 {
                     entriesSP.ClearArray();
@@ -82,7 +82,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
         {
             for (int i = 0; i < entriesSP.arraySize; i++)
             {
-                SerializedProperty conditionalSP = entriesSP.GetArrayElementAtIndex(i).FindPropertyRelative(BlackboardConditionalEntry.ConditionalFieldName);
+                SerializedProperty conditionalSP = entriesSP.GetArrayElementAtIndex(i).FindPropertyRelative(BlackboardConditionalEntry.CONDITIONAL_FIELD_NAME);
                 if ((conditionalSP?.managedReferenceValue as ABlackboardConditional)?.ValueType != valueType)
                 {
                     return false;

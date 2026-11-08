@@ -14,7 +14,7 @@ namespace Soup.Editor.Core.DataRefs
         public BlackboardRef(SerializedProperty blackboardSP)
         {
             BlackboardSP = blackboardSP;
-            VariablesSP = blackboardSP?.FindPropertyRelative(Blackboard.VariablesFieldName);
+            VariablesSP = blackboardSP?.FindPropertyRelative(Blackboard.VARIABLES_FIELD_NAME);
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Soup.Editor.Core.DataRefs
 
         public bool IsValid => VariableIdSP != null;
 
-        public SerializedProperty VariableIdSP => KeySP?.FindPropertyRelative(BlackboardKey.VariableIdFieldName);
+        public SerializedProperty VariableIdSP => KeySP?.FindPropertyRelative(BlackboardKey.VARIABLE_ID_FIELD_NAME);
         public string VariableId => VariableIdSP?.stringValue;
     }
 }

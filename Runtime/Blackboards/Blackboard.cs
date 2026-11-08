@@ -5,34 +5,28 @@ using UnityEngine;
 namespace Soup.Runtime.Blackboards
 {
     /// <summary>
-    /// A graph asset's own variables, added and edited in the graph editor. Every run gets its own copy, so the asset's values are
-    /// only defaults. Nodes reach the run's copy through NodeExecutionContext.Blackboard and address variables with BlackboardKey
-    /// fields; code outside the graph goes through FlowGraphController.GraphRunner.Blackboard and addresses them by name. Data every graph of a
-    /// type needs belongs in its GraphProperties instead: nothing guarantees a variable exists in a particular asset.
+    /// A flow graph's variables defined on a per graph instance basis.
     /// </summary>
     [Serializable]
     public sealed class Blackboard : ISerializationCallbackReceiver
     {
         [SerializeReference]
         private List<ABlackboardVariable> m_variables = new();
+        public IReadOnlyList<ABlackboardVariable> Variables => m_variables;
 
         [NonSerialized]
         private Dictionary<string, ABlackboardVariable> m_variableCacheById;
 
-        public IReadOnlyList<ABlackboardVariable> Variables => m_variables;
-
         void ISerializationCallbackReceiver.OnBeforeSerialize() { }
 
-        // Any deserialize (a run's copy, an editor Apply, undo) can add, remove or replace variables, so the lookup is rebuilt on next use.
+        /// <summary>
+        /// Any deserialize (editor apply, undo, reimport, etc) can add, remove or replace variables, so the lookup needs to be rebuilt.
+        /// </summary>
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             m_variableCacheById = null;
         }
 
-        /// <summary>
-        /// A deep copy for one run, so the run's writes never reach the asset. FlowGraphController makes one per StartGraph; code
-        /// that runs a GraphRunner itself should pass one too, never the asset's own blackboard.
-        /// </summary>
         public Blackboard Clone()
         {
             return JsonUtility.FromJson<Blackboard>(JsonUtility.ToJson(this));
@@ -56,7 +50,7 @@ namespace Soup.Runtime.Blackboards
         }
 
         /// <summary>
-        /// Names aren't unique, so this returns the first variable with the name.
+        /// Returns the first variable with the name.
         /// </summary>
         public ABlackboardVariable GetVariableByName(string name)
         {
@@ -103,7 +97,18 @@ namespace Soup.Runtime.Blackboards
                 return typedVariable.Value;
             }
 
-            LogKeyError(key, variable, typeof(T));
+            if (key == null || !key.IsSet)
+            {
+                Debug.LogError("[Soup] Blackboard: the key has no variable set.");
+            }
+            else if (variable == null)
+            {
+                Debug.LogError($"[Soup] Blackboard: no variable found with id '{key.VariableId}'.");
+            }
+            else
+            {
+                Debug.LogError($"[Soup] Blackboard: '{variable.Name}' is a {variable.ValueType.Name} but expected {typeof(T).Name}.");
+            }
             return default;
         }
 
@@ -127,25 +132,8 @@ namespace Soup.Runtime.Blackboards
                 typedVariable.Value = value;
                 return true;
             }
-
-            LogKeyError(key, variable, typeof(T));
+            
             return false;
-        }
-
-        private static void LogKeyError(BlackboardKey key, ABlackboardVariable variable, Type valueType)
-        {
-            if (key == null || !key.IsSet)
-            {
-                Debug.LogError("[Soup] Blackboard: the key has no variable set.");
-            }
-            else if (variable == null)
-            {
-                Debug.LogError($"[Soup] Blackboard: no variable has the id '{key.VariableId}'. It was deleted, or the node came from another graph.");
-            }
-            else
-            {
-                Debug.LogError($"[Soup] Blackboard: '{variable.Name}' holds a {variable.ValueType.Name}, not a {valueType.Name}.");
-            }
         }
         #endregion
 
@@ -184,8 +172,9 @@ namespace Soup.Runtime.Blackboards
         }
         #endregion
 
+        /** For editor use. */
 #if UNITY_EDITOR
-        internal const string VariablesFieldName = nameof(m_variables);
+        internal const string VARIABLES_FIELD_NAME = nameof(m_variables);
 #endif
     }
 }

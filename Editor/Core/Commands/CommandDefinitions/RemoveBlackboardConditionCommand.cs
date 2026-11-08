@@ -29,7 +29,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 return;
             }
 
-            SerializedProperty entriesSP = nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.EntriesFieldName);
+            SerializedProperty entriesSP = nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.ENTRIES_FIELD_NAME);
             int index = FindEntry(entriesSP, m_entryId);
             if (index < 0)
             {
@@ -46,7 +46,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
         {
             for (int i = 0; i < entriesSP.arraySize; i++)
             {
-                if (entriesSP.GetArrayElementAtIndex(i).FindPropertyRelative(BlackboardConditionalEntry.IdFieldName).stringValue == entryId)
+                if (entriesSP.GetArrayElementAtIndex(i).FindPropertyRelative(BlackboardConditionalEntry.OUTPORT_ID_FIELD_NAME).stringValue == entryId)
                 {
                     return i;
                 }

@@ -28,7 +28,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 return;
             }
 
-            string variableId = new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.VariableFieldName)).VariableId;
+            string variableId = new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.VARIABLE_FIELD_NAME)).VariableId;
             if (!scope.TryGetBlackboard(out BlackboardRef blackboard) || !blackboard.TryGetVariable(variableId, out BlackboardVariableRef variable))
             {
                 Debug.LogError($"[Soup] {nameof(AddBlackboardConditionCommand)}: the node has no variable to add a condition for.");
@@ -43,14 +43,14 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 return;
             }
 
-            SerializedProperty entriesSP = nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.EntriesFieldName);
+            SerializedProperty entriesSP = nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.ENTRIES_FIELD_NAME);
             int index = entriesSP.arraySize;
             entriesSP.arraySize++;
             SerializedProperty entrySP = entriesSP.GetArrayElementAtIndex(index);
-            entrySP.FindPropertyRelative(BlackboardConditionalEntry.IdFieldName).stringValue = Guid.NewGuid().ToString("N");
+            entrySP.FindPropertyRelative(BlackboardConditionalEntry.OUTPORT_ID_FIELD_NAME).stringValue = Guid.NewGuid().ToString("N");
 
             // A new array element starts as a copy of the last one, reference included, so it gets an instance of its own.
-            entrySP.FindPropertyRelative(BlackboardConditionalEntry.ConditionalFieldName).managedReferenceValue = conditional;
+            entrySP.FindPropertyRelative(BlackboardConditionalEntry.CONDITIONAL_FIELD_NAME).managedReferenceValue = conditional;
 
             scope.ChangeSet.ChangedNodes.Add(m_nodeId);
             scope.RepairOutports(nodeRef);
