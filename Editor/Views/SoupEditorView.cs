@@ -147,6 +147,7 @@ namespace Soup.Editor.Views
             LoadedFlowGraph previous = m_loadedFlowGraph;
             m_loadedFlowGraph = loadedFlowGraph;
 
+            m_graphView.GraphType = loadedFlowGraph != null && loadedFlowGraph.IsGraphAlive ? loadedFlowGraph.GraphAsset.GetType() : null;
             m_observer.SetLoadedFlowGraph(loadedFlowGraph);
             m_inspector.SetLoadedFlowGraph(loadedFlowGraph);
             m_state.Load(loadedFlowGraph);

@@ -10,22 +10,24 @@ namespace Soup.Editor.Views.Extraneous
     {
         private static readonly Vector2 k_WindowSize = new(260f, 300f);
 
+        private Type m_graphType;
         private Action<Type> m_onSelect;
         private List<NodeUtils.MenuEntry> m_allEntries;
         private readonly List<NodeUtils.MenuEntry> m_filtered = new();
         private TextField m_searchField;
         private ListView m_listView;
 
-        public static void Open(Vector2 screenPosition, Action<Type> onSelect)
+        public static void Open(Vector2 screenPosition, Type graphType, Action<Type> onSelect)
         {
             NodeSearchWindow window = CreateInstance<NodeSearchWindow>();
+            window.m_graphType = graphType;
             window.m_onSelect = onSelect;
             window.ShowAsDropDown(new Rect(screenPosition, Vector2.zero), k_WindowSize);
         }
 
         private void CreateGUI()
         {
-            m_allEntries = NodeUtils.GetMenuEntries();
+            m_allEntries = NodeUtils.GetMenuEntries(m_graphType);
 
             m_searchField = new TextField();
             m_searchField.RegisterValueChangedCallback(evt => Filter(evt.newValue));

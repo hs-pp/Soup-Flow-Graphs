@@ -61,6 +61,9 @@ namespace Soup.Editor.Views
         
         private GridBackgroundElement m_gridBackgroundElement = new();
 
+        /** The loaded graph asset's type. The node search only offers node types it allows. */
+        public Type GraphType { get; set; }
+
         // Commands
         public event Action<ICommand> OnCommandRequested;
         public event Action<IReadOnlyList<IGraphCommand>, string> OnCommandBatchRequested;
@@ -1060,7 +1063,7 @@ namespace Soup.Editor.Views
         }
         private void OpenNodeSearch(Vector2 screenPosition, Vector2 panelPosition, PendingPortConnection? pending)
         {
-            NodeSearchWindow.Open(screenPosition, nodeType => CreateNode(nodeType, panelPosition, pending));
+            NodeSearchWindow.Open(screenPosition, GraphType, nodeType => CreateNode(nodeType, panelPosition, pending));
         }
         #endregion
 

@@ -4,11 +4,10 @@ using UnityEngine;
 namespace Soup.Runtime.BuiltInNodes
 {
     /// <summary>
-    /// Logs a message when entered, then continues on the next tick. Mostly
-    /// here as the simplest possible authorable node for testing graphs.
+    /// Very simple logger node. 
     /// </summary>
     [Serializable]
-    [NodeMenu("Debug/Log Message")]
+    [CustomNode(typeof(AFlowGraph), "Debug/Log Message")]
     public sealed class LogNode : ANode
     {
         [SerializeField]

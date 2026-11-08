@@ -37,13 +37,30 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 return;
             }
 
+            Type graphType = scope.GraphType;
             List<ANode> pastedNodes = new();
+            List<string> disallowedNodes = new();
             foreach (ANode node in m_payload.Nodes)
             {
-                if (node != null && node is not EntryNode)
+                if (node == null || node is EntryNode)
                 {
-                    pastedNodes.Add(node);
+                    continue;
                 }
+
+                if (TryFindDisallowedNodeType(node, graphType, out Type disallowedType))
+                {
+                    disallowedNodes.Add(disallowedType == node.GetType()
+                        ? disallowedType.Name
+                        : $"{node.GetType().Name} (holds a {disallowedType.Name})");
+                    continue;
+                }
+
+                pastedNodes.Add(node);
+            }
+
+            if (disallowedNodes.Count > 0)
+            {
+                Debug.LogWarning($"[Soup] {disallowedNodes.Count} node(s) weren't pasted because a {graphType.Name} doesn't allow them: {string.Join(", ", disallowedNodes)}.");
             }
 
             List<GroupMetaData> pastedGroups = new();
@@ -165,6 +182,32 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             {
                 Debug.LogError($"[Soup] {nameof(PasteGraphElementsCommand)}: meta data could not be resolved, so pasted nodes will appear at the origin and pasted groups were dropped.");
             }
+        }
+
+        /// <summary>
+        /// Finds the first node type in this node, or anywhere inside it if it's a subgraph node, that the graph type doesn't allow.
+        /// </summary>
+        private static bool TryFindDisallowedNodeType(ANode node, Type graphType, out Type disallowedType)
+        {
+            disallowedType = node.GetType();
+            if (!NodeUtils.IsNodeTypeAllowed(disallowedType, graphType))
+            {
+                return true;
+            }
+
+            if (node is SubGraphNode subGraph && subGraph.SubGraph != null)
+            {
+                foreach (ANode child in subGraph.SubGraph.Nodes)
+                {
+                    if (child != null && TryFindDisallowedNodeType(child, graphType, out disallowedType))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            disallowedType = null;
+            return false;
         }
 
         // Nodes contribute their positions and groups both corners, so a group-only paste centers the frames themselves.

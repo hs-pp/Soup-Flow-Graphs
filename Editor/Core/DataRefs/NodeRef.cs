@@ -29,7 +29,7 @@ namespace Soup.Editor.Core.DataRefs
 
         public bool TryGetSubGraphCollection(out NodeCollectionRef collection)
         {
-            collection = new NodeCollectionRef(NodeSP?.FindPropertyRelative(SubGraphNode.SubGraphFieldName));
+            collection = new NodeCollectionRef(NodeSP?.FindPropertyRelative(SubGraphNode.SUBGRAPH_FIELD_NAME));
             return collection.IsValid;
         }
 

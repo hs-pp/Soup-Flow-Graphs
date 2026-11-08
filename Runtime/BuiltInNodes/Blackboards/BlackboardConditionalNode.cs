@@ -10,7 +10,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
     /// holds. Else is taken when none does, and when the node has no variable or a condition of the wrong type (which also logs).
     /// </summary>
     [Serializable]
-    [NodeMenu("Blackboard/Conditional")]
+    [CustomNode(typeof(AFlowGraph), "Blackboard/Conditional")]
     public sealed class BlackboardConditionalNode : ANode
     {
         public const string ElsePort = "Else";

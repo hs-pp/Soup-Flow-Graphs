@@ -92,6 +92,8 @@ namespace Soup.Editor.Core
 
                 FlowGraphValidator.LogReport(metaDataReport);
             }
+
+            FlowGraphValidator.LogDisallowedNodes(m_graphAsset, FlowGraphValidator.FindDisallowedNodes(rootCollection, m_graphAsset.GetType()));
         }
 
         #region Commands

@@ -28,6 +28,12 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 return;
             }
 
+            if (!NodeUtils.IsNodeTypeAllowed(m_nodeType, scope.GraphType))
+            {
+                Debug.LogError($"[Soup] {nameof(CreateNodeCommand)}: '{m_nodeType.Name}' isn't allowed in a {scope.GraphType.Name}, so it was not created.");
+                return;
+            }
+
             if (!string.IsNullOrEmpty(m_presetNodeId) && scope.Collection.ContainsNode(m_presetNodeId))
             {
                 Debug.LogError($"[Soup] {nameof(CreateNodeCommand)}: preset id '{m_presetNodeId}' already exists.");

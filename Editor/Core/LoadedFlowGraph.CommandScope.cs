@@ -15,6 +15,9 @@ namespace Soup.Editor.Core
             public readonly NodeCollectionRef Collection;
             public GraphChangeSet ChangeSet => m_graph.m_workingChangeSet;
 
+            /** The edited graph asset's type. Every collection in the asset, subgraphs included, belongs to it. */
+            public Type GraphType => m_graph.GraphAsset.GetType();
+
             public CommandScope(LoadedFlowGraph graph, IReadOnlyList<string> subGraphPath)
             {
                 m_graph = graph;

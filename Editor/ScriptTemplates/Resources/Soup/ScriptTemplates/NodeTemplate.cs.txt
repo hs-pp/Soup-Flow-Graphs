@@ -3,7 +3,7 @@ using Soup.Runtime;
 
 #NAMESPACEBEGIN#
 [Serializable]
-[NodeMenu("Custom/#NAME#")]
+[CustomNode(typeof(AFlowGraph), "Custom/#NAME#")]
 public class #SCRIPTNAME# : ANode
 {
     // Runs when the graph enters this node.

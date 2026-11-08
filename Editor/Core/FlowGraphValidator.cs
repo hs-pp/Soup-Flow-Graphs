@@ -344,7 +344,67 @@ namespace Soup.Editor.Core
             }
         }
         #endregion
-        
+
+        #region Node Type Validation
+        /// <summary>
+        /// Lists the nodes, subgraphs included, whose type the graph type doesn't allow. Nothing is changed.
+        /// </summary>
+        public static List<string> FindDisallowedNodes(NodeCollectionRef rootCollection, Type graphType)
+        {
+            List<string> disallowedNodes = new();
+            FindDisallowedNodes(rootCollection, graphType, disallowedNodes, 0);
+            return disallowedNodes;
+        }
+
+        private static void FindDisallowedNodes(NodeCollectionRef collection, Type graphType, List<string> inDisallowedNodes, int depth)
+        {
+            // Edge validation already logs nesting that's too deep.
+            if (!collection.IsValid || depth > MAX_SUBGRAPH_DEPTH)
+            {
+                return;
+            }
+
+            foreach (NodeRef nodeRef in collection.GetNodes())
+            {
+                if (nodeRef.IsMissingType)
+                {
+                    continue;
+                }
+
+                Type nodeType = nodeRef.GetNodeType();
+                if (nodeType != null && !NodeUtils.IsNodeTypeAllowed(nodeType, graphType))
+                {
+                    inDisallowedNodes.Add($"{nodeType.Name} ({nodeRef.Id})");
+                }
+
+                if (nodeRef.TryGetSubGraphCollection(out NodeCollectionRef subGraph))
+                {
+                    FindDisallowedNodes(subGraph, graphType, inDisallowedNodes, depth + 1);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Warns about the nodes FindDisallowedNodes found, if there are any.
+        /// </summary>
+        public static void LogDisallowedNodes(UnityEngine.Object asset, List<string> disallowedNodes)
+        {
+            if (disallowedNodes.Count == 0)
+            {
+                return;
+            }
+
+            StringBuilder message = new();
+            message.AppendLine($"[Soup] '{asset.name}' has {disallowedNodes.Count} node(s) its graph type doesn't allow. They still run and stay in the asset, but new ones can't be created or pasted.");
+            foreach (string node in disallowedNodes)
+            {
+                message.AppendLine($"  • {node}");
+            }
+
+            Debug.LogWarning(message.ToString(), asset);
+        }
+        #endregion
+
         private static List<string> GetMissingTypeNames(UnityEngine.Object asset, out int referenceCount)
         {
             if (asset == null)

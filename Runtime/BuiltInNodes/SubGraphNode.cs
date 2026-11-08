@@ -4,18 +4,15 @@ using UnityEngine;
 namespace Soup.Runtime.BuiltInNodes
 {
     [Serializable]
-    [NodeMenu("Flow/Sub Graph")]
+    [CustomNode(typeof(AFlowGraph), "Flow/Sub Graph")]
     public sealed class SubGraphNode : ANode
     {
+        public override NodeRuntimeState CreateRuntimeState() => new SubGraphNodeRuntimeState();
+
         [SerializeField]
         private NodeCollection m_subGraph = new();
         public NodeCollection SubGraph => m_subGraph;
-
-        public override NodeRuntimeState CreateRuntimeState()
-        {
-            return new SubGraphNodeRuntimeState();
-        }
-
+        
         public override void OnNodeEnter(NodeExecutionContext context)
         {
             SubGraphNodeRuntimeState state = context.RuntimeState as SubGraphNodeRuntimeState;
@@ -68,8 +65,9 @@ namespace Soup.Runtime.BuiltInNodes
             }
         }
         
+        /** For editor use. */
 #if UNITY_EDITOR
-        internal const string SubGraphFieldName = nameof(m_subGraph);
+        internal const string SUBGRAPH_FIELD_NAME = nameof(m_subGraph);
 #endif
     }
 

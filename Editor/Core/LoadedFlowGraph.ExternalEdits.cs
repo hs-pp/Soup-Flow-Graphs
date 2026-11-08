@@ -35,7 +35,7 @@ namespace Soup.Editor.Core
         private const string GRAPH_ROOT_PREFIX = AFlowGraph.ROOT_COLLECTION_FIELD_NAME + ".";
         private const string GRAPH_BLACKBOARD_PREFIX = AFlowGraph.BLACKBOARD_FIELD_NAME + ".";
         private const string BLACKBOARD_VALUE_PREFIX = ABlackboardElement.ValueFieldName + ".";
-        private const string GRAPH_SUBGRAPH_PREFIX = SubGraphNode.SubGraphFieldName + ".";
+        private const string GRAPH_SUBGRAPH_PREFIX = SubGraphNode.SUBGRAPH_FIELD_NAME + ".";
         private const string METADATA_ROOT_PREFIX = FlowGraphMetaData.RootCollectionFieldName + ".";
         private const string METADATA_SUBGRAPH_PREFIX = SubGraphNodeMetaData.SubGraphFieldName + ".";
         private const string METADATA_GROUPS_PREFIX = NodeCollectionMetaData.GroupsFieldName + ".";
@@ -152,7 +152,7 @@ namespace Soup.Editor.Core
                 }
 
                 // The nodes of a subgraph own what they hold, so the walk skips the subgraph here and recurses into it below.
-                string subGraphPath = nodeRef.NodeSP.propertyPath + "." + SubGraphNode.SubGraphFieldName;
+                string subGraphPath = nodeRef.NodeSP.propertyPath + "." + SubGraphNode.SUBGRAPH_FIELD_NAME;
                 SerializedProperty iterator = nodeRef.NodeSP.Copy();
                 SerializedProperty endProperty = nodeRef.NodeSP.GetEndProperty();
                 bool enterChildren = true;

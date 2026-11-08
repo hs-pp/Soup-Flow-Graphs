@@ -216,22 +216,39 @@ namespace Soup.Editor
             }
         }
 
-        public static List<MenuEntry> GetMenuEntries()
+        /// <summary>
+        /// The creation menu entries a graph of the given type allows, sorted by menu path.
+        /// </summary>
+        public static List<MenuEntry> GetMenuEntries(Type graphType)
         {
             List<MenuEntry> entries = new();
-            foreach (Type type in TypeCache.GetTypesWithAttribute<NodeMenuAttribute>())
+            foreach (Type type in TypeCache.GetTypesWithAttribute<CustomNodeAttribute>())
             {
                 if (!IsConcreteNodeType(type))
                 {
                     continue;
                 }
 
-                NodeMenuAttribute attribute = type.GetCustomAttribute<NodeMenuAttribute>();
+                CustomNodeAttribute attribute = type.GetCustomAttribute<CustomNodeAttribute>();
+                if (!attribute.AllowsGraphType(graphType))
+                {
+                    continue;
+                }
+
                 entries.Add(new MenuEntry(type, attribute.MenuPath));
             }
 
             entries.Sort((a, b) => string.CompareOrdinal(a.MenuPath, b.MenuPath));
             return entries;
+        }
+
+        /// <summary>
+        /// Whether a graph of graphType can hold a node of nodeType. Node types without [CustomNode] are allowed in every graph.
+        /// </summary>
+        public static bool IsNodeTypeAllowed(Type nodeType, Type graphType)
+        {
+            CustomNodeAttribute attribute = nodeType.GetCustomAttribute<CustomNodeAttribute>();
+            return attribute == null || attribute.AllowsGraphType(graphType);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
     /// node with no variable, no setter or a setter of the wrong type logs and continues without changing anything.
     /// </summary>
     [Serializable]
-    [NodeMenu("Blackboard/Set Variable")]
+    [CustomNode(typeof(AFlowGraph), "Blackboard/Set Variable")]
     public sealed class BlackboardSetterNode : ANode
     {
         [SerializeField]
