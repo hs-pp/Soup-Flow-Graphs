@@ -48,10 +48,10 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             Type nodeType = nodeRef.GetNodeType();
             if (nodeType == typeof(BlackboardSetterNode))
             {
-                SerializedProperty setterSP = nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.SetterFieldName);
+                SerializedProperty setterSP = nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.SETTER_FIELD_NAME);
                 bool keepSetter = (setterSP.managedReferenceValue as ABlackboardSetter)?.ValueType == valueType;
 
-                new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.VariableFieldName)).VariableIdSP.stringValue = m_variableId;
+                new BlackboardKeyRef(nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.VARIABLE_FIELD_NAME)).VariableIdSP.stringValue = m_variableId;
                 if (!keepSetter)
                 {
                     setterSP.managedReferenceValue = EditorTypesFactory.CreateBlackboardSetter(valueType);

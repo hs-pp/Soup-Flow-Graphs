@@ -5,8 +5,7 @@ using UnityEngine;
 namespace Soup.Runtime.BuiltInNodes.Blackboards
 {
     /// <summary>
-    /// Changes one blackboard variable, then continues. Picking the variable in the inspector creates the setter for its type. A
-    /// node with no variable, no setter or a setter of the wrong type logs and continues without changing anything.
+    /// Changes one blackboard variable.
     /// </summary>
     [Serializable]
     [CustomNode(typeof(AFlowGraph), "Blackboard/Set Variable")]
@@ -23,24 +22,31 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
             ABlackboardVariable variable = context.Blackboard?.GetVariable(m_variable);
             if (variable == null)
             {
-                string reason = m_variable.IsSet ? $"no variable has the id '{m_variable.VariableId}'" : "no variable is picked";
-                Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): {reason}. Continuing without setting anything.");
+                if (m_variable.IsSet)
+                {
+                    Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): no variable has the id '{m_variable.VariableId}'. Skipping.");
+                }
+                else
+                {
+                    Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): no variable is set. Skipping.");
+                }
             }
             else if (m_setter == null)
             {
-                Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): there is no setter for '{variable.Name}'. Continuing without setting anything.");
+                Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): there is no setter for '{variable.Name}'. Skipping.");
             }
-            else if (!m_setter.TryEvaluate(variable))
+            else if (!m_setter.TryApply(variable))
             {
-                Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): its setter works on {m_setter.ValueType.Name}, but '{variable.Name}' holds a {variable.ValueType.Name}. Continuing without setting anything.");
+                Debug.LogError($"[Soup] BlackboardSetterNode ({Id}): its setter works on {m_setter.ValueType.Name}, but '{variable.Name}' holds a {variable.ValueType.Name}. Skipping.");
             }
 
             context.TraverseEdge(DEFAULT_OUTPORT);
         }
 
+        /** For editor use. */
 #if UNITY_EDITOR
-        internal const string VariableFieldName = nameof(m_variable);
-        internal const string SetterFieldName = nameof(m_setter);
+        internal const string VARIABLE_FIELD_NAME = nameof(m_variable);
+        internal const string SETTER_FIELD_NAME = nameof(m_setter);
 #endif
     }
 }

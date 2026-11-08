@@ -67,10 +67,10 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
 
             BlackboardRef blackboard = BlackboardRef.Find(m_nodeRef.NodeSP.serializedObject);
-            string variableId = BlackboardInspectorUtils.GetVariableId(m_nodeRef, BlackboardSetterNode.VariableFieldName);
+            string variableId = BlackboardInspectorUtils.GetVariableId(m_nodeRef, BlackboardSetterNode.VARIABLE_FIELD_NAME);
             m_picker.Refresh(blackboard, variableId);
 
-            SerializedProperty setterSP = m_nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.SetterFieldName);
+            SerializedProperty setterSP = m_nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.SETTER_FIELD_NAME);
             string problem = BlackboardInspectorUtils.GetVariableProblem(blackboard, variableId, out BlackboardVariableRef variable, out Type valueType);
             if (problem == null)
             {

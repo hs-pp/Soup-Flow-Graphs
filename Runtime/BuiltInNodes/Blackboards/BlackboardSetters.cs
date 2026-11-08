@@ -61,12 +61,19 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
 
         public override string GetLabel(string variableName)
         {
-            string symbol = m_operation switch
+            string symbol;
+            switch (m_operation)
             {
-                Operation.Increment => "+=",
-                Operation.Decrement => "-=",
-                _ => "=",
-            };
+                case Operation.Increment:
+                    symbol = "+=";
+                    break;
+                case Operation.Decrement:
+                    symbol = "-=";
+                    break;
+                default:
+                    symbol = "=";
+                    break;
+            }
             return $"{variableName} {symbol} {m_value.ToString(CultureInfo.InvariantCulture)}";
         }
     }
@@ -102,12 +109,19 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
 
         public override string GetLabel(string variableName)
         {
-            string symbol = m_operation switch
+            string symbol;
+            switch (m_operation)
             {
-                Operation.Increment => "+=",
-                Operation.Decrement => "-=",
-                _ => "=",
-            };
+                case Operation.Increment:
+                    symbol = "+=";
+                    break;
+                case Operation.Decrement:
+                    symbol = "-=";
+                    break;
+                default:
+                    symbol = "=";
+                    break;
+            }
             return $"{variableName} {symbol} {m_value.ToString(CultureInfo.InvariantCulture)}";
         }
     }
