@@ -7,55 +7,58 @@ using UnityEngine;
 
 namespace Soup.Editor
 {
+    /// <summary>
+    /// The Soup editor window. It shows one graph through a SoupEditorView, and serializes its GraphEditorState so the
+    /// open graph and view survive domain reloads. Several windows can show the same graph.
+    /// </summary>
     public class SoupWindow : EditorWindow, IHasCustomMenu
     {
+        private const string WINDOW_TITLE = "Soup";
         [SerializeField]
-        private GraphEditorState m_state;
+        private GraphEditorState m_state = new();
         
         private SoupEditorView m_editorView;
         
         [MenuItem("Window/Soup")]
-        public static void OpenWindow()
+        private static void OpenWindow()
         {
-            GetWindow<SoupWindow>("Soup").Show();
+            GetWindow<SoupWindow>(WINDOW_TITLE);
         }
 
         [OnOpenAsset]
-        private static bool OnOpenAsset(int instanceID, int line)
+        private static bool OnOpenAsset(EntityId entityId, int line)
         {
-            if (EditorUtility.EntityIdToObject(instanceID) is not AFlowGraph graph)
+            if (EditorUtility.EntityIdToObject(entityId) is not AFlowGraph graph)
             {
                 return false;
             }
 
             string assetGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(graph));
-            foreach (SoupWindow open in Resources.FindObjectsOfTypeAll<SoupWindow>())
+            foreach (SoupWindow existing in Resources.FindObjectsOfTypeAll<SoupWindow>())
             {
-                if (open.m_state != null && open.m_state.AssetGuid == assetGuid)
+                if (existing.m_state.AssetGuid == assetGuid)
                 {
-                    open.Focus();
+                    existing.Focus();
                     return true;
                 }
             }
 
-            SoupWindow window = GetWindow<SoupWindow>("Soup");
+            SoupWindow window = GetWindow<SoupWindow>(WINDOW_TITLE);
             window.LoadGraph(assetGuid);
-            window.Show();
             return true;
         }
 
         private static void OpenInNewWindow(string assetGuid)
         {
             SoupWindow window = CreateInstance<SoupWindow>();
-            window.titleContent = new GUIContent("Soup");
+            window.titleContent = new GUIContent(WINDOW_TITLE);
             window.LoadGraph(assetGuid);
             window.Show();
         }
         
         public void AddItemsToMenu(GenericMenu menu)
         {
-            menu.AddItem(new GUIContent("Open in New Window"), false, () => OpenInNewWindow(m_state?.AssetGuid));
-            menu.AddItem(new GUIContent("Force Recompile"), false, () => { UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation(); });
+            menu.AddItem(new GUIContent("Open in New Window"), false, () => OpenInNewWindow(m_state.AssetGuid));
             menu.AddItem(new GUIContent("Force Rebuild Editor"), false, CreateGUI);
         }
 
@@ -66,11 +69,6 @@ namespace Soup.Editor
 
         private void CreateGUI()
         {
-            if (m_state == null)
-            {
-                m_state = new GraphEditorState();
-            }
-            
             if (m_editorView != null)
             {
                 m_editorView.Dispose();

@@ -3,7 +3,7 @@ using System;
 namespace Soup.Editor
 {
     /// <summary>
-    /// Definition of an edge aka a connection between an outport and an inport.
+    /// Identifies an edge by the node it leaves and its outport.
     /// </summary>
     public readonly struct EdgeId : IEquatable<EdgeId>
     {

@@ -102,7 +102,6 @@ namespace Soup.Editor
 
     public static class SerializedPropertyUtils
     {
-        // Only the direct children, each a copy that's safe to keep. NextVisible skips [HideInInspector] fields.
         public static IEnumerable<SerializedProperty> EnumerateVisibleChildren(SerializedProperty property)
         {
             SerializedProperty iterator = property.Copy();
@@ -115,10 +114,6 @@ namespace Soup.Editor
             }
         }
 
-        /// <summary>
-        /// One bound field per visible child, so the children read as fields of their own rather than one foldout. Not for a
-        /// property drawer's own tree: the PropertyField hosting a drawer binds what it returns.
-        /// </summary>
         public static void AddVisibleChildFields(VisualElement container, SerializedProperty property)
         {
             if (property == null)
@@ -152,9 +147,6 @@ namespace Soup.Editor
             return GetOutportDefinitions((ANode)Activator.CreateInstance(nodeType));
         }
 
-        /// <summary>
-        /// Null when the node's DefineOutports throws: its outports are unknown, so callers leave them as they are.
-        /// </summary>
         public static List<OutportDefinition> GetOutportDefinitions(ANode node)
         {
             List<OutportDefinition> definitions = new();
@@ -163,7 +155,6 @@ namespace Soup.Editor
                 return definitions;
             }
 
-            // User code, and it runs while a graph loads. Uncontained, one throwing node would keep the whole graph from opening.
             try
             {
                 node.DefineOutports(definitions);
@@ -216,9 +207,6 @@ namespace Soup.Editor
             }
         }
 
-        /// <summary>
-        /// The creation menu entries a graph of the given type allows, sorted by menu path.
-        /// </summary>
         public static List<MenuEntry> GetMenuEntries(Type graphType)
         {
             List<MenuEntry> entries = new();
@@ -242,9 +230,6 @@ namespace Soup.Editor
             return entries;
         }
 
-        /// <summary>
-        /// Whether a graph of graphType can hold a node of nodeType. Node types without [CustomNode] are allowed in every graph.
-        /// </summary>
         public static bool IsNodeTypeAllowed(Type nodeType, Type graphType)
         {
             CustomNodeAttribute attribute = nodeType.GetCustomAttribute<CustomNodeAttribute>();

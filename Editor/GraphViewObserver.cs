@@ -30,16 +30,16 @@ namespace Soup.Editor
         {
             m_state = state;
             m_graphView = graphView;
-            m_state.OnGraphLoaded += HandleRebuildRequired;
-            m_state.OnNavigationChanged += HandleRebuildRequired;
+            m_state.OnGraphLoaded += HandleGraphLoaded;
+            m_state.OnNavigationChanged += HandleNavigationChanged;
             m_state.OnSelectionChanged += ApplySelection;
         }
 
         public void Dispose()
         {
             SetLoadedFlowGraph(null);
-            m_state.OnGraphLoaded -= HandleRebuildRequired;
-            m_state.OnNavigationChanged -= HandleRebuildRequired;
+            m_state.OnGraphLoaded -= HandleGraphLoaded;
+            m_state.OnNavigationChanged -= HandleNavigationChanged;
             m_state.OnSelectionChanged -= ApplySelection;
         }
 
@@ -86,8 +86,18 @@ namespace Soup.Editor
             m_groupViews.Clear();
         }
 
-        private void HandleRebuildRequired()
+        private void HandleGraphLoaded()
         {
+            Reconcile();
+        }
+
+        /// <summary>
+        /// Starts the new collection from empty. Every collection's entry node has the same id, so a diff would otherwise
+        /// keep the old entry view and rebind it.
+        /// </summary>
+        private void HandleNavigationChanged()
+        {
+            RemoveAllViews();
             Reconcile();
         }
 
@@ -180,37 +190,37 @@ namespace Soup.Editor
                 }
             }
 
-            HashSet<string> nodeViewsToRemove = new();
+            HashSet<string> staleNodeIds = new();
             foreach (KeyValuePair<string, BaseNodeView> pair in m_nodeViews)
             {
                 if (!modelNodes.TryGetValue(pair.Key, out NodeRef nodeRef) || !pair.Value.OutportsMatch(nodeRef))
                 {
-                    nodeViewsToRemove.Add(pair.Key);
+                    staleNodeIds.Add(pair.Key);
                 }
             }
 
-            List<string> staleEdges = new();
+            List<string> staleEdgeKeys = new();
             foreach (KeyValuePair<string, EdgeView> pair in m_edgeViews)
             {
                 if (!modelEdges.TryGetValue(pair.Key, out var edge)
                     || edge.toId != pair.Value.ToNodeId
-                    || nodeViewsToRemove.Contains(pair.Value.FromNodeId)
-                    || nodeViewsToRemove.Contains(pair.Value.ToNodeId))
+                    || staleNodeIds.Contains(pair.Value.FromNodeId)
+                    || staleNodeIds.Contains(pair.Value.ToNodeId))
                 {
-                    staleEdges.Add(pair.Key);
+                    staleEdgeKeys.Add(pair.Key);
                 }
             }
 
-            bool changed = nodeViewsToRemove.Count > 0 || staleEdges.Count > 0;
+            bool changed = staleNodeIds.Count > 0 || staleEdgeKeys.Count > 0;
 
-            foreach (string key in staleEdges)
+            foreach (string key in staleEdgeKeys)
             {
                 m_graphView.RemoveGraphElement(m_edgeViews[key]);
                 m_edgeViews.Remove(key);
             }
 
             // Remove the stale/rebuilt node views.
-            foreach (string id in nodeViewsToRemove)
+            foreach (string id in staleNodeIds)
             {
                 m_graphView.RemoveGraphElement(m_nodeViews[id]);
                 m_nodeViews.Remove(id);
@@ -255,7 +265,7 @@ namespace Soup.Editor
                     continue;
                 }
 
-                EdgeView edgeView = new EdgeView();
+                EdgeView edgeView = new();
                 edgeView.BindToModel(outputPort, inputPort);
                 m_edgeViews[pair.Key] = edgeView;
                 m_graphView.AddGraphElement(edgeView);
@@ -291,23 +301,23 @@ namespace Soup.Editor
 
             bool changed = false;
 
-            List<string> staleIds = new();
+            List<string> staleGroupIds = new();
             foreach (string id in m_groupViews.Keys)
             {
                 if (!modelIds.Contains(id))
                 {
-                    staleIds.Add(id);
+                    staleGroupIds.Add(id);
                 }
             }
 
-            foreach (string id in staleIds)
+            foreach (string id in staleGroupIds)
             {
                 m_graphView.RemoveGraphElement(m_groupViews[id]);
                 m_groupViews.Remove(id);
                 changed = true;
             }
 
-            m_state.GraphSelection.Apply(GraphSelectionMode.Remove, staleIds);
+            m_state.GraphSelection.Apply(GraphSelectionMode.Remove, staleGroupIds);
 
             foreach (GroupMetaDataRef group in modelGroups)
             {
@@ -331,7 +341,9 @@ namespace Soup.Editor
             return changed;
         }
 
-        // Null refreshes every node view.
+        /// <summary>
+        /// Null refreshes every node view.
+        /// </summary>
         private void RefreshNodeViews(HashSet<string> nodeIds)
         {
             m_state.TryGetCurrentCollection(m_loadedFlowGraph, out NodeCollectionRef currentCollection);

@@ -34,9 +34,9 @@ namespace Soup.Runtime
         private OutportEdge m_pendingEdge;
         private static readonly OutportEdge STOP_GRAPH_EDGE = new();
 
-        public Action OnGraphStart = null;
-        public Action OnGraphStop = null;
-        public Action<ANode> OnActiveNodeChanged = null;
+        public event Action OnGraphStart = null;
+        public event Action OnGraphStop = null;
+        public event Action<ANode> OnActiveNodeChanged = null;
 
         public GraphRunner(NodeCollection nodeCollection, AGraphProperties graphProperties, Blackboard blackboard)
         {

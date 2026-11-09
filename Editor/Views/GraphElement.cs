@@ -5,6 +5,12 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views
 {
+    public struct PositionData
+    {
+        public Vector2 Position;
+        public VisualElement Element;
+    }
+        
     public abstract class GraphElement : VisualElement
     {
         public virtual string Id { get; protected set; }
