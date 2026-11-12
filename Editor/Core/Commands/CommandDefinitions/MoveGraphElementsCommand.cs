@@ -39,15 +39,9 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             }
 
             // First pass: create any missing node meta data.
-            bool created = false;
             foreach (NodeRef nodeRef in movedNodes.Values)
             {
-                created |= scope.TryCreateNodeMetaData(collectionMetaData, nodeRef.Id, nodeRef.GetNodeType());
-            }
-
-            if (created)
-            {
-                collectionMetaData = scope.ApplyAndReResolve(collectionMetaData);
+                scope.TryCreateNodeMetaData(collectionMetaData, nodeRef.Id, nodeRef.GetNodeType());
             }
 
             Dictionary<string, NodeMetaDataRef> movedMetaDatas = new(movedNodes.Count);

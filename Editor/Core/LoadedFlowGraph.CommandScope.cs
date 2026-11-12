@@ -2,30 +2,34 @@ using System;
 using System.Collections.Generic;
 using Soup.Editor.Core.DataRefs;
 using Soup.Editor.State;
+using Soup.Runtime.BuiltInNodes;
 using UnityEngine;
 
 namespace Soup.Editor.Core
 {
     public partial class LoadedFlowGraph
     {
-        public struct CommandScope
+        /// <summary>
+        /// The object that every graph command gets. It provides everything it needs to successfully execute the command.
+        /// </summary>
+        public readonly struct CommandScope
         {
-            private readonly LoadedFlowGraph m_graph;
+            private readonly LoadedFlowGraph m_loadedFlowGraph;
             private readonly IReadOnlyList<string> m_subGraphPath;
             public readonly NodeCollectionRef Collection;
-            public GraphChangeSet ChangeSet => m_graph.m_workingChangeSet;
+            public GraphChangeSet ChangeSet => m_loadedFlowGraph.m_workingChangeSet;
 
             /** The edited graph asset's type. Every collection in the asset, subgraphs included, belongs to it. */
-            public Type GraphType => m_graph.GraphAsset.GetType();
+            public Type GraphType => m_loadedFlowGraph.GraphAsset.GetType();
 
-            public CommandScope(LoadedFlowGraph graph, IReadOnlyList<string> subGraphPath)
+            public CommandScope(LoadedFlowGraph loadedFlowGraph, IReadOnlyList<string> subGraphPath)
             {
-                m_graph = graph;
+                m_loadedFlowGraph = loadedFlowGraph;
                 m_subGraphPath = subGraphPath;
-                if (!graph.TryGetCollection(subGraphPath, out NodeCollectionRef collection))
+                if (!loadedFlowGraph.TryGetCollection(subGraphPath, out NodeCollectionRef collection))
                 {
-                    throw new InvalidOperationException(
-                        $"[Soup] CommandScope: subgraph path '{string.Join("/", subGraphPath ?? Array.Empty<string>())}' could not be resolved.");
+                    string path = subGraphPath != null ? string.Join("/", subGraphPath) : string.Empty;
+                    throw new InvalidOperationException($"[Soup] CommandScope: subgraph path '{path}' could not be resolved.");
                 }
                 
                 Collection = collection;
@@ -33,25 +37,27 @@ namespace Soup.Editor.Core
 
             public bool TryGetCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData)
             {
-                return m_graph.TryGetCollectionMetaData(m_subGraphPath, out collectionMetaData);
+                return m_loadedFlowGraph.TryGetCollectionMetaData(m_subGraphPath, out collectionMetaData);
             }
 
-            // One per graph, whichever subgraph the command runs in.
+            /// <summary>
+            /// The graph's blackboard. There's one per graph, whichever subgraph the command runs in.
+            /// </summary>
             public bool TryGetBlackboard(out BlackboardRef blackboard)
             {
-                return m_graph.TryGetBlackboard(out blackboard);
+                return m_loadedFlowGraph.TryGetBlackboard(out blackboard);
             }
 
             #region Nodes
             public bool RepairOutports(NodeRef nodeRef)
             {
-                m_graph.ApplyGraphChanges();
+                m_loadedFlowGraph.ApplyGraphChanges();
                 return RecordRepair(FlowGraphValidator.ValidateNodeTreeEdges(nodeRef));
             }
 
             public bool RepairOutports(IReadOnlyCollection<string> nodeIds)
             {
-                m_graph.ApplyGraphChanges();
+                m_loadedFlowGraph.ApplyGraphChanges();
 
                 bool changed = false;
                 Dictionary<string, NodeRef> nodesById = Collection.GetNodesById();
@@ -77,59 +83,31 @@ namespace Soup.Editor.Core
             }
             #endregion
 
-            #region MetaData
-            public NodeCollectionMetaDataRef ApplyAndReResolve(NodeCollectionMetaDataRef collectionMetaData)
-            {
-                if (!collectionMetaData.IsValid || !m_graph.IsMetaDataAlive)
-                {
-                    return default;
-                }
-
-                m_graph.ApplyMetaDataChanges();
-                return new NodeCollectionMetaDataRef(m_graph.m_serializedMetaData.FindProperty(collectionMetaData.Path));
-            }
-            #endregion
-
             #region NodeCollectionMetaData
             public bool TryGetOrCreateCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData)
             {
                 collectionMetaData = default;
-                if (!m_graph.EnsureMetaDataSubAssetExists())
+                if (!m_loadedFlowGraph.EnsureMetaDataSubAssetExists())
                 {
                     return false;
                 }
 
-                List<(string id, Type type)> subGraphNodes = new();
-                if (!m_graph.TryGetRootCollection(out NodeCollectionRef collection))
+                if (!m_loadedFlowGraph.TryGetRootCollectionMetaData(out collectionMetaData))
                 {
                     return false;
                 }
 
-                if (m_subGraphPath != null)
+                if (m_subGraphPath == null)
                 {
-                    foreach (string subGraphNodeId in m_subGraphPath)
+                    return true;
+                }
+
+                // Every node on a subgraph path is a SubGraphNode, which is sealed, so its meta data type is known without reading the node.
+                foreach (string subGraphNodeId in m_subGraphPath)
+                {
+                    if (!TryGetOrCreateNodeMetaData(collectionMetaData, subGraphNodeId, typeof(SubGraphNode), out NodeMetaDataRef nodeMetaData) || !nodeMetaData.TryGetSubGraphCollectionMetaData(out collectionMetaData))
                     {
-                        if (!collection.TryGetNode(subGraphNodeId, out NodeRef nodeRef) || !nodeRef.TryGetSubGraphCollection(out NodeCollectionRef next))
-                        {
-                            Debug.LogError($"[Soup] meta data for subgraph '{subGraphNodeId}' could not be resolved!!! Node data in this subgraph will not be saved.");
-                            return false;
-                        }
-
-                        subGraphNodes.Add((subGraphNodeId, nodeRef.GetNodeType()));
-                        collection = next;
-                    }
-                }
-
-                if (!m_graph.TryGetRootCollectionMetaData(out collectionMetaData))
-                {
-                    return false;
-                }
-
-                foreach ((string id, Type type) in subGraphNodes)
-                {
-                    if (!TryGetOrCreateNodeMetaDataRef(collectionMetaData, id, type, out NodeMetaDataRef nodeMetaData) || !nodeMetaData.TryGetSubGraphCollectionMetaData(out collectionMetaData))
-                    {
-                        Debug.LogError($"[Soup] meta data for subgraph '{id}' could not be resolved!!! Node data in this subgraph will not be saved.");
+                        Debug.LogError($"[Soup] CommandScope: meta data for subgraph '{subGraphNodeId}' could not be resolved, so positions in this subgraph won't be saved.");
                         collectionMetaData = default;
                         return false;
                     }
@@ -140,12 +118,11 @@ namespace Soup.Editor.Core
             #endregion
 
             #region NodeMetaData
-            public bool TryGetOrCreateNodeMetaDataRef(NodeCollectionMetaDataRef collectionMetaData, string nodeId, Type nodeType, out NodeMetaDataRef nodeMetaData)
+            public bool TryGetOrCreateNodeMetaData(NodeCollectionMetaDataRef collectionMetaData, string nodeId, Type nodeType, out NodeMetaDataRef nodeMetaData)
             {
-                // Creating an entry invalidates element handles, so re-resolve the collection before looking it back up.
-                return TryCreateNodeMetaData(collectionMetaData, nodeId, nodeType)
-                    ? ApplyAndReResolve(collectionMetaData).TryGetNodeMetaDataRef(nodeId, out nodeMetaData)
-                    : collectionMetaData.TryGetNodeMetaDataRef(nodeId, out nodeMetaData);
+                // A new entry reads back through the same handles without an apply, so its writes stay pending until the run applies.
+                TryCreateNodeMetaData(collectionMetaData, nodeId, nodeType);
+                return collectionMetaData.TryGetNodeMetaDataRef(nodeId, out nodeMetaData);
             }
 
             public bool TryCreateNodeMetaData(NodeCollectionMetaDataRef collectionMetaData, string nodeId, Type nodeType)

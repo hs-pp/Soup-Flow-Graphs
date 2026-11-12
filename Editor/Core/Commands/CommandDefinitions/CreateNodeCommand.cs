@@ -53,7 +53,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             scope.RepairOutports(nodeRef);
 
             if (!scope.TryGetOrCreateCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData)
-                || !scope.TryGetOrCreateNodeMetaDataRef(collectionMetaData, node.Id, m_nodeType, out NodeMetaDataRef nodeMetaData)
+                || !scope.TryGetOrCreateNodeMetaData(collectionMetaData, node.Id, m_nodeType, out NodeMetaDataRef nodeMetaData)
                 || !CommandUtils.SetNodePosition(scope, nodeMetaData, m_position))
             {
                 Debug.LogError($"[Soup] '{m_nodeType.Name}' was created but its position could not be saved; it will appear at the origin.");

@@ -4,32 +4,32 @@ using Soup.Editor.Core.Commands;
 using Soup.Editor.Core.DataRefs;
 using Soup.Editor.State;
 using Soup.Runtime;
-using Soup.Runtime.Blackboards;
 using UnityEditor;
 using UnityEngine;
 
 namespace Soup.Editor.Core
 {
+    /// <summary>
+    /// Represents a single graph asset open for editing. All graph editors with the same graph asset open point to the same LoadedFlowGraph.
+    /// Changes to the graph asset made by one editor are easily signaled to all editors looking at the same graph asset.
+    /// </summary>
     public partial class LoadedFlowGraph
     {
-        private string m_assetGuid;
-        public string AssetGuid => m_assetGuid;
+        public string AssetGuid { get; }
+        public AFlowGraph GraphAsset { get; }
 
-        private AFlowGraph m_graphAsset;
-        public AFlowGraph GraphAsset => m_graphAsset;
-        
         private SerializedObject m_serializedGraph;
         private FlowGraphMetaData m_metaData;
         private SerializedObject m_serializedMetaData;
         
         private GraphChangeSet m_workingChangeSet = new();
         public event Action<GraphChangeSet> OnFlowGraphChanged;
-        public event Action OnReloaded;
+        public event Action OnFlowGraphReloaded;
 
         private bool m_isNotifyingGraphChanged;
         private bool m_isExecutingCommands; // While set, every undoable write to this graph is a command's own, not an external edit.
 
-        public bool IsGraphAlive => m_graphAsset != null;
+        public bool IsGraphAlive => GraphAsset != null;
         public bool IsMetaDataAlive => m_metaData != null;
 
         public static bool TryLoad(string assetGuid, out LoadedFlowGraph loadedFlowGraph)
@@ -47,14 +47,14 @@ namespace Soup.Editor.Core
         
         private LoadedFlowGraph(string assetGuid, AFlowGraph graph, string assetPath)
         {
-            m_assetGuid = assetGuid;
-            m_graphAsset = graph;
+            AssetGuid = assetGuid;
+            GraphAsset = graph;
             m_serializedGraph = new SerializedObject(graph);
 
             m_metaData = GetMetaDataSubAsset(assetPath);
             m_serializedMetaData = m_metaData != null ? new SerializedObject(m_metaData) : null;
             
-            ValidateOnLoad();
+            ValidateAll();
 
             Undo.undoRedoPerformed += HandleUndoRedoPerformed;
             Undo.postprocessModifications += HandlePostprocessModifications;
@@ -67,7 +67,7 @@ namespace Soup.Editor.Core
             EditorApplication.delayCall -= ProcessExternalEdits;
         }
 
-        private void ValidateOnLoad()
+        private void ValidateAll()
         {
             if (!TryGetRootCollection(out NodeCollectionRef rootCollection))
             {
@@ -84,7 +84,7 @@ namespace Soup.Editor.Core
 
             if (TryGetRootCollectionMetaData(out NodeCollectionMetaDataRef rootCollectionMetaData))
             {
-                FlowGraphValidator.MetaDataValidationReport metaDataReport = FlowGraphValidator.ValidateFlowGraphMetaData(rootCollectionMetaData, rootCollection);
+                FlowGraphValidator.MetaDataValidationReport metaDataReport = FlowGraphValidator.ValidateAllMetaData(rootCollectionMetaData, rootCollection);
                 if (metaDataReport.Changed)
                 {
                     ApplyMetaDataChangesWithoutUndo();
@@ -93,7 +93,7 @@ namespace Soup.Editor.Core
                 FlowGraphValidator.LogReport(metaDataReport);
             }
 
-            FlowGraphValidator.LogDisallowedNodes(m_graphAsset, FlowGraphValidator.FindDisallowedNodes(rootCollection, m_graphAsset.GetType()));
+            FlowGraphValidator.LogDisallowedNodes(GraphAsset, FlowGraphValidator.FindDisallowedNodes(rootCollection, GraphAsset.GetType()));
         }
 
         #region Commands
@@ -104,15 +104,15 @@ namespace Soup.Editor.Core
                 return null;
             }
 
-            return ExecuteCommands(command.IsUndoable ? command.GetUndoName() : null, new[] { command }, subGraphPath);
+            return ExecuteCommands(new[] { command }, subGraphPath, command.IsUndoable ? command.GetUndoName() : null);
         }
 
-        public GraphChangeSet ExecuteBatch(IReadOnlyList<IGraphCommand> commands, IReadOnlyList<string> subGraphPath, string undoName = "FlowGraph Edit")
+        public GraphChangeSet ExecuteBatch(IReadOnlyList<IGraphCommand> commands, IReadOnlyList<string> subGraphPath, string undoName)
         {
-            return ExecuteCommands(undoName, commands, subGraphPath);
+            return ExecuteCommands(commands, subGraphPath, undoName);
         }
 
-        private GraphChangeSet ExecuteCommands(string undoName, IReadOnlyList<IGraphCommand> commands, IReadOnlyList<string> subGraphPath)
+        private GraphChangeSet ExecuteCommands(IReadOnlyList<IGraphCommand> commands, IReadOnlyList<string> subGraphPath, string undoName)
         {
             if (commands == null || commands.Count == 0)
             {
@@ -122,6 +122,12 @@ namespace Soup.Editor.Core
             if (m_isNotifyingGraphChanged) // Avoid any callbacks trying to make another change. Unlikely but good protection.
             {
                 Debug.LogError("[Soup] LoadedFlowGraph: An execute was started from inside an OnFlowGraphChanged subscriber. Subscribers must not modify the graph.");
+                return null;
+            }
+            
+            if (m_isExecutingCommands) // Avoid calling execute while a command is running.
+            {
+                Debug.LogError("[Soup] LoadedFlowGraph: An execute was started from inside a running command. Commands must write through their CommandScope.");
                 return null;
             }
 
@@ -232,7 +238,11 @@ namespace Soup.Editor.Core
                 try
                 {
                     OnFlowGraphChanged?.Invoke(m_workingChangeSet);
-                } catch(Exception e) { Debug.LogException(e); }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
             }
             m_workingChangeSet.Clear();
             m_isNotifyingGraphChanged = false;
@@ -243,7 +253,7 @@ namespace Soup.Editor.Core
             ClearExternalEdits(); // An undo flushes held-back writes just before it runs, and the reload covers them.
             RefreshSerializedObjects();
             m_workingChangeSet.Clear();
-            OnReloaded?.Invoke();
+            OnFlowGraphReloaded?.Invoke();
         }
 
         private bool ApplyGraphChanges() => IsGraphAlive && m_serializedGraph.ApplyModifiedProperties();
@@ -278,7 +288,7 @@ namespace Soup.Editor.Core
             {
                 if (!current.TryGetNode(subGraphPath[depth], out NodeRef nodeRef) || !nodeRef.TryGetSubGraphCollection(out NodeCollectionRef next))
                 {
-                    collection = current;
+                    collection = default;
                     return false;
                 }
 
@@ -339,7 +349,7 @@ namespace Soup.Editor.Core
             }
 
             // AddObjectToAsset needs a real asset to attach to. Nothing can be created without one.
-            if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(m_graphAsset)))
+            if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(GraphAsset)))
             {
                 return false;
             }
@@ -348,8 +358,8 @@ namespace Soup.Editor.Core
             m_metaData.name = nameof(FlowGraphMetaData);
             m_metaData.hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSaveInBuild; // May not be necessary as long as there's no references to it but just in case.
 
-            AssetDatabase.AddObjectToAsset(m_metaData, m_graphAsset);
-            EditorUtility.SetDirty(m_graphAsset);
+            AssetDatabase.AddObjectToAsset(m_metaData, GraphAsset);
+            EditorUtility.SetDirty(GraphAsset);
 
             m_serializedMetaData = new SerializedObject(m_metaData);
             return true;

@@ -4,47 +4,45 @@ using UnityEditor;
 
 namespace Soup.Editor.Core
 {
-    public class LoadedFlowGraphHandler
+    public static class SoupEditorCore
     {
-        public string AssetGuid { get; private set; }
-        public LoadedFlowGraph LoadedGraph { get; private set; }
-        private List<SoupEditorView> m_requesters = new();
-        public IReadOnlyList<SoupEditorView> Requesters => m_requesters;
-
-        public LoadedFlowGraphHandler(string assetGuid, LoadedFlowGraph loadedGraph)
+        private class LoadedFlowGraphHandler
         {
-            AssetGuid = assetGuid;
-            LoadedGraph = loadedGraph;
-        }
+            public LoadedFlowGraph LoadedGraph { get; }
+            private List<SoupEditorView> m_requesters = new();
+            public IReadOnlyList<SoupEditorView> Requesters => m_requesters;
 
-        public void AddRequester(SoupEditorView requestedEditor)
-        {
-            if (!m_requesters.Contains(requestedEditor))
+            public LoadedFlowGraphHandler(LoadedFlowGraph loadedGraph)
             {
-                m_requesters.Add(requestedEditor);
+                LoadedGraph = loadedGraph;
+            }
+
+            public void AddRequester(SoupEditorView requestedEditor)
+            {
+                if (!m_requesters.Contains(requestedEditor))
+                {
+                    m_requesters.Add(requestedEditor);
+                }
+            }
+
+            public void RemoveRequester(SoupEditorView requestedEditor)
+            {
+                m_requesters.Remove(requestedEditor);
+            }
+
+            public bool HasAnyRequesters()
+            {
+                return m_requesters.Count != 0;
+            }
+
+            public void Dispose()
+            {
+                LoadedGraph.Dispose();
             }
         }
 
-        public void RemoveRequester(SoupEditorView requestedEditor)
-        {
-            m_requesters.Remove(requestedEditor);
-        }
-
-        public bool HasAnyRequesters()
-        {
-            return  m_requesters.Count != 0;
-        }
-
-        public void ClearHandler()
-        {
-            LoadedGraph.Dispose();
-        }
-    }
-    
-    public static class SoupEditorCore
-    {
         private static Dictionary<string, LoadedFlowGraphHandler> m_loadedGraphs = new();
-        
+
         public static LoadedFlowGraph RequestLoadedGraph(string assetGuid, SoupEditorView requestedEditor)
         {
             if (string.IsNullOrEmpty(assetGuid))
@@ -54,16 +52,16 @@ namespace Soup.Editor.Core
 
             if (!m_loadedGraphs.TryGetValue(assetGuid, out LoadedFlowGraphHandler handler))
             {
-                if (!LoadedFlowGraph.TryLoad(assetGuid, out LoadedFlowGraph loaded))
+                if (!LoadedFlowGraph.TryLoad(assetGuid, out LoadedFlowGraph loadedFlowGraph))
                 {
                     return null;
                 }
 
-                handler = new LoadedFlowGraphHandler(assetGuid, loaded);
+                handler = new LoadedFlowGraphHandler(loadedFlowGraph);
                 m_loadedGraphs.Add(assetGuid, handler);
             }
             handler.AddRequester(requestedEditor);
-            
+
             return handler.LoadedGraph;
         }
 
@@ -74,33 +72,32 @@ namespace Soup.Editor.Core
                 return;
             }
 
-            if (!m_loadedGraphs.ContainsKey(assetGuid))
+            if (!m_loadedGraphs.TryGetValue(assetGuid, out LoadedFlowGraphHandler handler))
             {
                 return;
             }
-            
-            LoadedFlowGraphHandler handler = m_loadedGraphs[assetGuid];
+
             handler.RemoveRequester(requestedEditor);
             if (!handler.HasAnyRequesters())
             {
-                handler.ClearHandler();
+                handler.Dispose();
                 m_loadedGraphs.Remove(assetGuid);
             }
         }
 
         internal static void UnloadDeletedGraphs()
         {
-            List<SoupEditorView> orphaned = new();
+            List<SoupEditorView> viewsToUnload = new();
             foreach (LoadedFlowGraphHandler handler in m_loadedGraphs.Values)
             {
                 if (!handler.LoadedGraph.IsGraphAlive)
                 {
-                    orphaned.AddRange(handler.Requesters);
+                    viewsToUnload.AddRange(handler.Requesters);
                 }
             }
 
             // Loop through these separately to avoid array changing mid loop.
-            foreach (SoupEditorView view in orphaned)
+            foreach (SoupEditorView view in viewsToUnload)
             {
                 view.UnloadGraph();
             }

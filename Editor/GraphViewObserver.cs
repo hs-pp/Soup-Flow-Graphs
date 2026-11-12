@@ -48,7 +48,7 @@ namespace Soup.Editor
             if (m_loadedFlowGraph != null)
             {
                 m_loadedFlowGraph.OnFlowGraphChanged -= HandleFlowGraphChanged;
-                m_loadedFlowGraph.OnReloaded -= HandleReloaded;
+                m_loadedFlowGraph.OnFlowGraphReloaded -= HandleFlowGraphReloaded;
             }
 
             if (loadedFlowGraph != m_loadedFlowGraph)
@@ -60,7 +60,7 @@ namespace Soup.Editor
             if (m_loadedFlowGraph != null)
             {
                 m_loadedFlowGraph.OnFlowGraphChanged += HandleFlowGraphChanged;
-                m_loadedFlowGraph.OnReloaded += HandleReloaded;
+                m_loadedFlowGraph.OnFlowGraphReloaded += HandleFlowGraphReloaded;
             }
         }
 
@@ -101,7 +101,7 @@ namespace Soup.Editor
             Reconcile();
         }
 
-        private void HandleReloaded()
+        private void HandleFlowGraphReloaded()
         {
             // Undo can delete the subgraph node we're currently inside of. Pruning raises OnNavigationChanged, which reconciles.
             bool navigated = m_state.ValidateSubGraphPath(m_loadedFlowGraph);

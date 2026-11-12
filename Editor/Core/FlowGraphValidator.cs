@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Soup.Editor.Core.DataRefs;
 using Soup.Editor.State;
@@ -19,7 +18,7 @@ namespace Soup.Editor.Core
         {
             public readonly UnityEngine.Object Asset;
             public readonly List<DroppedEdge> DroppedEdges = new();
-            public int MissingNodeTypes;
+            public int MissingTypeNodeCount;
             public bool Changed;
 
             public EdgeValidationReport(UnityEngine.Object asset)
@@ -30,16 +29,16 @@ namespace Soup.Editor.Core
         
         public readonly struct DroppedEdge
         {
-            public readonly string NodeType;
+            public readonly string NodeTypeName;
             public readonly string NodeId;
-            public readonly string OutportKey;
+            public readonly string OutportId;
             public readonly string TargetNodeId;
 
-            public DroppedEdge(string nodeTypeName, string nodeId, string outportKey, string targetNodeId)
+            public DroppedEdge(string nodeTypeName, string nodeId, string outportId, string targetNodeId)
             {
-                NodeType = nodeTypeName;
+                NodeTypeName = nodeTypeName;
                 NodeId = nodeId;
-                OutportKey = outportKey;
+                OutportId = outportId;
                 TargetNodeId = targetNodeId;
             }
         }
@@ -54,7 +53,7 @@ namespace Soup.Editor.Core
         /// <summary>
         /// Validates and REPAIRS broken edges due to outport definitions changing in code.
         /// </summary>
-        private static bool ValidateNodeEdges(NodeRef nodeRef, List<DroppedEdge> inDroppedEdges = null)
+        private static bool ValidateNodeEdges(NodeRef nodeRef, List<DroppedEdge> droppedEdges = null)
         {
             if (!nodeRef.IsValid)
             {
@@ -89,31 +88,31 @@ namespace Soup.Editor.Core
                 }
             }
 
-            // Any edges whose key no longer exist is dropped.
-            Dictionary<string, string> connectionsByKey = new();
+            // Edges whose outport id no longer exists are dropped.
+            Dictionary<string, string> connectedNodeIdsByOutportId = new();
             foreach (OutportRef outport in currentOutports)
             {
                 if (!string.IsNullOrEmpty(outport.Id))
                 {
-                    connectionsByKey.TryAdd(outport.Id, outport.ConnectedNodeId);
+                    connectedNodeIdsByOutportId.TryAdd(outport.Id, outport.ConnectedNodeId);
                 }
             }
 
             // If we passed in a dropped list, populate it.
-            if (inDroppedEdges != null)
+            if (droppedEdges != null)
             {
-                HashSet<string> survivingKeys = new(definitions.Count);
+                HashSet<string> survivingOutportIds = new(definitions.Count);
                 foreach (OutportDefinition definition in definitions)
                 {
-                    survivingKeys.Add(definition.Id);
+                    survivingOutportIds.Add(definition.Id);
                 }
 
                 string nodeTypeName = nodeRef.GetNodeType()?.Name;
-                foreach (KeyValuePair<string, string> connection in connectionsByKey)
+                foreach (KeyValuePair<string, string> connection in connectedNodeIdsByOutportId)
                 {
-                    if (!string.IsNullOrEmpty(connection.Value) && !survivingKeys.Contains(connection.Key))
+                    if (!string.IsNullOrEmpty(connection.Value) && !survivingOutportIds.Contains(connection.Key))
                     {
-                        inDroppedEdges.Add(new DroppedEdge(nodeTypeName, nodeRef.Id, connection.Key, connection.Value));
+                        droppedEdges.Add(new DroppedEdge(nodeTypeName, nodeRef.Id, connection.Key, connection.Value));
                     }
                 }
             }
@@ -123,8 +122,14 @@ namespace Soup.Editor.Core
             for (int i = 0; i < definitions.Count; i++)
             {
                 SerializedProperty element = outports.GetArrayElementAtIndex(i);
+                string connectedNodeId = string.Empty;
+                if (connectedNodeIdsByOutportId.TryGetValue(definitions[i].Id, out string target) && target != null)
+                {
+                    connectedNodeId = target;
+                }
+
                 element.FindPropertyRelative(OutportEdge.OUTPORT_ID_FIELD_NAME).stringValue = definitions[i].Id;
-                element.FindPropertyRelative(OutportEdge.CONNECTED_NODE_ID_FIELD_NAME).stringValue = connectionsByKey.TryGetValue(definitions[i].Id, out string target) ? target ?? string.Empty : string.Empty;
+                element.FindPropertyRelative(OutportEdge.CONNECTED_NODE_ID_FIELD_NAME).stringValue = connectedNodeId;
             }
 
             return true;
@@ -137,7 +142,7 @@ namespace Soup.Editor.Core
             return report.Changed;
         }
 
-        private static void ValidateEdgesInCollection(NodeCollectionRef collection, EdgeValidationReport inReport, int depth)
+        private static void ValidateEdgesInCollection(NodeCollectionRef collection, EdgeValidationReport report, int depth)
         {
             if (!collection.IsValid)
             {
@@ -146,7 +151,7 @@ namespace Soup.Editor.Core
 
             if (depth > MAX_SUBGRAPH_DEPTH)
             {
-                Debug.LogError($"[Soup] Subgraph nesting exceeded {MAX_SUBGRAPH_DEPTH} levels.");
+                Debug.LogError($"[Soup] FlowGraphValidator: subgraph nesting exceeded {MAX_SUBGRAPH_DEPTH} levels.");
                 return;
             }
 
@@ -155,21 +160,21 @@ namespace Soup.Editor.Core
             {
                 if (nodeRef.IsMissingType)
                 {
-                    inReport.MissingNodeTypes++;
+                    report.MissingTypeNodeCount++;
                     continue;
                 }
 
-                ValidateNodeTreeEdges(nodeRef, inReport, depth);
+                ValidateNodeTreeEdges(nodeRef, report, depth);
             }
         }
 
-        private static void ValidateNodeTreeEdges(NodeRef nodeRef, EdgeValidationReport inReport, int depth)
+        private static void ValidateNodeTreeEdges(NodeRef nodeRef, EdgeValidationReport report, int depth)
         {
-            inReport.Changed |= ValidateNodeEdges(nodeRef, inReport.DroppedEdges);
+            report.Changed |= ValidateNodeEdges(nodeRef, report.DroppedEdges);
 
             if (nodeRef.TryGetSubGraphCollection(out NodeCollectionRef subGraph))
             {
-                ValidateEdgesInCollection(subGraph, inReport, depth + 1);
+                ValidateEdgesInCollection(subGraph, report, depth + 1);
             }
         }
         
@@ -181,16 +186,16 @@ namespace Soup.Editor.Core
                 message.AppendLine($"[Soup] '{report.Asset.name}' {report.DroppedEdges.Count} connection(s) were dropped. Asset is now dirty and saving makes this permanent.");
                 foreach (DroppedEdge drop in report.DroppedEdges)
                 {
-                    message.AppendLine($"  • {drop.NodeType} ({drop.NodeId}) outport '{drop.OutportKey}' → {drop.TargetNodeId}");
+                    message.AppendLine($"  • {drop.NodeTypeName} ({drop.NodeId}) outport '{drop.OutportId}' → {drop.TargetNodeId}");
                 }
 
                 Debug.LogWarning(message.ToString(), report.Asset);
             }
 
-            if (report.MissingNodeTypes > 0)
+            if (report.MissingTypeNodeCount > 0)
             {
                 StringBuilder message = new();
-                message.AppendLine($"[Soup] '{report.Asset.name}' {report.MissingNodeTypes} node(s) could not be loaded because their class was renamed, moved to another namespace or assembly, or deleted. They are hidden from the canvas and connections to them dangle, but their data is still in the asset and comes back with the type.");
+                message.AppendLine($"[Soup] '{report.Asset.name}' {report.MissingTypeNodeCount} node(s) could not be loaded because their class was renamed, moved to another namespace or assembly, or deleted. They are hidden from the canvas and connections to them dangle, but their data is still in the asset and comes back with the type.");
 
                 List<string> missingTypes = GetMissingTypeNames(report.Asset, out _);
                 if (missingTypes.Count > 0)
@@ -212,9 +217,9 @@ namespace Soup.Editor.Core
         {
             public readonly UnityEngine.Object Asset;
             public readonly List<string> MissingTypes = new();
-            public int MissingTypeReferences;
+            public int MissingTypeReferenceCount;
+            public int UnresolvedMetaDataCount;
             public bool Changed;
-            public int UnresolvedMetaDatas;
 
             public MetaDataValidationReport(UnityEngine.Object asset)
             {
@@ -222,30 +227,27 @@ namespace Soup.Editor.Core
             }
         }
         
-        public static MetaDataValidationReport ValidateFlowGraphMetaData(NodeCollectionMetaDataRef rootCollectionMetaData, NodeCollectionRef rootCollection)
+        public static MetaDataValidationReport ValidateAllMetaData(NodeCollectionMetaDataRef rootCollectionMetaData, NodeCollectionRef rootCollection)
         {
             MetaDataValidationReport report = new(rootCollection.CollectionSP?.serializedObject.targetObject);
-            report.MissingTypes.AddRange(GetMissingTypeNames(rootCollectionMetaData.CollectionSP?.serializedObject.targetObject, out int missingTypeReferences));
-            report.MissingTypeReferences = missingTypeReferences;
+            report.MissingTypes.AddRange(GetMissingTypeNames(rootCollectionMetaData.CollectionSP?.serializedObject.targetObject, out int missingTypeReferenceCount));
+            report.MissingTypeReferenceCount = missingTypeReferenceCount;
 
-            ValidateNodeCollectionMetaData(rootCollectionMetaData, rootCollection, 0, report.MissingTypeReferences > 0, report);
+            ValidateNodeCollectionMetaData(rootCollectionMetaData, rootCollection, 0, report);
             return report;
         }
-        
-        private static void ValidateNodeCollectionMetaData(NodeCollectionMetaDataRef collectionMetaData, NodeCollectionRef collection, int depth, bool metaDataHasMissingTypes, MetaDataValidationReport report)
+
+        private static void ValidateNodeCollectionMetaData(NodeCollectionMetaDataRef collectionMetaData, NodeCollectionRef collection, int depth, MetaDataValidationReport report)
         {
-            if (!collectionMetaData.IsValid || !collection.IsValid)
+            // Edge validation already logs nesting that's too deep.
+            if (!collectionMetaData.IsValid || !collection.IsValid || depth > MAX_SUBGRAPH_DEPTH)
             {
                 return;
             }
 
-            if (depth > MAX_SUBGRAPH_DEPTH)
-            {
-                Debug.LogError($"[Soup] Subgraph nesting exceeded {MAX_SUBGRAPH_DEPTH} levels.");
-                return;
-            }
-
+            bool metaDataHasMissingTypes = report.MissingTypeReferenceCount > 0;
             bool hasMissingNodes = HasMissingNodes(collection);
+            Dictionary<string, NodeRef> nodesById = collection.GetNodesById();
 
             // Walked in reverse and indexed by hand because entries are deleted in place, which rules out enumerating
             // NodeCollectionMetaDataRef.GetNodeMetaDatas here.
@@ -264,7 +266,7 @@ namespace Soup.Editor.Core
                     continue;
                 }
 
-                if (!collection.TryGetNode(nodeMetaData.NodeId, out NodeRef nodeRef))
+                if (!nodesById.TryGetValue(nodeMetaData.NodeId, out NodeRef nodeRef))
                 {
                     if (hasMissingNodes)
                     {
@@ -285,13 +287,13 @@ namespace Soup.Editor.Core
 
                 if (EditorTypesFactory.HasNoRegisteredMetaDataType(nodeMetaData.GetNodeMetaDataInstance(), nodeType))
                 {
-                    report.UnresolvedMetaDatas++;
+                    report.UnresolvedMetaDataCount++;
                 }
 
                 if (nodeRef.TryGetSubGraphCollection(out NodeCollectionRef subGraph)
                     && nodeMetaData.TryGetSubGraphCollectionMetaData(out NodeCollectionMetaDataRef subGraphMetaData))
                 {
-                    ValidateNodeCollectionMetaData(subGraphMetaData, subGraph, depth + 1, metaDataHasMissingTypes, report);
+                    ValidateNodeCollectionMetaData(subGraphMetaData, subGraph, depth + 1, report);
                 }
             }
         }
@@ -328,7 +330,7 @@ namespace Soup.Editor.Core
             if (report.MissingTypes.Count > 0)
             {
                 StringBuilder message = new();
-                message.AppendLine($"[Soup] '{report.Asset.name}' {report.MissingTypeReferences} node meta data entry(s) could not be loaded because their class was renamed, moved to another namespace or assembly, or deleted. Nothing was deleted in response: positions, and for a subgraph the whole nested layout, stay in the asset and come back with the type.");
+                message.AppendLine($"[Soup] '{report.Asset.name}' {report.MissingTypeReferenceCount} node meta data entry(s) could not be loaded because their class was renamed, moved to another namespace or assembly, or deleted. Nothing was deleted in response: positions, and for a subgraph the whole nested layout, stay in the asset and come back with the type.");
                 message.AppendLine("Missing meta data types:");
                 foreach (string typeName in report.MissingTypes)
                 {
@@ -338,9 +340,9 @@ namespace Soup.Editor.Core
                 Debug.LogWarning(message.ToString(), report.Asset);
             }
 
-            if (report.UnresolvedMetaDatas > 0)
+            if (report.UnresolvedMetaDataCount > 0)
             {
-                Debug.LogWarning($"[Soup] '{report.Asset.name}' {report.UnresolvedMetaDatas} node meta data entry(s) were kept as-is because their node's type has no registered meta data type. Check the console for EditorTypesFactory errors; the entries are preserved until a registration is back.", report.Asset);
+                Debug.LogWarning($"[Soup] '{report.Asset.name}' {report.UnresolvedMetaDataCount} node meta data entry(s) were kept as-is because their node's type has no registered meta data type. Check the console for EditorTypesFactory errors; the entries are preserved until a registration is back.", report.Asset);
             }
         }
         #endregion
@@ -356,7 +358,7 @@ namespace Soup.Editor.Core
             return disallowedNodes;
         }
 
-        private static void FindDisallowedNodes(NodeCollectionRef collection, Type graphType, List<string> inDisallowedNodes, int depth)
+        private static void FindDisallowedNodes(NodeCollectionRef collection, Type graphType, List<string> disallowedNodes, int depth)
         {
             // Edge validation already logs nesting that's too deep.
             if (!collection.IsValid || depth > MAX_SUBGRAPH_DEPTH)
@@ -374,12 +376,12 @@ namespace Soup.Editor.Core
                 Type nodeType = nodeRef.GetNodeType();
                 if (nodeType != null && !NodeUtils.IsNodeTypeAllowed(nodeType, graphType))
                 {
-                    inDisallowedNodes.Add($"{nodeType.Name} ({nodeRef.Id})");
+                    disallowedNodes.Add($"{nodeType.Name} ({nodeRef.Id})");
                 }
 
                 if (nodeRef.TryGetSubGraphCollection(out NodeCollectionRef subGraph))
                 {
-                    FindDisallowedNodes(subGraph, graphType, inDisallowedNodes, depth + 1);
+                    FindDisallowedNodes(subGraph, graphType, disallowedNodes, depth + 1);
                 }
             }
         }
@@ -420,12 +422,12 @@ namespace Soup.Editor.Core
             foreach (ManagedReferenceMissingType missing in allMissing)
             {
                 string prefix = string.IsNullOrEmpty(missing.namespaceName) ? string.Empty : missing.namespaceName + ".";
-                string name = $"{prefix}{missing.className}  (assembly '{missing.assemblyName}')";
+                string name = $"{prefix}{missing.className} (assembly '{missing.assemblyName}')";
                 missingClasses.Add(name);
             }
 
-            List<string> sorted = missingClasses.ToList();
-            sorted.Sort((a, b) => string.CompareOrdinal(a, b));
+            List<string> sorted = new(missingClasses);
+            sorted.Sort(string.CompareOrdinal);
             return sorted;
         }
     }

@@ -64,7 +64,7 @@ namespace Soup.Editor.Core
                     continue;
                 }
 
-                if (IsGraphAlive && property.target == m_graphAsset)
+                if (IsGraphAlive && property.target == GraphAsset)
                 {
                     RecordExternalEdit(ClassifyGraphEdit(property.propertyPath, out string nodeId), nodeId);
                 }
@@ -97,7 +97,7 @@ namespace Soup.Editor.Core
                 return ExternalEditType.Structure; // The reference itself changed.
             }
 
-            switch (ManagedReferenceUtility.GetManagedReference(m_graphAsset, referenceId))
+            switch (ManagedReferenceUtility.GetManagedReference(GraphAsset, referenceId))
             {
                 case SubGraphNode when localPath.StartsWith(GRAPH_SUBGRAPH_PREFIX, StringComparison.Ordinal):
                     return ExternalEditType.Structure; // The subgraph's own lists. Its nodes report under their own references.
@@ -135,7 +135,7 @@ namespace Soup.Editor.Core
                 m_nestedReferenceOwners = new Dictionary<long, string>();
 
                 // A fresh SerializedObject: this runs in the middle of a write the document's own may not have read back yet.
-                using SerializedObject serializedGraph = new(m_graphAsset);
+                using SerializedObject serializedGraph = new(GraphAsset);
                 CollectNestedReferenceOwners(new NodeCollectionRef(serializedGraph.FindProperty(AFlowGraph.ROOT_COLLECTION_FIELD_NAME)), m_nestedReferenceOwners);
             }
 
@@ -303,9 +303,9 @@ namespace Soup.Editor.Core
                 // Like an undo, this can leave anything stale, the subgraph a window is inside of included. Validation repairs
                 // whatever the other edits would have.
                 RefreshSerializedObjects();
-                ValidateOnLoad();
+                ValidateAll();
                 m_workingChangeSet.Clear();
-                OnReloaded?.Invoke();
+                OnFlowGraphReloaded?.Invoke();
                 return;
             }
 
@@ -329,7 +329,7 @@ namespace Soup.Editor.Core
             m_serializedGraph.Update();
 
             // A reimport can add or replace the meta data sub-asset. Holding on to the old one would let the next command create a second.
-            FlowGraphMetaData metaData = GetMetaDataSubAsset(AssetDatabase.GetAssetPath(m_graphAsset));
+            FlowGraphMetaData metaData = GetMetaDataSubAsset(AssetDatabase.GetAssetPath(GraphAsset));
             if (metaData != m_metaData)
             {
                 m_metaData = metaData;
