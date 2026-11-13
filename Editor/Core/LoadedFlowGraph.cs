@@ -387,7 +387,7 @@ namespace Soup.Editor.Core
 
             foreach (string subGraphNodeId in subGraphPath)
             {
-                if (!collectionMetaData.TryGetNodeMetaDataRef(subGraphNodeId, out NodeMetaDataRef nodeMetaData) || !nodeMetaData.TryGetSubGraphCollectionMetaData(out collectionMetaData))
+                if (!collectionMetaData.TryGetNode(subGraphNodeId, out NodeMetaDataRef nodeMetaData) || !nodeMetaData.TryGetSubGraphCollectionMetaData(out collectionMetaData))
                 {
                     collectionMetaData = default;
                     return false;

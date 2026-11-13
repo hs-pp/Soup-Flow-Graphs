@@ -24,7 +24,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             // Explicitly deleted edges.
             foreach (EdgeId edge in m_edges)
             {
-                CommandUtils.TrySetOutportTarget(scope, edge.FromNodeId, edge.OutportId, string.Empty);
+                scope.TrySetOutportTarget(edge.FromNodeId, edge.OutportId, string.Empty);
             }
 
             HashSet<string> deletedIds = DeleteNodes(scope, m_nodeIds);

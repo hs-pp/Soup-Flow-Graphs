@@ -180,6 +180,7 @@ namespace Soup.Editor.Views.Nodes
 
             SetComment(metaData.Comment);
             OnMetaDataChanged(metaData);
+            Graph?.NotifyContentChanged(); // The minimap draws the node's color, which no position or geometry change reports.
         }
 
         private void SetComment(string comment)

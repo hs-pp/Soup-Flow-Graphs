@@ -61,7 +61,7 @@ namespace Soup.Editor.Views.Inspector
             Dictionary<string, Rect> rectsById = new();
             if (collection.IsValid && metaData.IsValid)
             {
-                Dictionary<string, NodeMetaDataRef> metaDataById = metaData.GetNodeMetaDatasById();
+                Dictionary<string, NodeMetaDataRef> metaDataById = metaData.GetNodesById();
                 foreach (NodeRef node in collection.GetNodes())
                 {
                     if (node.IsMissingType || !metaDataById.TryGetValue(node.Id, out NodeMetaDataRef nodeMetaData))

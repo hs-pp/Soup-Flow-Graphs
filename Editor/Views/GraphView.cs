@@ -59,7 +59,7 @@ namespace Soup.Editor.Views
         private Dictionary<int, GraphViewLayer> m_layers = new();
         private Vector2 m_mousePosition;
         
-        private GridBackgroundElement m_gridBackgroundElement = new();
+        private GridBackgroundElement m_gridBackgroundElement;
 
         /** The loaded graph asset's type. The node search only offers node types it allows. */
         public Type GraphType { get; set; }
@@ -109,8 +109,9 @@ namespace Soup.Editor.Views
             AddToClassList(STYLECLASS_NAME);
             usageHints = UsageHints.MaskContainer; // Should equate to RenderHints.ClipWithScissors
 
+            m_gridBackgroundElement = new GridBackgroundElement(this);
             hierarchy.Add(m_gridBackgroundElement);
-            
+
             ContentContainer = new GraphElementContainer();
             m_gridBackgroundElement.Add(ContentContainer);
 
@@ -1076,7 +1077,7 @@ namespace Soup.Editor.Views
                 {
                     return false;
                 }
-                return m_miniMapElement.style.display == DisplayStyle.Flex;
+                return m_miniMapElement.style.display != DisplayStyle.None; // Unset reads as visible: the inline display only matches Flex once assigned.
             }
             set
             {

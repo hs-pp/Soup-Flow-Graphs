@@ -27,7 +27,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 }
             }
 
-            // Failed writes still report as moved, and groups as dirty, so the observer snaps the dragged views back to the model.
             scope.ChangeSet.GroupsDirty |= m_groupPositions.Count > 0;
 
             if (!scope.TryGetOrCreateCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData))
@@ -43,7 +42,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             }
 
             Dictionary<string, NodeMetaDataRef> movedMetaDatas = new(movedNodes.Count);
-            foreach (NodeMetaDataRef nodeMetaData in collectionMetaData.GetNodeMetaDatas())
+            foreach (NodeMetaDataRef nodeMetaData in collectionMetaData.GetNodes())
             {
                 if (!nodeMetaData.IsMissingType && movedNodes.ContainsKey(nodeMetaData.NodeId))
                 {
@@ -56,7 +55,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             foreach (string nodeId in movedNodes.Keys)
             {
                 if (!movedMetaDatas.TryGetValue(nodeId, out NodeMetaDataRef nodeMetaData)
-                    || !CommandUtils.SetNodePosition(scope, nodeMetaData, m_nodePositions[nodeId]))
+                    || !scope.TrySetNodePosition(nodeMetaData, m_nodePositions[nodeId]))
                 {
                     unwritten.Add(nodeId);
                 }
@@ -65,7 +64,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             // Third pass: update group positions.
             foreach (KeyValuePair<string, Vector2> pair in m_groupPositions)
             {
-                if (collectionMetaData.TryGetGroupMetaDataRef(pair.Key, out GroupMetaDataRef group))
+                if (collectionMetaData.TryGetGroup(pair.Key, out GroupMetaDataRef group))
                 {
                     SetGroupPosition(scope, group, pair.Value);
                 }

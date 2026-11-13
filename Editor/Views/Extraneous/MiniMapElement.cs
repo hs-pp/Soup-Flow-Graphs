@@ -15,15 +15,15 @@ namespace Soup.Editor.Views.Extraneous
     {
         private const string STYLECLASS_NAME = "minimap";
         private const float CONTENT_PADDING = 6f;
-        private const float MIN_NODE_SIZE = 2f;
+        private const float MIN_ELEMENT_SIZE = 2f;
 
-        private static readonly CustomStyleProperty<Color> s_nodeColorProperty = new("--minimap-node-color");
-        private static readonly CustomStyleProperty<Color> s_edgeColorProperty = new("--minimap-edge-color");
-        private static readonly CustomStyleProperty<Color> s_selectedColorProperty = new("--minimap-selected-color");
-        private static readonly CustomStyleProperty<Color> s_viewportColorProperty = new("--minimap-viewport-color");
+        private static readonly CustomStyleProperty<Color> NODE_COLOR_PROPERTY = new("--minimap-node-color");
+        private static readonly CustomStyleProperty<Color> EDGE_COLOR_PROPERTY = new("--minimap-edge-color");
+        private static readonly CustomStyleProperty<Color> SELECTED_COLOR_PROPERTY = new("--minimap-selected-color");
+        private static readonly CustomStyleProperty<Color> VIEWPORT_COLOR_PROPERTY = new("--minimap-viewport-color");
 
         private readonly GraphView m_graphView;
-        private readonly VisualElement m_canvas;
+        private readonly VisualElement m_mapElement;
         private readonly UQueryState<BaseNodeView> m_nodes;
         private readonly UQueryState<EdgeView> m_edges;
         private readonly UQueryState<GroupView> m_groups;
@@ -33,12 +33,8 @@ namespace Soup.Editor.Views.Extraneous
         private Color m_selectedColor = new(0.27f, 0.75f, 1f, 1f);
         private Color m_viewportColor = new(0.9f, 0.9f, 0.9f, 0.8f);
 
-        // Content space -> minimap space: minimap = content * m_scale + m_offset.
         private float m_scale;
         private Vector2 m_offset;
-
-        // The mapping fits the viewport as well as the nodes, so it shifts as the viewport moves.
-        // Frozen while panning, otherwise the point under the cursor would slide away mid-drag.
         private bool m_panning;
 
         public MiniMapElement(GraphView graphView)
@@ -47,10 +43,10 @@ namespace Soup.Editor.Views.Extraneous
             AddToClassList(STYLECLASS_NAME);
 
             // Drawn by a child so the frame's overflow clips it.
-            m_canvas = new VisualElement { pickingMode = PickingMode.Ignore };
-            m_canvas.StretchToParentSize();
-            m_canvas.generateVisualContent = OnGenerateVisualContent;
-            Add(m_canvas);
+            m_mapElement = new VisualElement { pickingMode = PickingMode.Ignore };
+            m_mapElement.StretchToParentSize();
+            m_mapElement.generateVisualContent = OnGenerateVisualContent;
+            Add(m_mapElement);
 
             m_nodes = graphView.ContentContainer.NodesAll;
             m_edges = graphView.ContentContainer.EdgesAll;
@@ -76,34 +72,32 @@ namespace Soup.Editor.Views.Extraneous
             graphView.OnViewTransformChanged += _ => RequestRepaint();
             graphView.OnContentChanged += RequestRepaint;
             graphView.RegisterCallback<GeometryChangedEvent>(_ => RequestRepaint());
-            
-            style.display = DisplayStyle.Flex; // MiniMapVisible reads the inline display, which is unset (not Flex) until assigned.
         }
 
         private static void StopPropagation(EventBase evt) => evt.StopPropagation();
 
-        private void RequestRepaint() => m_canvas.MarkDirtyRepaint();
+        private void RequestRepaint() => m_mapElement.MarkDirtyRepaint();
 
         private void OnCustomStyleResolved(CustomStyleResolvedEvent evt)
         {
             ICustomStyle customStyle = evt.customStyle;
 
-            if (customStyle.TryGetValue(s_nodeColorProperty, out Color nodeColor))
+            if (customStyle.TryGetValue(NODE_COLOR_PROPERTY, out Color nodeColor))
             {
                 m_defaultNodeColor = nodeColor;
             }
 
-            if (customStyle.TryGetValue(s_edgeColorProperty, out Color edgeColor))
+            if (customStyle.TryGetValue(EDGE_COLOR_PROPERTY, out Color edgeColor))
             {
                 m_edgeColor = edgeColor;
             }
 
-            if (customStyle.TryGetValue(s_selectedColorProperty, out Color selectedColor))
+            if (customStyle.TryGetValue(SELECTED_COLOR_PROPERTY, out Color selectedColor))
             {
                 m_selectedColor = selectedColor;
             }
 
-            if (customStyle.TryGetValue(s_viewportColorProperty, out Color viewportColor))
+            if (customStyle.TryGetValue(VIEWPORT_COLOR_PROPERTY, out Color viewportColor))
             {
                 m_viewportColor = viewportColor;
             }
@@ -112,12 +106,9 @@ namespace Soup.Editor.Views.Extraneous
         }
 
         #region Mapping
-        /// <summary>
-        /// Fits the nodes and the viewport into the minimap. Returns false while there's nothing sensible to map yet (unresolved layout).
-        /// </summary>
         private bool UpdateMapping()
         {
-            Vector2 size = m_canvas.layout.size;
+            Vector2 size = m_mapElement.layout.size;
             if (!TryGetViewportRect(out Rect bounds) || float.IsNaN(size.x) || float.IsNaN(size.y))
             {
                 return false;
@@ -150,10 +141,6 @@ namespace Soup.Editor.Views.Extraneous
             return true;
         }
 
-        /// <summary>
-        /// The visible part of the graph in content space. Same translate/scale model as GraphView.Frame.
-        /// Reads the inline view transform, so it's current even before the style pass resolves a pan we just made.
-        /// </summary>
         private bool TryGetViewportRect(out Rect viewport)
         {
             Vector2 size = m_graphView.layout.size;
@@ -168,9 +155,6 @@ namespace Soup.Editor.Views.Extraneous
             return true;
         }
 
-        /// <summary>
-        /// False for an element that hasn't been through layout yet: its NaN size would poison the whole fit.
-        /// </summary>
         private bool TryGetElementRect(GraphElement element, out Rect rect)
         {
             rect = element.ChangeCoordinatesTo(m_graphView.ContentContainer, element.Rect());
@@ -206,7 +190,6 @@ namespace Soup.Editor.Views.Extraneous
             Painter2D painter = ctx.painter2D;
             painter.lineWidth = 1f;
 
-            // Groups under edges, same as the graph's layers. The query walks the group layer, which the observer keeps back to front.
             foreach (GroupView group in m_groups)
             {
                 if (!TryGetElementRect(group, out Rect groupRect))
@@ -214,7 +197,7 @@ namespace Soup.Editor.Views.Extraneous
                     continue;
                 }
 
-                PathRectangle(painter, ToMiniMap(groupRect, MIN_NODE_SIZE));
+                PathRectangle(painter, ToMiniMap(groupRect, MIN_ELEMENT_SIZE));
                 Color fill = group.resolvedStyle.backgroundColor; // Resolved by the time layout has run, and groups without layout were skipped above.
                 fill.a = 1f; // Opaque, or the dark group colours disappear into the minimap's own background.
                 painter.fillColor = fill;
@@ -227,7 +210,6 @@ namespace Soup.Editor.Views.Extraneous
                 }
             }
 
-            // Edges under nodes, same as the graph's layers.
             foreach (EdgeView edge in m_edges)
             {
                 if (!edge.IsRealEdge() && !edge.IsCandidateEdge())
@@ -249,7 +231,7 @@ namespace Soup.Editor.Views.Extraneous
                     continue;
                 }
 
-                PathRectangle(painter, ToMiniMap(nodeRect, MIN_NODE_SIZE));
+                PathRectangle(painter, ToMiniMap(nodeRect, MIN_ELEMENT_SIZE));
                 
                 painter.fillColor = node.MetaData.Color;
                 painter.Fill();
@@ -296,7 +278,7 @@ namespace Soup.Editor.Views.Extraneous
 
             m_panning = true;
             this.CapturePointer(evt.pointerId);
-            CenterViewportOn(m_canvas.WorldToLocal(evt.position));
+            CenterViewportOn(m_mapElement.WorldToLocal(evt.position));
         }
 
         private void OnPointerMove(PointerMoveEvent evt)
@@ -305,7 +287,7 @@ namespace Soup.Editor.Views.Extraneous
 
             if (m_panning && this.HasPointerCapture(evt.pointerId))
             {
-                CenterViewportOn(m_canvas.WorldToLocal(evt.position));
+                CenterViewportOn(m_mapElement.WorldToLocal(evt.position));
             }
         }
 
@@ -332,38 +314,26 @@ namespace Soup.Editor.Views.Extraneous
 
         private void CenterViewportOn(Vector2 miniMapPosition)
         {
-            Vector2 contentPosition = ToContent(miniMapPosition);
-            Vector3 scale = m_graphView.GetViewTransformScale();
-            Vector2 translation = m_graphView.layout.size * 0.5f - contentPosition * scale.x;
-            m_graphView.UpdateViewTransform(translation, scale);
+            CenterView(ToContent(miniMapPosition), m_graphView.CurrentScale);
         }
 
-        /// <summary>
-        /// Zooms the graph around the centre of the viewport. The graph's own zoomer anchors on the cursor instead,
-        /// but the content under the minimap's cursor is usually off screen, so anchoring there would fling the view away.
-        /// </summary>
+        private void CenterView(Vector2 contentPosition, float scale)
+        {
+            Vector2 translation = m_graphView.layout.size * 0.5f - contentPosition * scale;
+            m_graphView.UpdateViewTransform(translation, new(scale, scale, 1f));
+        }
+
         private void OnWheel(WheelEvent evt)
         {
             evt.StopPropagation();
 
-            // Same guard as ZoomManipulator: whoever holds the mouse owns the view transform, a minimap pan included.
-            if (panel?.GetCapturingElement(PointerId.mousePointerId) != null)
+            if (panel?.GetCapturingElement(PointerId.mousePointerId) != null || !TryGetViewportRect(out Rect viewport))
             {
                 return;
             }
 
-            Vector3 scale = m_graphView.GetViewTransformScale();
-            if (scale.x <= 0f)
-            {
-                return;
-            }
-
-            float zoom = ZoomManipulator.CalculateNewZoom(scale.y, -evt.delta.y, m_graphView.ScaleStep, m_graphView.ReferenceScale, m_graphView.MinScale, m_graphView.MaxScale);
-
-            Vector2 viewportCenter = m_graphView.layout.size * 0.5f;
-            Vector2 contentCenter = (viewportCenter - (Vector2)m_graphView.GetViewTransformPosition()) / scale.x;
-            Vector2 translation = viewportCenter - contentCenter * zoom;
-            m_graphView.UpdateViewTransform(translation, new Vector3(zoom, zoom, 1f));
+            float zoom = ZoomManipulator.CalculateNewZoom(m_graphView.CurrentScale, -evt.delta.y, m_graphView.ScaleStep, m_graphView.ReferenceScale, m_graphView.MinScale, m_graphView.MaxScale);
+            CenterView(viewport.center, zoom);
         }
 
         private void BuildContextualMenu(ContextualMenuPopulateEvent evt)

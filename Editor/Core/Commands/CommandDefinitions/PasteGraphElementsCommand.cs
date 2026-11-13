@@ -155,7 +155,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             {
                 foreach (ANode node in pastedNodes)
                 {
-                    CommandUtils.AddNode(scope, node);
+                    scope.AddNode(node);
                 }
 
                 // The clipboard outlives code changes, so pasted outports can be stale.
@@ -173,7 +173,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
                 foreach (GroupMetaData group in pastedGroups)
                 {
-                    CommandUtils.AddGroup(scope, collectionMetaData, group.Title, new Rect(group.Rect.position + delta, group.Rect.size), group.Color);
+                    scope.AddGroup(collectionMetaData, group.Title, new Rect(group.Rect.position + delta, group.Rect.size), group.Color);
                 }
             }
             else

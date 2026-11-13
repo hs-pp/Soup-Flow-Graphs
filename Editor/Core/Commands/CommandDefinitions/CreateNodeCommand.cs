@@ -41,7 +41,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             ANode node = (ANode)Activator.CreateInstance(m_nodeType);
             node.SetId(string.IsNullOrEmpty(m_presetNodeId) ? Guid.NewGuid().ToString("N") : m_presetNodeId);
 
-            NodeRef nodeRef = CommandUtils.AddNode(scope, node);
+            NodeRef nodeRef = scope.AddNode(node);
             if (!nodeRef.IsValid)
             {
                 Debug.LogError($"[Soup] {nameof(CreateNodeCommand)}: the current collection could not be resolved, so '{m_nodeType.Name}' was not created.");
@@ -52,7 +52,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
             if (!scope.TryGetOrCreateCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData)
                 || !scope.TryGetOrCreateNodeMetaData(collectionMetaData, node.Id, m_nodeType, out NodeMetaDataRef nodeMetaData)
-                || !CommandUtils.SetNodePosition(scope, nodeMetaData, m_position))
+                || !scope.TrySetNodePosition(nodeMetaData, m_position))
             {
                 Debug.LogError($"[Soup] {nameof(CreateNodeCommand)}: '{m_nodeType.Name}' was created but its position could not be saved; it will appear at the origin.");
             }

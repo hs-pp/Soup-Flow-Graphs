@@ -21,7 +21,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 return;
             }
 
-            CommandUtils.AddGroup(scope, collectionMetaData, GroupMetaData.DEFAULT_TITLE, m_rect, GroupMetaData.DEFAULT_COLOR);
+            scope.AddGroup(collectionMetaData, GroupMetaData.DEFAULT_TITLE, m_rect, GroupMetaData.DEFAULT_COLOR);
         }
     }
 }

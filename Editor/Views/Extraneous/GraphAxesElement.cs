@@ -8,15 +8,15 @@ namespace Soup.Editor.Views.Extraneous
     {
         private const int MAX_TICKS_PER_AXIS = 200;
 
-        private static readonly float[] s_mantissas = { 1f, 2f, 5f };
+        private static readonly float[] MANTISSAS = { 1f, 2f, 5f };
 
-        private static readonly CustomStyleProperty<float> s_axisThicknessProperty = new("--graph-axis-thickness");
-        private static readonly CustomStyleProperty<float> s_minTickSpacingProperty = new("--graph-axis-min-tick-spacing");
-        private static readonly CustomStyleProperty<float> s_labelWidthProperty = new("--coordinate-label-width");
-        private static readonly CustomStyleProperty<float> s_labelHeightProperty = new("--coordinate-label-height");
-        private static readonly CustomStyleProperty<float> s_labelGapProperty = new("--coordinate-label-gap");
-        private static readonly CustomStyleProperty<float> s_tickLengthProperty = new("--coordinate-tick-length");
-        private static readonly CustomStyleProperty<float> s_tickThicknessProperty = new("--coordinate-tick-thickness");
+        private static readonly CustomStyleProperty<float> AXIS_THICKNESS_PROPERTY = new("--graph-axis-thickness");
+        private static readonly CustomStyleProperty<float> MIN_TICK_SPACING_PROPERTY = new("--graph-axis-min-tick-spacing");
+        private static readonly CustomStyleProperty<float> LABEL_WIDTH_PROPERTY = new("--coordinate-label-width");
+        private static readonly CustomStyleProperty<float> LABEL_HEIGHT_PROPERTY = new("--coordinate-label-height");
+        private static readonly CustomStyleProperty<float> LABEL_GAP_PROPERTY = new("--coordinate-label-gap");
+        private static readonly CustomStyleProperty<float> TICK_LENGTH_PROPERTY = new("--coordinate-tick-length");
+        private static readonly CustomStyleProperty<float> TICK_THICKNESS_PROPERTY = new("--coordinate-tick-thickness");
 
         private readonly GraphView m_graphView;
         
@@ -24,7 +24,6 @@ namespace Soup.Editor.Views.Extraneous
         private readonly VisualElement m_horizontalAxis;
         private readonly List<CoordinateLabel> m_labels = new();
         private int m_activeLabels;
-        private bool m_isVisible = true;
 
         private float m_axisThickness;
         private float m_minTickSpacing;
@@ -33,8 +32,6 @@ namespace Soup.Editor.Views.Extraneous
         private float m_labelGap;
         private float m_tickLength;
         private float m_tickThickness;
-        
-        private static bool IsUsable(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
         public GraphAxesElement(GraphView graphView)
         {
@@ -73,37 +70,37 @@ namespace Soup.Editor.Views.Extraneous
         {
             ICustomStyle customStyle = e.customStyle;
 
-            if (customStyle.TryGetValue(s_axisThicknessProperty, out float axisThickness))
+            if (customStyle.TryGetValue(AXIS_THICKNESS_PROPERTY, out float axisThickness))
             {
                 m_axisThickness = axisThickness;
             }
 
-            if (customStyle.TryGetValue(s_minTickSpacingProperty, out float minTickSpacing))
+            if (customStyle.TryGetValue(MIN_TICK_SPACING_PROPERTY, out float minTickSpacing))
             {
                 m_minTickSpacing = minTickSpacing;
             }
 
-            if (customStyle.TryGetValue(s_labelWidthProperty, out float labelWidth))
+            if (customStyle.TryGetValue(LABEL_WIDTH_PROPERTY, out float labelWidth))
             {
                 m_labelWidth = labelWidth;
             }
 
-            if (customStyle.TryGetValue(s_labelHeightProperty, out float labelHeight))
+            if (customStyle.TryGetValue(LABEL_HEIGHT_PROPERTY, out float labelHeight))
             {
                 m_labelHeight = labelHeight;
             }
 
-            if (customStyle.TryGetValue(s_labelGapProperty, out float labelGap))
+            if (customStyle.TryGetValue(LABEL_GAP_PROPERTY, out float labelGap))
             {
                 m_labelGap = labelGap;
             }
 
-            if (customStyle.TryGetValue(s_tickLengthProperty, out float tickLength))
+            if (customStyle.TryGetValue(TICK_LENGTH_PROPERTY, out float tickLength))
             {
                 m_tickLength = tickLength;
             }
 
-            if (customStyle.TryGetValue(s_tickThicknessProperty, out float tickThickness))
+            if (customStyle.TryGetValue(TICK_THICKNESS_PROPERTY, out float tickThickness))
             {
                 m_tickThickness = tickThickness;
             }
@@ -122,26 +119,6 @@ namespace Soup.Editor.Views.Extraneous
         private void ApplyMetrics(CoordinateLabel label)
         {
             label.SetMetrics(m_labelWidth, m_labelHeight, m_labelGap, m_tickLength, m_tickThickness, m_axisThickness * 0.5f);
-        }
-
-        public void SetVisible(bool isVisible)
-        {
-            if (m_isVisible == isVisible)
-            {
-                return;
-            }
-
-            m_isVisible = isVisible;
-            style.display = isVisible ? DisplayStyle.Flex : DisplayStyle.None;
-
-            if (isVisible)
-            {
-                Refresh();
-            }
-            else
-            {
-                HideSurplusLabels(0);
-            }
         }
 
         private void OnAttachToPanel(AttachToPanelEvent evt)
@@ -172,11 +149,6 @@ namespace Soup.Editor.Views.Extraneous
 
         private void Refresh()
         {
-            if (!m_isVisible)
-            {
-                return;
-            }
-
             if (m_axisThickness <= 0f || m_minTickSpacing <= 0f)
             {
                 HideSurplusLabels(0);
@@ -188,14 +160,13 @@ namespace Soup.Editor.Views.Extraneous
             Vector2 translate = m_graphView.GetViewTransformPosition();
             Vector2 offset = m_graphView.ContentContainer.layout.position;
 
-            // Layout may not have resolved yet; a later GeometryChangedEvent re-runs us.
-            if (!IsUsable(size.x) || !IsUsable(size.y) || size.x <= 0f || size.y <= 0f || !IsUsable(scale) || scale <= 0f || !IsUsable(translate.x) || !IsUsable(translate.y))
+            if (!float.IsFinite(size.x) || !float.IsFinite(size.y) || size.x <= 0f || size.y <= 0f || !float.IsFinite(scale) || scale <= 0f || !float.IsFinite(translate.x) || !float.IsFinite(translate.y))
             {
                 HideSurplusLabels(0);
                 return;
             }
 
-            if (!IsUsable(offset.x) || !IsUsable(offset.y))
+            if (!float.IsFinite(offset.x) || !float.IsFinite(offset.y))
             {
                 offset = Vector2.zero;
             }
@@ -206,35 +177,31 @@ namespace Soup.Editor.Views.Extraneous
             Vector2 graphMin = ScreenToGraph(Vector2.zero, offset, scale, translate);
             Vector2 graphMax = ScreenToGraph(size, offset, scale, translate);
 
-            float maxBarX = Mathf.Max(0f, size.x - m_axisThickness);
-            float maxBarY = Mathf.Max(0f, size.y - m_axisThickness);
+            float maxPinnedX = Mathf.Max(0f, size.x - m_axisThickness);
+            float maxPinnedY = Mathf.Max(0f, size.y - m_axisThickness);
             float lineX = origin.x - m_axisThickness * 0.5f;
             float lineY = origin.y - m_axisThickness * 0.5f;
 
-            // The lines follow the origin off screen; only the numbers stay pinned to the nearest edge,
-            // so coordinates are always readable. A pinned axis drops its ticks, since its line isn't there.
             m_verticalAxis.style.translate = new Translate(lineX, 0f);
             m_horizontalAxis.style.translate = new Translate(0f, lineY);
 
-            float barX = Mathf.Clamp(lineX, 0f, maxBarX);
-            float barY = Mathf.Clamp(lineY, 0f, maxBarY);
-            bool verticalPinned = !Mathf.Approximately(barX, lineX);
-            bool horizontalPinned = !Mathf.Approximately(barY, lineY);
+            float pinnedX = Mathf.Clamp(lineX, 0f, maxPinnedX);
+            float pinnedY = Mathf.Clamp(lineY, 0f, maxPinnedY);
+            bool verticalPinned = !Mathf.Approximately(pinnedX, lineX);
+            bool horizontalPinned = !Mathf.Approximately(pinnedY, lineY);
 
             float increment = ChooseIncrement(scale);
 
-            // Labels sit left of / above the axis, ticks on the other side. An axis too close to the left or top
-            // edge to fit its labels there flips them inward so they stay on screen.
-            CoordinateLabel.Direction verticalDirection = barX >= m_labelGap + m_labelWidth ? CoordinateLabel.Direction.Left : CoordinateLabel.Direction.Right;
-            PlaceTicks(true, graphMin.y, graphMax.y, increment, offset.y, scale, translate.y, barX + m_axisThickness * 0.5f, verticalDirection, !verticalPinned);
+            CoordinateLabel.Direction verticalDirection = pinnedX >= m_labelGap + m_labelWidth ? CoordinateLabel.Direction.Left : CoordinateLabel.Direction.Right;
+            PlaceTicks(true, graphMin.y, graphMax.y, increment, offset.y, scale, translate.y, pinnedX + m_axisThickness * 0.5f, verticalDirection, !verticalPinned);
 
-            CoordinateLabel.Direction horizontalDirection = barY >= m_labelGap + m_labelHeight ? CoordinateLabel.Direction.Up : CoordinateLabel.Direction.Down;
-            PlaceTicks(false, graphMin.x, graphMax.x, increment, offset.x, scale, translate.x, barY + m_axisThickness * 0.5f, horizontalDirection, !horizontalPinned);
+            CoordinateLabel.Direction horizontalDirection = pinnedY >= m_labelGap + m_labelHeight ? CoordinateLabel.Direction.Up : CoordinateLabel.Direction.Down;
+            PlaceTicks(false, graphMin.x, graphMax.x, increment, offset.x, scale, translate.x, pinnedY + m_axisThickness * 0.5f, horizontalDirection, !horizontalPinned);
 
             HideSurplusLabels(m_activeLabels);
         }
 
-        private void PlaceTicks(bool vertical, float graphMin, float graphMax, float increment, float offsetAlong, float scale, float translateAlong, float fixedScreen, CoordinateLabel.Direction direction, bool showTicks)
+        private void PlaceTicks(bool vertical, float graphMin, float graphMax, float increment, float offsetAlong, float scale, float translateAlong, float across, CoordinateLabel.Direction direction, bool showTicks)
         {
             int first = Mathf.CeilToInt(graphMin / increment);
             int last = Mathf.FloorToInt(graphMax / increment);
@@ -247,12 +214,12 @@ namespace Soup.Editor.Views.Extraneous
             {
                 if (i == 0)
                 {
-                    continue; // The origin is the bar itself.
+                    continue; // Zero is where the axes cross, so it gets no label.
                 }
 
                 float graph = i * increment;
                 float along = (graph + offsetAlong) * scale + translateAlong;
-                Vector2 anchor = vertical ? new Vector2(fixedScreen, along) : new Vector2(along, fixedScreen);
+                Vector2 anchor = vertical ? new Vector2(across, along) : new Vector2(along, across);
                 NextLabel().SetLabel(graph, anchor, direction, showTicks);
             }
         }
@@ -262,7 +229,7 @@ namespace Soup.Editor.Views.Extraneous
             float minimum = m_minTickSpacing / scale;
             float magnitude = Mathf.Pow(10f, Mathf.Floor(Mathf.Log10(minimum)));
 
-            foreach (float mantissa in s_mantissas)
+            foreach (float mantissa in MANTISSAS)
             {
                 float candidate = mantissa * magnitude;
                 if (candidate >= minimum)
@@ -301,13 +268,8 @@ namespace Soup.Editor.Views.Extraneous
         }
         #endregion
 
-        /// <summary>
-        /// One axis step: a short tick on one side of the axis and the coordinate on the other.
-        /// The element itself has no size; it sits at the panel origin and translates its two children.
-        /// </summary>
         private class CoordinateLabel : VisualElement
         {
-            /// <summary>The side of the axis the text sits on. The tick goes on the opposite side.</summary>
             public enum Direction
             {
                 Up,
@@ -363,10 +325,9 @@ namespace Soup.Editor.Views.Extraneous
                 m_text.style.height = labelHeight;
             }
 
-            /// <param name="anchor">The step's point on the axis centre line, in screen space.</param>
             public void SetLabel(float coordinate, Vector2 anchor, Direction direction, bool showTick)
             {
-                if (!IsUsable(anchor.x) || !IsUsable(anchor.y))
+                if (!float.IsFinite(anchor.x) || !float.IsFinite(anchor.y))
                 {
                     style.display = DisplayStyle.None;
                     return;

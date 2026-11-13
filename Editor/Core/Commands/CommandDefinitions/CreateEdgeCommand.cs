@@ -29,7 +29,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 return;
             }
 
-            CommandUtils.TrySetOutportTarget(scope, m_fromNodeId, m_outportId, m_toNodeId);
+            scope.TrySetOutportTarget(m_fromNodeId, m_outportId, m_toNodeId);
         }
     }
 }

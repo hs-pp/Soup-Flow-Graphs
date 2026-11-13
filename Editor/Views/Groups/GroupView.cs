@@ -86,6 +86,7 @@ namespace Soup.Editor.Views.Groups
                 changed = true;
             }
 
+            Graph?.NotifyContentChanged(); // The minimap draws the group's color, which no position or size change reports.
             return changed;
         }
 

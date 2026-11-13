@@ -136,7 +136,7 @@ namespace Soup.Editor.Views.Inspector
             if (selectedNodes.Count == 1)
             {
                 NodeRef nodeRef = selectedNodes[0];
-                collectionMetaData.TryGetNodeMetaDataRef(nodeRef.Id, out NodeMetaDataRef nodeMetaData);
+                collectionMetaData.TryGetNode(nodeRef.Id, out NodeMetaDataRef nodeMetaData);
                 m_nodeInspectorView.SetNode(nodeRef, nodeMetaData);
                 m_nodeInspectorView.style.display = DisplayStyle.Flex;
                 return;
@@ -169,7 +169,7 @@ namespace Soup.Editor.Views.Inspector
             bool found = false;
             foreach (string id in m_graphState.GraphSelection.SelectedIds)
             {
-                if (!collectionMetaData.TryGetGroupMetaDataRef(id, out GroupMetaDataRef candidate))
+                if (!collectionMetaData.TryGetGroup(id, out GroupMetaDataRef candidate))
                 {
                     continue;
                 }

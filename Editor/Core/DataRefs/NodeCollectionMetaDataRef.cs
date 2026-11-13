@@ -6,7 +6,6 @@ namespace Soup.Editor.Core.DataRefs
 {
     public readonly struct NodeCollectionMetaDataRef
     {
-        public readonly string Path;
         public readonly SerializedProperty CollectionSP;
         public readonly SerializedProperty NodesSP;
         public readonly SerializedProperty GroupsSP;
@@ -16,12 +15,11 @@ namespace Soup.Editor.Core.DataRefs
         public NodeCollectionMetaDataRef(SerializedProperty collectionSP)
         {
             CollectionSP = collectionSP;
-            Path = collectionSP?.propertyPath;
             NodesSP = collectionSP?.FindPropertyRelative(NodeCollectionMetaData.NodesFieldName);
             GroupsSP = collectionSP?.FindPropertyRelative(NodeCollectionMetaData.GroupsFieldName);
         }
         
-        public IEnumerable<NodeMetaDataRef> GetNodeMetaDatas()
+        public IEnumerable<NodeMetaDataRef> GetNodes()
         {
             if (!IsValid)
             {
@@ -35,7 +33,7 @@ namespace Soup.Editor.Core.DataRefs
             }
         }
 
-        public bool TryGetNodeMetaDataRef(string nodeId, out NodeMetaDataRef nodeMetaData)
+        public bool TryGetNode(string nodeId, out NodeMetaDataRef nodeMetaData)
         {
             nodeMetaData = new();
             if (string.IsNullOrEmpty(nodeId))
@@ -43,7 +41,7 @@ namespace Soup.Editor.Core.DataRefs
                 return false;
             }
 
-            foreach (NodeMetaDataRef entry in GetNodeMetaDatas())
+            foreach (NodeMetaDataRef entry in GetNodes())
             {
                 if (entry.NodeId == nodeId)
                 {
@@ -55,10 +53,10 @@ namespace Soup.Editor.Core.DataRefs
             return false;
         }
 
-        public Dictionary<string, NodeMetaDataRef> GetNodeMetaDatasById()
+        public Dictionary<string, NodeMetaDataRef> GetNodesById()
         {
             Dictionary<string, NodeMetaDataRef> nodeMetaDatas = new();
-            foreach (NodeMetaDataRef entry in GetNodeMetaDatas())
+            foreach (NodeMetaDataRef entry in GetNodes())
             {
                 if (!entry.IsMissingType)
                 {
@@ -83,7 +81,7 @@ namespace Soup.Editor.Core.DataRefs
             }
         }
 
-        public bool TryGetGroupMetaDataRef(string groupId, out GroupMetaDataRef groupMetaData)
+        public bool TryGetGroup(string groupId, out GroupMetaDataRef groupMetaData)
         {
             groupMetaData = new();
             if (string.IsNullOrEmpty(groupId))

@@ -73,7 +73,7 @@ namespace Soup.Editor.State
                 if (nodeIds != null)
                 {
                     Dictionary<string, NodeRef> nodesById = collection.GetNodesById();
-                    Dictionary<string, NodeMetaDataRef> nodeMetaDatasById = collectionMetaData.GetNodeMetaDatasById();
+                    Dictionary<string, NodeMetaDataRef> nodeMetaDatasById = collectionMetaData.GetNodesById();
                     foreach (string nodeId in nodeIds)
                     {
                         if (nodeId == null || !nodesById.TryGetValue(nodeId, out NodeRef nodeRef) || nodeRef.IsEntryNode)
@@ -101,7 +101,7 @@ namespace Soup.Editor.State
                 {
                     foreach (string groupId in groupIds)
                     {
-                        if (collectionMetaData.TryGetGroupMetaDataRef(groupId, out GroupMetaDataRef group) 
+                        if (collectionMetaData.TryGetGroup(groupId, out GroupMetaDataRef group) 
                             && group.GroupSP.boxedValue is GroupMetaData groupMetaData)
                         {
                             payload.Groups.Add(groupMetaData);

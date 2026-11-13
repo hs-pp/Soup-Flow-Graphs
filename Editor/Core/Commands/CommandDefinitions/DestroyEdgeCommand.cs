@@ -11,7 +11,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
         public void ExecuteCommand(LoadedFlowGraph.CommandScope scope)
         {
-            CommandUtils.TrySetOutportTarget(scope, m_edge.FromNodeId, m_edge.OutportId, string.Empty);
+            scope.TrySetOutportTarget(m_edge.FromNodeId, m_edge.OutportId, string.Empty);
         }
     }
 }

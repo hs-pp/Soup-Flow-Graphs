@@ -3,28 +3,22 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Extraneous
 {
-    public enum SpeechBubbleArrowSide
-    {
-        Bottom,
-        Top,
-    }
-
-    /// <summary>
-    /// A rounded box with a small arrow on its top or bottom edge, styled through the --bubble-* custom properties.
-    /// Line width and corner radius come from border-top-width and border-top-left-radius; keep the USS border color
-    /// transparent so only the painted outline shows. The arrow is drawn outside the layout rect, so leave at least
-    /// --bubble-arrow-height of margin on that side.
-    /// </summary>
     [UxmlElement]
     public partial class SpeechBubbleElement : VisualElement
     {
-        private static readonly CustomStyleProperty<Color> s_fillColorProperty = new("--bubble-fill-color");
-        private static readonly CustomStyleProperty<Color> s_borderColorProperty = new("--bubble-border-color");
-        private static readonly CustomStyleProperty<float> s_arrowOffsetProperty = new("--bubble-arrow-offset");
-        private static readonly CustomStyleProperty<float> s_arrowWidthProperty = new("--bubble-arrow-width");
-        private static readonly CustomStyleProperty<float> s_arrowHeightProperty = new("--bubble-arrow-height");
+        public enum Side
+        {
+            Bottom,
+            Top,
+        }
 
-        private SpeechBubbleArrowSide m_arrowSide;
+        private static readonly CustomStyleProperty<Color> FILL_COLOR_PROPERTY = new("--bubble-fill-color");
+        private static readonly CustomStyleProperty<Color> BORDER_COLOR_PROPERTY = new("--bubble-border-color");
+        private static readonly CustomStyleProperty<float> ARROW_OFFSET_PROPERTY = new("--bubble-arrow-offset");
+        private static readonly CustomStyleProperty<float> ARROW_WIDTH_PROPERTY = new("--bubble-arrow-width");
+        private static readonly CustomStyleProperty<float> ARROW_HEIGHT_PROPERTY = new("--bubble-arrow-height");
+
+        private Side m_arrowSide;
         private Color m_fillColor;
         private Color m_borderColor;
         private float m_arrowOffset;
@@ -32,7 +26,7 @@ namespace Soup.Editor.Views.Extraneous
         private float m_arrowHeight;
 
         [UxmlAttribute]
-        public SpeechBubbleArrowSide ArrowSide
+        public Side ArrowSide
         {
             get => m_arrowSide;
             set
@@ -49,35 +43,35 @@ namespace Soup.Editor.Views.Extraneous
 
         public SpeechBubbleElement()
         {
-            generateVisualContent = OnGenerateBubble;
-            RegisterCallback<CustomStyleResolvedEvent>(OnBubbleStyleResolved);
+            generateVisualContent = OnGenerateVisualContent;
+            RegisterCallback<CustomStyleResolvedEvent>(OnCustomStyleResolved);
         }
 
-        private void OnBubbleStyleResolved(CustomStyleResolvedEvent e)
+        private void OnCustomStyleResolved(CustomStyleResolvedEvent e)
         {
             ICustomStyle customStyle = e.customStyle;
 
-            if (customStyle.TryGetValue(s_fillColorProperty, out Color fillColor))
+            if (customStyle.TryGetValue(FILL_COLOR_PROPERTY, out Color fillColor))
             {
                 m_fillColor = fillColor;
             }
 
-            if (customStyle.TryGetValue(s_borderColorProperty, out Color borderColor))
+            if (customStyle.TryGetValue(BORDER_COLOR_PROPERTY, out Color borderColor))
             {
                 m_borderColor = borderColor;
             }
 
-            if (customStyle.TryGetValue(s_arrowOffsetProperty, out float arrowOffset))
+            if (customStyle.TryGetValue(ARROW_OFFSET_PROPERTY, out float arrowOffset))
             {
                 m_arrowOffset = arrowOffset;
             }
 
-            if (customStyle.TryGetValue(s_arrowWidthProperty, out float arrowWidth))
+            if (customStyle.TryGetValue(ARROW_WIDTH_PROPERTY, out float arrowWidth))
             {
                 m_arrowWidth = arrowWidth;
             }
 
-            if (customStyle.TryGetValue(s_arrowHeightProperty, out float arrowHeight))
+            if (customStyle.TryGetValue(ARROW_HEIGHT_PROPERTY, out float arrowHeight))
             {
                 m_arrowHeight = arrowHeight;
             }
@@ -85,7 +79,7 @@ namespace Soup.Editor.Views.Extraneous
             MarkDirtyRepaint();
         }
 
-        private void OnGenerateBubble(MeshGenerationContext ctx)
+        private void OnGenerateVisualContent(MeshGenerationContext ctx)
         {
             float lineWidth = resolvedStyle.borderTopWidth;
             float inset = lineWidth * 0.5f;
@@ -94,9 +88,10 @@ namespace Soup.Editor.Views.Extraneous
             float right = layout.width - inset;
             float bottom = layout.height - inset;
             float radius = Mathf.Max(0.0f, resolvedStyle.borderTopLeftRadius - inset);
-            float arrowLeft = Mathf.Max(left + radius, Mathf.Min(m_arrowOffset, right - radius - m_arrowWidth));
-            float arrowMid = arrowLeft + m_arrowWidth * 0.5f;
-            float arrowRight = arrowLeft + m_arrowWidth;
+            float arrowWidth = Mathf.Min(m_arrowWidth, right - left - 2.0f * radius);
+            float arrowLeft = Mathf.Clamp(m_arrowOffset, left + radius, right - radius - arrowWidth);
+            float arrowMid = arrowLeft + arrowWidth * 0.5f;
+            float arrowRight = arrowLeft + arrowWidth;
 
             Painter2D painter = ctx.painter2D;
             painter.lineWidth = lineWidth;
@@ -105,7 +100,7 @@ namespace Soup.Editor.Views.Extraneous
             painter.strokeColor = m_borderColor;
             painter.BeginPath();
             painter.MoveTo(new(left + radius, top));
-            if (m_arrowSide == SpeechBubbleArrowSide.Top)
+            if (m_arrowSide == Side.Top)
             {
                 painter.LineTo(new(arrowLeft, top));
                 painter.LineTo(new(arrowMid, top - m_arrowHeight));
@@ -113,7 +108,7 @@ namespace Soup.Editor.Views.Extraneous
             }
             painter.ArcTo(new(right, top), new(right, bottom), radius);
             painter.ArcTo(new(right, bottom), new(left, bottom), radius);
-            if (m_arrowSide == SpeechBubbleArrowSide.Bottom)
+            if (m_arrowSide == Side.Bottom)
             {
                 painter.LineTo(new(arrowRight, bottom));
                 painter.LineTo(new(arrowMid, bottom + m_arrowHeight));

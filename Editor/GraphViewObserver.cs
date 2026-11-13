@@ -380,7 +380,7 @@ namespace Soup.Editor
                 return metaDatas;
             }
 
-            foreach (NodeMetaDataRef nodeMetaData in collectionMetaData.GetNodeMetaDatas())
+            foreach (NodeMetaDataRef nodeMetaData in collectionMetaData.GetNodes())
             {
                 if (!nodeMetaData.IsMissingType)
                 {

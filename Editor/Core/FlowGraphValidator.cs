@@ -250,7 +250,7 @@ namespace Soup.Editor.Core
             Dictionary<string, NodeRef> nodesById = collection.GetNodesById();
 
             // Walked in reverse and indexed by hand because entries are deleted in place, which rules out enumerating
-            // NodeCollectionMetaDataRef.GetNodeMetaDatas here.
+            // NodeCollectionMetaDataRef.GetNodes here.
             for (int i = collectionMetaData.NodesSP.arraySize - 1; i >= 0; i--)
             {
                 NodeMetaDataRef nodeMetaData = new(collectionMetaData.NodesSP.GetArrayElementAtIndex(i), i);

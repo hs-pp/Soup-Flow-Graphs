@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using Soup.Editor.Core.DataRefs;
 using Soup.Editor.State;
+using Soup.Runtime;
 using Soup.Runtime.BuiltInNodes;
+using UnityEditor;
 using UnityEngine;
 
 namespace Soup.Editor.Core
@@ -49,6 +51,21 @@ namespace Soup.Editor.Core
             }
 
             #region Nodes
+            public NodeRef AddNode(ANode node)
+            {
+                if (!Collection.IsValid || node == null)
+                {
+                    return default;
+                }
+
+                int index = Collection.NodesSP.arraySize;
+                Collection.NodesSP.arraySize++;
+                SerializedProperty nodeSP = Collection.NodesSP.GetArrayElementAtIndex(index);
+                nodeSP.managedReferenceValue = node;
+                ChangeSet.AddedNodes.Add(node.Id);
+                return new NodeRef(nodeSP, index);
+            }
+
             public bool RepairOutports(NodeRef nodeRef)
             {
                 m_loadedFlowGraph.ApplyGraphChanges();
@@ -80,6 +97,46 @@ namespace Soup.Editor.Core
                 }
 
                 return changed;
+            }
+
+            public bool TrySetOutportTarget(string nodeId, string outportId, string targetNodeId)
+            {
+                if (!Collection.TryGetNode(nodeId, out NodeRef nodeRef))
+                {
+                    Debug.LogError($"[Soup] CommandScope: Node '{nodeId}' not found in the current collection.");
+                    return false;
+                }
+
+                if (!TrySetOutportTarget(nodeRef, outportId, targetNodeId))
+                {
+                    Debug.LogError($"[Soup] CommandScope: Node '{nodeId}' has no outport with id '{outportId}'.");
+                    return false;
+                }
+
+                ChangeSet.TopologyDirty = true;
+                return true;
+            }
+
+            private static bool TrySetOutportTarget(NodeRef nodeRef, string outportId, string targetNodeId)
+            {
+                if (!nodeRef.TryGetOutport(outportId, out OutportRef outportRef))
+                {
+                    return false;
+                }
+
+                SerializedProperty target = outportRef.ConnectedNodeIdSP;
+                if (target == null)
+                {
+                    return false;
+                }
+
+                if (targetNodeId == null)
+                {
+                    targetNodeId = string.Empty;
+                }
+
+                target.stringValue = targetNodeId;
+                return true;
             }
             #endregion
 
@@ -122,7 +179,7 @@ namespace Soup.Editor.Core
             {
                 // A new entry reads back through the same handles without an apply, so its writes stay pending until the run applies.
                 TryCreateNodeMetaData(collectionMetaData, nodeId, nodeType);
-                return collectionMetaData.TryGetNodeMetaDataRef(nodeId, out nodeMetaData);
+                return collectionMetaData.TryGetNode(nodeId, out nodeMetaData);
             }
 
             public bool TryCreateNodeMetaData(NodeCollectionMetaDataRef collectionMetaData, string nodeId, Type nodeType)
@@ -132,7 +189,7 @@ namespace Soup.Editor.Core
                     return false;
                 }
 
-                if (!collectionMetaData.TryGetNodeMetaDataRef(nodeId, out NodeMetaDataRef nodeMetaData))
+                if (!collectionMetaData.TryGetNode(nodeId, out NodeMetaDataRef nodeMetaData))
                 {
                     collectionMetaData.NodesSP.arraySize++;
                     collectionMetaData.NodesSP.GetArrayElementAtIndex(collectionMetaData.NodesSP.arraySize - 1).managedReferenceValue = EditorTypesFactory.CreateMetaDataInstance(nodeType, nodeId);
@@ -140,6 +197,41 @@ namespace Soup.Editor.Core
                 }
 
                 return FlowGraphValidator.ValidateNodeMetaDataType(nodeMetaData, nodeType);
+            }
+
+            public bool TrySetNodePosition(NodeMetaDataRef nodeMetaData, Vector2 position)
+            {
+                SerializedProperty positionSP = nodeMetaData.PositionSP;
+                if (positionSP == null)
+                {
+                    return false;
+                }
+
+                positionSP.vector2Value = position;
+                ChangeSet.MovedNodes.Add(nodeMetaData.NodeId);
+                return true;
+            }
+            #endregion
+
+            #region Groups
+            public string AddGroup(NodeCollectionMetaDataRef collectionMetaData, string title, Rect rect, Color color)
+            {
+                if (!collectionMetaData.IsValid)
+                {
+                    return null;
+                }
+
+                string groupId = Guid.NewGuid().ToString("N");
+                int newIndex = collectionMetaData.GroupsSP.arraySize;
+                collectionMetaData.GroupsSP.arraySize++;
+                SerializedProperty entry = collectionMetaData.GroupsSP.GetArrayElementAtIndex(newIndex);
+                entry.FindPropertyRelative(GroupMetaData.GroupIdFieldName).stringValue = groupId;
+                entry.FindPropertyRelative(GroupMetaData.TitleFieldName).stringValue = title;
+                entry.FindPropertyRelative(GroupMetaData.RectFieldName).rectValue = new Rect(rect.position, GroupMetaData.ClampSize(rect.size));
+                entry.FindPropertyRelative(GroupMetaData.ColorFieldName).colorValue = color;
+                ChangeSet.GroupsDirty = true;
+                ChangeSet.AddedGroups.Add(groupId);
+                return groupId;
             }
             #endregion
         }

@@ -5,10 +5,6 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Inspector.Blackboards
 {
-    /// <summary>
-    /// A popup of the graph's blackboard variables. It always shows what the model holds: a pick is only handed to OnPicked, and the
-    /// owner writes it (a binding or a command) and calls Refresh.
-    /// </summary>
     public class BlackboardVariablePicker : VisualElement
     {
         private const string NONE_ID = "";
@@ -29,6 +25,8 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             m_filter = filter;
             m_showTypes = showTypes;
 
+            // The popup formats its first value while it's built, before any Refresh.
+            m_labelsById[NONE_ID] = NONE_LABEL;
             m_popup = new PopupField<string>(label, new List<string> { NONE_ID }, 0, FormatChoice, FormatChoice);
             m_popup.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             m_popup.RegisterValueChangedCallback(HandleValueChanged);
@@ -37,7 +35,10 @@ namespace Soup.Editor.Views.Inspector.Blackboards
 
         public void Refresh(BlackboardRef blackboard, string selectedId)
         {
-            selectedId ??= NONE_ID;
+            if (selectedId == null)
+            {
+                selectedId = NONE_ID;
+            }
 
             m_labelsById.Clear();
             m_labelsById[NONE_ID] = NONE_LABEL;
@@ -57,11 +58,19 @@ namespace Soup.Editor.Views.Inspector.Blackboards
                 }
 
                 // A pick the filter rejects, like a typed key whose T changed since, stays listed but marked, with its type.
-                string typeName = EditorTypesFactory.GetBlackboardValueTypeDisplayName(valueType);
+                string label = variable.Name;
+                if (isRejected || m_showTypes)
+                {
+                    label = $"{label} ({EditorTypesFactory.GetBlackboardValueTypeDisplayName(valueType)})";
+                }
+
+                if (isRejected)
+                {
+                    label = WARNING_PREFIX + label;
+                }
+
                 choices.Add(variable.Id);
-                m_labelsById[variable.Id] = isRejected ? $"{WARNING_PREFIX}{variable.Name} ({typeName})"
-                    : m_showTypes ? $"{variable.Name} ({typeName})"
-                    : variable.Name;
+                m_labelsById[variable.Id] = label;
             }
 
             // A deleted pick stays listed so the field can show it as missing.
@@ -76,7 +85,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
 
         private string FormatChoice(string id)
         {
-            return m_labelsById.TryGetValue(id ?? NONE_ID, out string label) ? label : MISSING_LABEL;
+            return m_labelsById.TryGetValue(id, out string label) ? label : MISSING_LABEL;
         }
 
         private void HandleValueChanged(ChangeEvent<string> evt)
@@ -85,7 +94,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             m_popup.SetValueWithoutNotify(evt.previousValue);
             if (evt.newValue != evt.previousValue)
             {
-                OnPicked?.Invoke(evt.newValue ?? NONE_ID);
+                OnPicked?.Invoke(evt.newValue);
             }
         }
     }

@@ -18,7 +18,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
         public void ExecuteCommand(LoadedFlowGraph.CommandScope scope)
         {
-            if (scope.TryGetCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData) && collectionMetaData.TryGetGroupMetaDataRef(m_groupId, out GroupMetaDataRef group))
+            if (scope.TryGetCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData) && collectionMetaData.TryGetGroup(m_groupId, out GroupMetaDataRef group))
             {
                 SetGroupSize(scope, group, m_size);
             }
