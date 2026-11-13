@@ -21,6 +21,7 @@ namespace Soup.Editor.Views.Breadcrumbs
         public void SetPath(List<string> path)
         {
             Clear();
+            
             for (int i = 0; i < path.Count; i++)
             {
                 BreadcrumbSegment segment = new BreadcrumbSegment(m_onBreadcrumbClicked);

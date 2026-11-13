@@ -7,8 +7,7 @@ using UnityEngine.UIElements;
 namespace Soup.Editor.Views.Inspector
 {
     /// <summary>
-    /// Thumbnail of a sub graph's layout, drawn from serialized data only (no node views). Node sizes are not
-    /// serialized, so every node is drawn at a fixed nominal size.
+    /// Thumbnail of a sub graph's NodeCollection.
     /// </summary>
     [UxmlElement]
     public partial class SubGraphPreviewElement : VisualElement
@@ -19,7 +18,6 @@ namespace Soup.Editor.Views.Inspector
         private const float MAX_SCALE = 0.5f; // Keeps a lone entry node from filling the whole preview.
         private const float MIN_NODE_SIZE = 3f;
         private static readonly Color EDGE_COLOR = new(1f, 1f, 1f, 0.45f);
-
         private const string OPEN_LABEL_CLASS = "subGraphPreviewOpenLabel";
 
         private readonly struct NodeShape
@@ -34,7 +32,6 @@ namespace Soup.Editor.Views.Inspector
             }
         }
 
-        // Snapshot of the data taken in SetContents. Drawing never touches SerializedProperties, whose paths can go stale.
         private readonly List<NodeShape> m_nodes = new();
         private readonly List<NodeShape> m_groups = new();
         private readonly List<(Vector2 from, Vector2 to)> m_edges = new();
@@ -131,7 +128,6 @@ namespace Soup.Editor.Views.Inspector
 
         private void OnGeometryChanged(GeometryChangedEvent evt)
         {
-            // USS has no aspect-ratio, so height follows width by hand. Width never depends on height, so this settles.
             float height = Mathf.Round(evt.newRect.width * ASPECT_RATIO);
             if (!Mathf.Approximately(resolvedStyle.height, height))
             {

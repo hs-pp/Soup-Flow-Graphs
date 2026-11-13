@@ -9,9 +9,6 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Inspector.Blackboards
 {
-    /// <summary>
-    /// One blackboard variable: its name (double-click to rename), its type, and its default value.
-    /// </summary>
     public class BlackboardVariableRow : VisualElement
     {
         private const string ROW_CLASS = "blackboardRow";
@@ -57,10 +54,8 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             {
                 evt.menu.AppendAction("Rename", _ => BeginRename());
                 evt.menu.AppendSeparator();
-                evt.menu.AppendAction("Move Up", _ => m_requestCommand(new MoveBlackboardVariableCommand(m_variableId, -1)),
-                    canMoveUp ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-                evt.menu.AppendAction("Move Down", _ => m_requestCommand(new MoveBlackboardVariableCommand(m_variableId, 1)),
-                    canMoveDown ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+                evt.menu.AppendAction("Move Up", _ => m_requestCommand(new MoveBlackboardVariableCommand(m_variableId, -1)), canMoveUp ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+                evt.menu.AppendAction("Move Down", _ => m_requestCommand(new MoveBlackboardVariableCommand(m_variableId, 1)), canMoveDown ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
                 evt.menu.AppendSeparator();
                 evt.menu.AppendAction("Delete", _ => m_requestCommand(new DeleteBlackboardVariableCommand(m_variableId)));
             }));
@@ -74,7 +69,6 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
         }
 
-        // While renaming, the field keeps what's being typed.
         public void SetName(string name)
         {
             m_nameLabel.text = name;
@@ -106,7 +100,6 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             m_nameLabel.style.display = DisplayStyle.None;
             m_nameField.style.display = DisplayStyle.Flex;
 
-            // A hidden field can't take focus, so this waits for the field to show.
             m_nameField.schedule.Execute(() =>
             {
                 m_nameField.Focus();
@@ -133,7 +126,6 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
         }
 
-        // Leaving the field saves it. Focus can leave in the middle of a refresh, which can't run a command, so it waits a frame.
         private void HandleNameFocusOut(FocusOutEvent evt)
         {
             if (m_isRenaming)

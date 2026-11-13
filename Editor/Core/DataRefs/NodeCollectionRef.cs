@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace Soup.Editor.Core.DataRefs
 {
-    public struct NodeCollectionRef
+    public readonly struct NodeCollectionRef
     {
         public readonly SerializedProperty CollectionSP;
         public readonly SerializedProperty NodesSP;

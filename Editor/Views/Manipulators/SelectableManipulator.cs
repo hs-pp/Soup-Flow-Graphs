@@ -1,8 +1,4 @@
-// Ported from Logical2.GraphCore, rewritten for Soup: instead of
-// mutating view selection directly, clicks dispatch SelectElementsCommand.
-// The dispatcher applies it to SelectionState synchronously and the observer
-// reflects it back onto the views before the gesture continues, so
-// click-then-drag still sees up-to-date selection.
+using System;
 using System.Collections.Generic;
 using Soup.Editor.Core.Commands.CommandDefinitions;
 using Soup.Editor.State;
@@ -31,7 +27,7 @@ namespace Soup.Editor.Views.Manipulators
             m_Element = target as GraphElement;
             if (m_Element == null)
             {
-                throw new("SelectableManipulator can only be added to GraphElement elements");
+                throw new InvalidOperationException("[Soup] SelectableManipulator can only be added to GraphElement elements.");
             }
 
             target.RegisterCallback<MouseDownEvent>(OnMouseDown);
@@ -43,7 +39,7 @@ namespace Soup.Editor.Views.Manipulators
             m_Element = null;
         }
 
-        protected void OnMouseDown(MouseDownEvent e)
+        private void OnMouseDown(MouseDownEvent e)
         {
             if (!CanStartManipulation(e))
             {
@@ -55,15 +51,13 @@ namespace Soup.Editor.Views.Manipulators
                 return;
             }
 
-            // Do not stop the propagation since selection should happen before other use cases (e.g. dragging).
+            // Do not stop the propagation since selection should happen before other use cases
             bool additive = e.shiftKey;
             bool subtractive = e.actionKey;
             bool exclusive = !(additive ^ subtractive);
 
             if (exclusive)
             {
-                // Clicking an already-selected element keeps the current
-                // (possibly multi-)selection so it can be dragged as a group.
                 if (!m_Element.Selected)
                 {
                     m_Element.Graph.RequestCommand(new SelectGraphElementsCommand(new List<string> { m_Element.Id }, GraphSelectionMode.Replace));

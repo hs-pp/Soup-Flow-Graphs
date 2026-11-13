@@ -86,7 +86,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
                 return;
             }
 
-            BlackboardRef blackboard = BlackboardRef.Find(m_nodeRef.NodeSP.serializedObject);
+            BlackboardRef blackboard = new(m_nodeRef.NodeSP.serializedObject);
             string variableId = new BlackboardKeyRef(m_nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.VARIABLE_FIELD_NAME)).VariableId;
             m_picker.Refresh(blackboard, variableId);
 

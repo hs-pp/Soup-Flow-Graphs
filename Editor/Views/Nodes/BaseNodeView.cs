@@ -214,8 +214,8 @@ namespace Soup.Editor.Views.Nodes
             m_outportDefinitions.Clear();
             foreach (OutportRef outport in nodeRef.EnumerateOutports())
             {
-                string name = definitions?.Find(x => x.Id == outport.Id).Name;
-                m_outportDefinitions.Add(new OutportDefinition(outport.Id, name ?? outport.Id));
+                string name = definitions?.Find(x => x.Id == outport.OutportId).Name;
+                m_outportDefinitions.Add(new OutportDefinition(outport.OutportId, name ?? outport.OutportId));
             }
         }
 
@@ -281,7 +281,7 @@ namespace Soup.Editor.Views.Nodes
             int i = 0;
             foreach (OutportRef outport in nodeRef.EnumerateOutports())
             {
-                if (i >= m_outputPorts.Count || m_outputPorts[i].OutportId != outport.Id)
+                if (i >= m_outputPorts.Count || m_outputPorts[i].OutportId != outport.OutportId)
                 {
                     return false;
                 }

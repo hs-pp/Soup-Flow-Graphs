@@ -6,7 +6,7 @@ using UnityEditor;
 
 namespace Soup.Editor.Core.DataRefs
 {
-    public struct NodeRef
+    public readonly struct NodeRef
     {
         public const int ENTRY_NODE_INDEX = -1;
 
@@ -14,16 +14,16 @@ namespace Soup.Editor.Core.DataRefs
         public readonly SerializedProperty NodeSP;
         public readonly int Index;
 
+        public bool IsEntryNode => Index == ENTRY_NODE_INDEX;
+        public bool IsMissingType => string.IsNullOrEmpty(Id);
+        public bool IsValid => NodeSP != null;
+        
         public NodeRef(SerializedProperty nodeSP, int index)
         {
             Id = nodeSP?.FindPropertyRelative(ANode.ID_FIELD_NAME)?.stringValue;
             NodeSP = nodeSP;
             Index = index;
         }
-
-        public bool IsEntryNode => Index == ENTRY_NODE_INDEX;
-        public bool IsMissingType => string.IsNullOrEmpty(Id);
-        public bool IsValid => NodeSP != null;
 
         public SerializedProperty OutportsSP => NodeSP?.FindPropertyRelative(ANode.OUTPORTS_FIELD_NAME);
 
@@ -73,7 +73,7 @@ namespace Soup.Editor.Core.DataRefs
 
             foreach (OutportRef outport in EnumerateOutports())
             {
-                if (outport.Id == outportId)
+                if (outport.OutportId == outportId)
                 {
                     outportRef = outport;
                     return true;

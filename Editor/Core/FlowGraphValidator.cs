@@ -75,7 +75,7 @@ namespace Soup.Editor.Core
                 bool identical = true;
                 for (int i = 0; i < definitions.Count; i++)
                 {
-                    if (currentOutports[i].Id != definitions[i].Id)
+                    if (currentOutports[i].OutportId != definitions[i].Id)
                     {
                         identical = false;
                         break;
@@ -92,9 +92,9 @@ namespace Soup.Editor.Core
             Dictionary<string, string> connectedNodeIdsByOutportId = new();
             foreach (OutportRef outport in currentOutports)
             {
-                if (!string.IsNullOrEmpty(outport.Id))
+                if (!string.IsNullOrEmpty(outport.OutportId))
                 {
-                    connectedNodeIdsByOutportId.TryAdd(outport.Id, outport.ConnectedNodeId);
+                    connectedNodeIdsByOutportId.TryAdd(outport.OutportId, outport.ConnectedNodeId);
                 }
             }
 

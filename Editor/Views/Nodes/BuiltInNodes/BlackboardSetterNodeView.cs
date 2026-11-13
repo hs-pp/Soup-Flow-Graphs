@@ -21,7 +21,7 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
         {
             base.OnNodeDataChanged(nodeRef);
 
-            BlackboardRef blackboard = BlackboardRef.Find(nodeRef.NodeSP?.serializedObject);
+            BlackboardRef blackboard = new(nodeRef.NodeSP?.serializedObject);
             string variableId = new BlackboardKeyRef(nodeRef.NodeSP?.FindPropertyRelative(BlackboardSetterNode.VARIABLE_FIELD_NAME)).VariableId;
             if (string.IsNullOrEmpty(variableId))
             {

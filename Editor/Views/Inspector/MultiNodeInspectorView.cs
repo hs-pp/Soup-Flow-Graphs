@@ -13,7 +13,7 @@ namespace Soup.Editor.Views.Inspector
 
         private void CreateLayout()
         {
-            m_label = new Label("Multiple Nodes Selected!");
+            m_label = new Label();
             Add(m_label);
         }
 

@@ -4,12 +4,14 @@ using UnityEditor;
 
 namespace Soup.Editor.Core.DataRefs
 {
-    public struct NodeCollectionMetaDataRef
+    public readonly struct NodeCollectionMetaDataRef
     {
         public readonly string Path;
         public readonly SerializedProperty CollectionSP;
         public readonly SerializedProperty NodesSP;
         public readonly SerializedProperty GroupsSP;
+        
+        public bool IsValid => CollectionSP != null && NodesSP != null && GroupsSP != null;
 
         public NodeCollectionMetaDataRef(SerializedProperty collectionSP)
         {
@@ -18,9 +20,7 @@ namespace Soup.Editor.Core.DataRefs
             NodesSP = collectionSP?.FindPropertyRelative(NodeCollectionMetaData.NodesFieldName);
             GroupsSP = collectionSP?.FindPropertyRelative(NodeCollectionMetaData.GroupsFieldName);
         }
-
-        public bool IsValid => CollectionSP != null && NodesSP != null && GroupsSP != null;
-
+        
         public IEnumerable<NodeMetaDataRef> GetNodeMetaDatas()
         {
             if (!IsValid)

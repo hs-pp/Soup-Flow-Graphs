@@ -5,17 +5,13 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Manipulators.Gestures
 {
-    /// <summary>
-    /// Drags one end of an edge, or of every selected edge at the grabbed port, and is the payload drop targets read.
-    /// A drag from a port drags the free end of a new candidate edge. Drop targets <see cref="Take"/> the edges they accept,
-    /// and the drag puts back the rest when it ends.
-    /// </summary>
-    public sealed class EdgeDragGesture : DragGesture
+    public class EdgeDragGesture : DragGesture
     {
-        private readonly PortView m_port; // A drag from a port gets its candidate edge at begin, so a click leaves nothing behind.
+        private readonly PortView m_port;
         private readonly List<EdgeView> m_edges = new();
+        public IReadOnlyList<EdgeView> Edges => m_edges;
         private readonly HashSet<EdgeView> m_taken = new();
-        private bool m_draggedInput; // Which end of every dragged edge follows the mouse.
+        private bool m_draggedInput;
 
         private EdgeDragGesture(GraphView graphView, PortView port, EdgeView edge) : base(graphView)
         {
@@ -71,7 +67,7 @@ namespace Soup.Editor.Views.Manipulators.Gestures
 
             if (m_edges.Count == 0)
             {
-                // The dragged edge itself wasn't selected; drag just it.
+                // The dragged edge itself wasn't selected. Drag just it.
                 Latch(draggedEdge);
             }
 
@@ -122,10 +118,6 @@ namespace Soup.Editor.Views.Manipulators.Gestures
             }
         }
 
-        /// <summary>
-        /// For a drop target that accepts this edge: removes it from the graph, and the drag leaves it alone from then on.
-        /// The target then dispatches whatever command gives the edge its new place in the model.
-        /// </summary>
         public void Take(EdgeView edge)
         {
             m_taken.Add(edge);
@@ -137,12 +129,8 @@ namespace Soup.Editor.Views.Manipulators.Gestures
             }
         }
 
-        /// <summary>
-        /// The port the edge stays attached to while its other end is dragged. Null for an edge that has none.
-        /// </summary>
         public PortView GetAnchoredPort(EdgeView edge) => m_draggedInput ? edge.OutputPort : edge.InputPort;
 
-        // Any edge no drop target took was released where nothing accepted it.
         public override void End() => Release();
 
         public override void Cancel(bool keepPositions) => Release();
@@ -175,9 +163,6 @@ namespace Soup.Editor.Views.Manipulators.Gestures
             Graph.IlluminateAllPorts();
         }
 
-        /// <summary>
-        /// True once a reconcile has removed an edge this drag holds. Edges a drop target took don't count.
-        /// </summary>
         public override bool IsStale()
         {
             if (Dragged == null || IsRemoved((EdgeView)Dragged))
@@ -196,11 +181,9 @@ namespace Soup.Editor.Views.Manipulators.Gestures
             return false;
         }
 
-        private bool IsRemoved(EdgeView edge) => edge.Graph == null && !m_taken.Contains(edge);
-
-        /// <summary>
-        /// The edges being dragged, for drop targets to read.
-        /// </summary>
-        public IReadOnlyList<EdgeView> Edges => m_edges;
+        private bool IsRemoved(EdgeView edge)
+        {
+            return edge.Graph == null && !m_taken.Contains(edge);
+        }
     }
 }

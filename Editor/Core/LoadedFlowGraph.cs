@@ -312,7 +312,7 @@ namespace Soup.Editor.Core
         #region Blackboard
         public bool TryGetBlackboard(out BlackboardRef blackboard)
         {
-            blackboard = IsGraphAlive ? BlackboardRef.Find(m_serializedGraph) : default;
+            blackboard = IsGraphAlive ? new BlackboardRef(m_serializedGraph) : default;
             return blackboard.IsValid;
         }
         #endregion

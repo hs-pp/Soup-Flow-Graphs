@@ -5,10 +5,6 @@ using UnityEngine;
 
 namespace Soup.Editor.Views
 {
-    /// <summary>
-    /// Active while a <see cref="GraphView"/> itself holds keyboard focus. Shortcuts in this context beat Unity's global ones
-    /// (Cmd/Ctrl+G is Assets > Generate), and plain keys still reach a text field when one has focus instead of the graph.
-    /// </summary>
     internal sealed class GraphShortcutContext : IShortcutContext
     {
         private static GraphShortcutContext s_instance;
@@ -24,8 +20,6 @@ namespace Soup.Editor.Views
             }
         }
 
-        // Called by every GraphView rather than on load, so it can't run before the Shortcut Manager is up. Statics reset on
-        // domain reload, which re-registers.
         public static void EnsureRegistered()
         {
             if (s_instance != null)
@@ -39,8 +33,7 @@ namespace Soup.Editor.Views
     }
 
     /// <summary>
-    /// Soup-only graph hotkeys, rebindable under Edit > Shortcuts > Soup. Actions Unity's Edit menu already has (copy, cut,
-    /// paste, duplicate, select all, delete, frame) reach the GraphView as command events instead.
+    /// Rebindable under Edit > Shortcuts > Soup.
     /// </summary>
     internal static class GraphShortcuts
     {
@@ -49,13 +42,10 @@ namespace Soup.Editor.Views
         public const string GROUP_SELECTION = "Soup/Group Selection";
         public const string DELETE_SELECTION = "Soup/Delete Selection";
         public const string DELETE_SELECTION_BACKSPACE = "Soup/Delete Selection (Backspace)";
-
-        // Unity's bindings for the Edit-menu actions, so hints follow the user's rebinding.
         public const string EDIT_PASTE = "Main Menu/Edit/Paste";
         public const string EDIT_DUPLICATE = "Main Menu/Edit/Duplicate";
         public const string EDIT_FRAME = "Main Menu/Edit/Frame Selected in Window under Cursor";
 
-        // Mac keyboards label Backspace "delete", so that's the key to show there.
         public static string DeleteSelectionHintId => Application.platform == RuntimePlatform.OSXEditor ? DELETE_SELECTION_BACKSPACE : DELETE_SELECTION;
 
         [Shortcut(CREATE_NODE, typeof(GraphShortcutContext), KeyCode.Space)]
@@ -73,7 +63,6 @@ namespace Soup.Editor.Views
         [Shortcut(DELETE_SELECTION_BACKSPACE, typeof(GraphShortcutContext), KeyCode.Backspace)]
         private static void DeleteSelectionBackspace() => Run(graph => graph.RequestDeleteSelection());
 
-        // The key is taken even mid-drag, so it can't fall through to a global shortcut.
         private static void Run(Action<GraphView> action)
         {
             GraphView graph = GraphShortcutContext.FocusedGraph;
@@ -83,9 +72,6 @@ namespace Soup.Editor.Views
             }
         }
 
-        /// <summary>
-        /// "Group Selection (⌘G)" for a bound shortcut, the bare label otherwise.
-        /// </summary>
         public static string WithHint(string label, string shortcutId)
         {
             string binding;
@@ -93,7 +79,7 @@ namespace Soup.Editor.Views
             {
                 binding = ShortcutManager.instance.GetShortcutBinding(shortcutId).ToString();
             }
-            catch (ArgumentException) // Unknown id, e.g. a Unity version that renamed its menu item.
+            catch (ArgumentException)
             {
                 return label;
             }

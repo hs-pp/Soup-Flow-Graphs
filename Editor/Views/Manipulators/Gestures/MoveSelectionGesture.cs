@@ -7,13 +7,10 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Manipulators.Gestures
 {
-    /// <summary>
-    /// Moves the selected nodes and groups, plus everything inside the selected groups, by one snapped offset taken from the dragged element.
-    /// </summary>
-    public sealed class MoveSelectionGesture : DragGesture
+    public class MoveSelectionGesture : DragGesture
     {
         private readonly List<GraphElement> m_moving = new();
-        private readonly List<Vector2> m_startPositions = new(); // Parallel to m_moving.
+        private readonly List<Vector2> m_startPositions = new();
         private Vector2 m_anchorStart;
         private Vector2 m_rawOffset;
         private Vector2 m_appliedOffset;
@@ -83,13 +80,11 @@ namespace Soup.Editor.Views.Manipulators.Gestures
                 GraphElement element = m_moving[i];
                 element.pickingMode = PickingMode.Position;
 
-                // A drag that snapped back to where it started changes nothing.
                 if (element.Id == null || m_appliedOffset == Vector2.zero)
                 {
                     continue;
                 }
 
-                // Read from the drag rather than the views, which a reconcile mid-drag may have moved back to the model.
                 Vector2 position = m_startPositions[i] + m_appliedOffset;
                 if (element is GroupView)
                 {
@@ -114,7 +109,6 @@ namespace Soup.Editor.Views.Manipulators.Gestures
                 GraphElement element = m_moving[i];
                 element.pickingMode = PickingMode.Position;
 
-                // After an undo the observer has already put every surviving view at its model position.
                 if (!keepPositions)
                 {
                     element.SetPosition(m_startPositions[i]);

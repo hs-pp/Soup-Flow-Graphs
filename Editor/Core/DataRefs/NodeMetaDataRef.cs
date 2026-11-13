@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Soup.Editor.Core.DataRefs
 {
-    public struct NodeMetaDataRef
+    public readonly struct NodeMetaDataRef
     {
         public readonly string NodeId;
         public readonly SerializedProperty MetaDataSP;

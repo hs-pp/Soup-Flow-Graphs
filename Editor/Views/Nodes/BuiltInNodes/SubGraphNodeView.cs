@@ -8,13 +8,13 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
     [CustomNodeName("Sub Graph")]
     public class SubGraphNodeView : BaseHorizontalNodeView
     {
-        private const string GLYPH_CLASS = "subGraphNodeGlyph";
+        private const string ICON_CLASS = "subGraphNodeIcon";
 
         protected override void OnAddExtensionsContents(VisualElement extensionsContainer)
         {
-            VisualElement glyph = new() { pickingMode = PickingMode.Ignore };
-            glyph.AddToClassList(GLYPH_CLASS);
-            extensionsContainer.Add(glyph);
+            VisualElement icon = new() { pickingMode = PickingMode.Ignore };
+            icon.AddToClassList(ICON_CLASS);
+            extensionsContainer.Add(icon);
         }
 
         protected override void BindManipulators()
@@ -33,6 +33,7 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
             if (e.button == 0 && e.clickCount == 2)
             {
                 Graph.RequestCommand(new EnterSubGraphCommand(Id));
+                e.StopPropagation();
             }
         }
     }

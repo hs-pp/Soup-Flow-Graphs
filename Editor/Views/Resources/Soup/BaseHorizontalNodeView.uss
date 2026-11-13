@@ -39,11 +39,11 @@
 
 /* Stacked-cards icon in the sub graph node. The PNG is white on transparent (4x, mipmapped), so the tint sets its color
    and the node body shows through. */
-.subGraphNodeGlyph {
+.subGraphNodeIcon {
     width: 54px;
     height: 38px;
     align-self: center;
-    background-image: url("SubGraphNodeGlyph.png");
+    background-image: url("SubGraphNodeIcon.png");
     -unity-background-image-tint-color: rgb(185, 189, 196);
 }
 

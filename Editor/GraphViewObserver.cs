@@ -181,12 +181,12 @@ namespace Soup.Editor
                 foreach (OutportRef outport in node.Value.EnumerateOutports())
                 {
                     string toId = outport.ConnectedNodeId;
-                    if (string.IsNullOrEmpty(outport.Id) || string.IsNullOrEmpty(toId) || !modelNodes.ContainsKey(toId))
+                    if (string.IsNullOrEmpty(outport.OutportId) || string.IsNullOrEmpty(toId) || !modelNodes.ContainsKey(toId))
                     {
                         continue;
                     }
 
-                    modelEdges[new EdgeId(node.Key, outport.Id).Key] = (node.Key, outport.Id, toId);
+                    modelEdges[new EdgeId(node.Key, outport.OutportId).Key] = (node.Key, outport.OutportId, toId);
                 }
             }
 
