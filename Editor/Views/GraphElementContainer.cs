@@ -45,7 +45,7 @@ namespace Soup.Editor.Views
             return new List<GraphElement>(contents);
         }
 
-        internal void CollectGroupContents(GroupView group, HashSet<GraphElement> into)
+        public void CollectGroupContents(GroupView group, HashSet<GraphElement> into)
         {
             Rect bounds = group.CanvasRect;
 

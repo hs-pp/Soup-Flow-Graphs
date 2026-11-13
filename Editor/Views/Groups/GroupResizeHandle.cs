@@ -6,9 +6,6 @@ namespace Soup.Editor.Views.Groups
     [UxmlElement]
     public sealed partial class GroupResizeHandle : VisualElement
     {
-        /// <summary>
-        /// Set by the owning <see cref="GroupView"/> once it has cloned its layout.
-        /// </summary>
         public GroupView Group { get; internal set; }
 
         [EventInterest(typeof(DragOfferEvent))]

@@ -36,7 +36,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
             Rect rect = rectSP.rectValue;
             size = GroupMetaData.ClampSize(size);
-            if (rect.size == size) // No change: don't dirty the asset.
+            if (rect.size == size)
             {
                 return;
             }

@@ -1,14 +1,11 @@
 using UnityEditor.ProjectWindowCallback;
+using UnityEngine;
 
 namespace Soup.Editor.ScriptTemplates
 {
-    /// <summary>
-    /// Finishes Create > Soup > Node Script once the new file has been named in the Project window. It's a
-    /// ScriptableObject, so it lives in a file of its own name.
-    /// </summary>
-    internal sealed class CreateNodeScriptAction : EndNameEditAction
+    internal sealed class CreateNodeScriptAction : AssetCreationEndAction
     {
-        public override void Action(int instanceId, string pathName, string resourceFile)
+        public override void Action(EntityId entityId, string pathName, string resourceFile)
         {
             SoupScriptCreator.CreateNodeScriptFromProjectWindow(pathName);
         }

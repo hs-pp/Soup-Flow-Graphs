@@ -96,7 +96,7 @@ namespace Soup.Editor.Views.Groups
         }
 
         /// <summary>
-        /// Back-to-front order: larger groups first, so a group always draws above any group that encloses it. Ties keep list order.
+        /// Back-to-front order with larger groups first.
         /// </summary>
         public static int CompareStacking(GroupView a, GroupView b)
         {
@@ -122,13 +122,11 @@ namespace Soup.Editor.Views.Groups
         public override void BuildContextMenu(ContextualMenuPopulateEvent evt, GraphView graphView)
         {
             List<string> contentIds = CollectIds(graphView.GetGroupContents(this), element => element.IsSelectable());
-            evt.menu.AppendAction("Select Contents", _ => graphView.RequestCommand(new SelectGraphElementsCommand(contentIds, GraphSelectionMode.Replace)),
-                contentIds.Count > 0 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+            evt.menu.AppendAction("Select Contents", _ => graphView.RequestCommand(new SelectGraphElementsCommand(contentIds, GraphSelectionMode.Replace)), contentIds.Count > 0 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
 
             evt.menu.AppendSeparator();
 
-            evt.menu.AppendAction(GraphShortcuts.WithHint("Delete Group", GraphShortcuts.DeleteSelectionHintId), _ =>
-                graphView.RequestCommand(new DeleteGraphElementsCommand(null, null, new[] { Id })), IsDeletable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+            evt.menu.AppendAction(GraphShortcuts.WithHint("Delete Group", GraphShortcuts.DeleteSelectionHintId), _ => graphView.RequestCommand(new DeleteGraphElementsCommand(null, null, new[] { Id })), IsDeletable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
         }
         
         private List<string> CollectIds<T>(IEnumerable<T> elements, Func<T, bool> include) where T : GraphElement

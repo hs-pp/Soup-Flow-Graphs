@@ -26,7 +26,7 @@ namespace Soup.Editor.ScriptTemplates
         private static void CreateNodeScriptMenuItem()
         {
             Texture2D icon = EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D;
-            ProjectWindowUtil.StartNameEditingIfProjectWindowExists(0, ScriptableObject.CreateInstance<CreateNodeScriptAction>(), "NewNode.cs", icon, null);
+            ProjectWindowUtil.StartNameEditingIfProjectWindowExists(EntityId.None, ScriptableObject.CreateInstance<CreateNodeScriptAction>(), "NewNode.cs", icon, null);
         }
 
         internal static void CreateNodeScriptFromProjectWindow(string pathName)

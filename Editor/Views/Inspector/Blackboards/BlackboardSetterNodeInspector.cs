@@ -67,13 +67,22 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
 
             BlackboardRef blackboard = BlackboardRef.Find(m_nodeRef.NodeSP.serializedObject);
-            string variableId = BlackboardInspectorUtils.GetVariableId(m_nodeRef, BlackboardSetterNode.VARIABLE_FIELD_NAME);
+            string variableId = new BlackboardKeyRef(m_nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.VARIABLE_FIELD_NAME)).VariableId;
             m_picker.Refresh(blackboard, variableId);
 
             SerializedProperty setterSP = m_nodeRef.NodeSP.FindPropertyRelative(BlackboardSetterNode.SETTER_FIELD_NAME);
-            string problem = BlackboardInspectorUtils.GetVariableProblem(blackboard, variableId, out BlackboardVariableRef variable, out Type valueType);
-            if (problem == null)
+            string problem = null;
+            if (string.IsNullOrEmpty(variableId))
             {
+                problem = "Pick a variable.";
+            }
+            else if (!blackboard.TryGetVariable(variableId, out BlackboardVariableRef variable))
+            {
+                problem = "The variable was deleted, or the node came from another graph. Pick another one.";
+            }
+            else
+            {
+                Type valueType = variable.GetValueType();
                 ABlackboardSetter setter = setterSP?.managedReferenceValue as ABlackboardSetter;
                 if (setter == null)
                 {

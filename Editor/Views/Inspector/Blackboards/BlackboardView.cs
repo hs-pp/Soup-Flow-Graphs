@@ -10,10 +10,6 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Inspector.Blackboards
 {
-    /// <summary>
-    /// The graph's blackboard, one row per variable. Adding, renaming, reordering and deleting go through commands; default values
-    /// are plain bindings, like graph properties.
-    /// </summary>
     [UxmlElement]
     public partial class BlackboardView : VisualElement
     {
@@ -53,7 +49,6 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         {
             m_addButton.SetEnabled(blackboard.IsValid);
 
-            // A variable whose class is missing stays in the asset but isn't shown, like a node whose type is missing.
             List<BlackboardVariableRef> variables = new();
             List<string> rowKeys = new();
             foreach (BlackboardVariableRef variable in blackboard.GetVariables())
@@ -67,8 +62,6 @@ namespace Soup.Editor.Views.Inspector.Blackboards
 
             m_emptyLabel.style.display = blackboard.IsValid && variables.Count == 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
-            // Rebinding steals focus mid-edit, and this runs after every change to the graph. Rows are only rebuilt when the list
-            // itself changed. A rename relabels them in place.
             SerializedObject serializedObject = blackboard.BlackboardSP?.serializedObject;
             if (serializedObject == m_boundObject && IsBoundTo(rowKeys))
             {
@@ -111,7 +104,6 @@ namespace Soup.Editor.Views.Inspector.Blackboards
 
         private void ClearRows()
         {
-            // A name field removed mid-rename loses focus on the way out, which must not commit.
             foreach (BlackboardVariableRow row in m_rows)
             {
                 row.CancelRename();

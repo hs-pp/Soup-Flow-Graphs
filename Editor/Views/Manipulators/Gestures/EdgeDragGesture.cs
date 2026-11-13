@@ -10,7 +10,7 @@ namespace Soup.Editor.Views.Manipulators.Gestures
     /// A drag from a port drags the free end of a new candidate edge. Drop targets <see cref="Take"/> the edges they accept,
     /// and the drag puts back the rest when it ends.
     /// </summary>
-    internal sealed class EdgeDragGesture : DragGesture
+    public sealed class EdgeDragGesture : DragGesture
     {
         private readonly PortView m_port; // A drag from a port gets its candidate edge at begin, so a click leaves nothing behind.
         private readonly List<EdgeView> m_edges = new();

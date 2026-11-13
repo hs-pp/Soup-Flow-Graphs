@@ -3,7 +3,7 @@ using Soup.Editor.Core.DataRefs;
 
 namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
-    internal sealed class ApplyExternalEditsCommand : IGraphCommand
+    public sealed class ApplyExternalEditsCommand : IGraphCommand
     {
         public bool IsUndoable => false;
 
@@ -24,8 +24,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
         {
             if (m_editedNodeIds.Count > 0)
             {
-                // External edits can land in any subgraph, so this runs at the root and searches the whole tree. Collected first
-                // because each repair applies.
+                // External edits can land in any subgraph, so this runs at the root and searches the whole tree.
                 List<NodeRef> editedNodes = new(m_editedNodeIds.Count);
                 CollectNodes(scope.Collection, new HashSet<string>(m_editedNodeIds), editedNodes);
                 foreach (NodeRef nodeRef in editedNodes)

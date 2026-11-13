@@ -44,12 +44,10 @@ namespace Soup.Editor.Views.Inspector
             m_colorSwatch = this.Q<ColorField>(COLOR_SWATCH_TAG);
             m_commentBubble = this.Q<SpeechBubbleElement>(COMMENT_BUBBLE_TAG);
 
-            // Clicking a ColorField opens Unity's color picker; trimmed down, the field is just the swatch.
             m_colorSwatch.showEyeDropper = false;
             m_colorSwatch.showAlpha = false;
             m_commentField = this.Q<TextField>(COMMENT_FIELD_TAG);
 
-            // Focus lands on the field's inner text element; FocusIn/FocusOut bubble up to the field.
             m_commentField.RegisterCallback<FocusInEvent>(_ => m_commentBubble.AddToClassList(COMMENT_FOCUSED_CLASS));
             m_commentField.RegisterCallback<FocusOutEvent>(_ => m_commentBubble.RemoveFromClassList(COMMENT_FOCUSED_CLASS));
             m_commentField.RegisterValueChangedCallback(evt => RefreshCommentEmpty(evt.newValue));
@@ -59,10 +57,9 @@ namespace Soup.Editor.Views.Inspector
         {
             Type nodeType = nodeRef.GetNodeType();
             m_titleLabel.text = nodeType != null ? EditorTypesFactory.GetNodeDisplayName(nodeType) : "error";
-            m_titleLabel.tooltip = nodeType != null ? nodeType.FullName : string.Empty; // The display name can hide which class this is.
+            m_titleLabel.tooltip = nodeType != null ? nodeType.FullName : string.Empty;
             m_idLabel.text = !string.IsNullOrEmpty(nodeRef.Id) ? nodeRef.Id : "error";
 
-            // Subscribe to color changes. Unbinding the container also unbinds the swatch inside it.
             m_headerContainer.Unbind();
             SerializedProperty colorSP = metaDataRef.ColorSP;
             m_colorSwatch.style.display = colorSP != null ? DisplayStyle.Flex : DisplayStyle.None;
@@ -78,10 +75,8 @@ namespace Soup.Editor.Views.Inspector
 
         private void BindComment(SerializedProperty commentSP)
         {
-            // Also unbinds the field inside the bubble.
             m_commentBubble.Unbind();
 
-            // A node with no meta data entry has nowhere to store a comment.
             m_commentBubble.style.display = commentSP != null ? DisplayStyle.Flex : DisplayStyle.None;
             if (commentSP == null)
             {
@@ -89,7 +84,6 @@ namespace Soup.Editor.Views.Inspector
             }
 
             m_commentField.BindProperty(commentSP);
-            // The field's change event covers typing; the tracker covers undo and edits from another window.
             m_commentBubble.TrackPropertyValue(commentSP, property => RefreshCommentEmpty(property.stringValue));
             RefreshCommentEmpty(commentSP.stringValue);
         }

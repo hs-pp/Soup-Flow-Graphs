@@ -87,19 +87,33 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             }
 
             BlackboardRef blackboard = BlackboardRef.Find(m_nodeRef.NodeSP.serializedObject);
-            string variableId = BlackboardInspectorUtils.GetVariableId(m_nodeRef, BlackboardConditionalNode.VARIABLE_FIELD_NAME);
+            string variableId = new BlackboardKeyRef(m_nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.VARIABLE_FIELD_NAME)).VariableId;
             m_picker.Refresh(blackboard, variableId);
 
             SerializedProperty entriesSP = m_nodeRef.NodeSP.FindPropertyRelative(BlackboardConditionalNode.ENTRIES_FIELD_NAME);
-            string problem = BlackboardInspectorUtils.GetVariableProblem(blackboard, variableId, out BlackboardVariableRef variable, out Type valueType);
-            bool canAdd = problem == null && EditorTypesFactory.HasBlackboardConditional(valueType);
-            if (problem == null && !canAdd)
+            string problem = null;
+            Type valueType = null;
+            bool canAdd = false;
+            if (string.IsNullOrEmpty(variableId))
             {
-                problem = $"There are no conditions for {EditorTypesFactory.GetBlackboardValueTypeDisplayName(valueType)} variables.";
+                problem = "Pick a variable.";
             }
-            else if (problem == null && !AllConditionsWorkOn(entriesSP, valueType))
+            else if (!blackboard.TryGetVariable(variableId, out BlackboardVariableRef variable))
             {
-                problem = $"Some conditions work on another type than '{variable.Name}'. They take Else when the graph runs. Pick the variable again to clear them.";
+                problem = "The variable was deleted, or the node came from another graph. Pick another one.";
+            }
+            else
+            {
+                valueType = variable.GetValueType();
+                canAdd = EditorTypesFactory.HasBlackboardConditional(valueType);
+                if (!canAdd)
+                {
+                    problem = $"There are no conditions for {EditorTypesFactory.GetBlackboardValueTypeDisplayName(valueType)} variables.";
+                }
+                else if (!AllConditionsWorkOn(entriesSP, valueType))
+                {
+                    problem = $"Some conditions work on another type than '{variable.Name}'. They take Else when the graph runs. Pick the variable again to clear them.";
+                }
             }
 
             m_helpBox.text = problem ?? string.Empty;

@@ -1,27 +1,24 @@
 using System.Collections.Generic;
 using Soup.Runtime;
-using Soup.Runtime.BuiltInNodes;
 using UnityEditor;
 
 namespace Soup.Editor.Core.DataRefs
 {
     public struct NodeCollectionRef
     {
-        public readonly string Path;
         public readonly SerializedProperty CollectionSP;
         public readonly SerializedProperty NodesSP;
         public readonly NodeRef EntryNode;
+        
+        public bool IsValid => CollectionSP != null && NodesSP != null;
 
         public NodeCollectionRef(SerializedProperty collectionSP)
         {
             CollectionSP = collectionSP;
-            Path = collectionSP?.propertyPath;
             NodesSP = collectionSP?.FindPropertyRelative(NodeCollection.NODES_FIELD_NAME);
             EntryNode = new NodeRef(collectionSP?.FindPropertyRelative(NodeCollection.ENTRY_NODE_FIELD_NAME), NodeRef.ENTRY_NODE_INDEX);
         }
-
-        public bool IsValid => CollectionSP != null && NodesSP != null;
-
+        
         public IEnumerable<NodeRef> GetNodes()
         {
             if (!IsValid)

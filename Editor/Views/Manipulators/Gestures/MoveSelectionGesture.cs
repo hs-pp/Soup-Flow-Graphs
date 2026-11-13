@@ -10,7 +10,7 @@ namespace Soup.Editor.Views.Manipulators.Gestures
     /// <summary>
     /// Moves the selected nodes and groups, plus everything inside the selected groups, by one snapped offset taken from the dragged element.
     /// </summary>
-    internal sealed class MoveSelectionGesture : DragGesture
+    public sealed class MoveSelectionGesture : DragGesture
     {
         private readonly List<GraphElement> m_moving = new();
         private readonly List<Vector2> m_startPositions = new(); // Parallel to m_moving.

@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
-    /// <summary>
-    /// Keys that point at the variable are left as they are: their nodes show it as missing, and undoing the delete brings it back.
-    /// </summary>
     public sealed class DeleteBlackboardVariableCommand : IGraphCommand
     {
         public bool IsUndoable => true;
@@ -21,7 +18,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
         {
             if (!scope.TryGetBlackboard(out BlackboardRef blackboard) || !blackboard.TryGetVariable(m_variableId, out BlackboardVariableRef variable))
             {
-                Debug.LogError($"[Soup] {nameof(DeleteBlackboardVariableCommand)}: no blackboard variable has the id '{m_variableId}'.");
+                Debug.LogError($"[Soup] {nameof(DeleteBlackboardVariableCommand)}: no blackboard variable with the id '{m_variableId}'.");
                 return;
             }
 

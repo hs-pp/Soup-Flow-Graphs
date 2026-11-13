@@ -20,13 +20,13 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
         {
             if (!EditorTypesFactory.IsBlackboardVariableType(m_variableType))
             {
-                Debug.LogError($"[Soup] {nameof(AddBlackboardVariableCommand)}: '{m_variableType}' is not a registered blackboard variable type.");
+                Debug.LogError($"[Soup] {nameof(AddBlackboardVariableCommand)}: '{m_variableType}' is not a blackboard variable type.");
                 return;
             }
 
             if (!scope.TryGetBlackboard(out BlackboardRef blackboard))
             {
-                Debug.LogError($"[Soup] {nameof(AddBlackboardVariableCommand)}: the graph's blackboard could not be resolved.");
+                Debug.LogError($"[Soup] {nameof(AddBlackboardVariableCommand)}: Could not find blackboard.");
                 return;
             }
 

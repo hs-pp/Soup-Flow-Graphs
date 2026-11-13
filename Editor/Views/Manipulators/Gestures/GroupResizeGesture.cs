@@ -6,16 +6,12 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Manipulators.Gestures
 {
-    /// <summary>
-    /// Drags a group's bottom-right corner. Its position never changes.
-    /// </summary>
-    internal sealed class GroupResizeGesture : DragGesture
+    public sealed class GroupResizeGesture : DragGesture
     {
         private readonly GroupView m_group;
         private readonly Vector2 m_startMouse;
         private Vector2 m_size;
 
-        /// <param name="mousePosition">The offer's mouse position, so the corner moves with the mouse from where it was pressed.</param>
         public GroupResizeGesture(GraphView graphView, GroupView group, Vector2 mousePosition) : base(graphView)
         {
             Dragged = group;
