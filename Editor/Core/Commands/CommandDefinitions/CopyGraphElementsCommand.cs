@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Soup.Editor.Core.DataRefs;
 using Soup.Editor.State;
@@ -12,8 +11,17 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
         public CopyGraphElementsCommand(IReadOnlyList<string> nodeIds, IReadOnlyList<string> groupIds = null)
         {
-            m_nodeIds = nodeIds ?? Array.Empty<string>();
-            m_groupIds = groupIds ?? Array.Empty<string>();
+            m_nodeIds = nodeIds;
+            if (m_nodeIds == null)
+            {
+                m_nodeIds = new List<string>();
+            }
+
+            m_groupIds = groupIds;
+            if (m_groupIds == null)
+            {
+                m_groupIds = new List<string>();
+            }
         }
 
         public void ExecuteCommand(GraphEditorState state, LoadedFlowGraph loadedFlowGraph)

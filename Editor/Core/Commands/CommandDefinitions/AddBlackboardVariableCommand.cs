@@ -7,8 +7,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class AddBlackboardVariableCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private Type m_variableType;
 
         public AddBlackboardVariableCommand(Type variableType)

@@ -5,18 +5,12 @@ using UnityEngine;
 
 namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
-    /// <summary>
-    /// Reorders a Conditional node's conditions, which is also the order they are tested in. Edges follow their outports.
-    /// </summary>
     public sealed class MoveBlackboardConditionCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private string m_nodeId;
         private string m_entryId;
         private int m_offset;
 
-        // An offset of -1 moves the condition up one place, +1 down one.
         public MoveBlackboardConditionCommand(string nodeId, string entryId, int offset)
         {
             m_nodeId = nodeId;

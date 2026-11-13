@@ -7,8 +7,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class MoveGraphElementsCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private IReadOnlyDictionary<string, Vector2> m_nodePositions;
         private IReadOnlyDictionary<string, Vector2> m_groupPositions;
 

@@ -6,13 +6,8 @@ using UnityEngine;
 
 namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
-    /// <summary>
-    /// Appends a condition for the value type of the node's variable to a Conditional node, which gives it a new outport before Else.
-    /// </summary>
     public sealed class AddBlackboardConditionCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private string m_nodeId;
 
         public AddBlackboardConditionCommand(string nodeId)
@@ -39,7 +34,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             ABlackboardConditional conditional = EditorTypesFactory.CreateBlackboardConditional(valueType);
             if (conditional == null)
             {
-                Debug.LogError($"[Soup] {nameof(AddBlackboardConditionCommand)}: there is no conditional for {valueType?.Name ?? "an unknown type"}.");
+                Debug.LogError($"[Soup] {nameof(AddBlackboardConditionCommand)}: there is no conditional for {valueType?.Name}.");
                 return;
             }
 

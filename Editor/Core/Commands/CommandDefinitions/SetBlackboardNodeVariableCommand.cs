@@ -6,22 +6,15 @@ using UnityEngine;
 
 namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
-    /// <summary>
-    /// Points a Setter or Conditional node at another blackboard variable, or at none. What the node holds follows the variable's
-    /// value type: kept when the type is unchanged, otherwise the Setter gets a new setter for the type and the Conditional loses its
-    /// conditions, along with their outports and edges.
-    /// </summary>
     public sealed class SetBlackboardNodeVariableCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private string m_nodeId;
         private string m_variableId;
 
         public SetBlackboardNodeVariableCommand(string nodeId, string variableId)
         {
             m_nodeId = nodeId;
-            m_variableId = variableId ?? string.Empty;
+            m_variableId = variableId;
         }
 
         public void ExecuteCommand(LoadedFlowGraph.CommandScope scope)

@@ -104,7 +104,7 @@ namespace Soup.Editor.Core
                 return null;
             }
 
-            return ExecuteCommands(new[] { command }, subGraphPath, command.IsUndoable ? command.GetUndoName() : null);
+            return ExecuteCommands(new[] { command }, subGraphPath, command.GetUndoName());
         }
 
         public GraphChangeSet ExecuteBatch(IReadOnlyList<IGraphCommand> commands, IReadOnlyList<string> subGraphPath, string undoName)

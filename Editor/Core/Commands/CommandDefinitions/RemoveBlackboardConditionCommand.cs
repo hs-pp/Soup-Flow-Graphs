@@ -10,8 +10,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
     /// </summary>
     public sealed class RemoveBlackboardConditionCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private string m_nodeId;
         private string m_entryId;
 

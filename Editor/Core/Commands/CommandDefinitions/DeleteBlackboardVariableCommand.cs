@@ -5,8 +5,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class DeleteBlackboardVariableCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private string m_variableId;
 
         public DeleteBlackboardVariableCommand(string variableId)

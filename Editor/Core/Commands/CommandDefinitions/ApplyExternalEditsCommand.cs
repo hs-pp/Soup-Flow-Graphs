@@ -5,8 +5,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class ApplyExternalEditsCommand : IGraphCommand
     {
-        public bool IsUndoable => false;
-
         private readonly IReadOnlyCollection<string> m_editedNodeIds;
         private readonly IReadOnlyCollection<string> m_editedMetaDataNodeIds;
         private readonly bool m_groupsEdited;

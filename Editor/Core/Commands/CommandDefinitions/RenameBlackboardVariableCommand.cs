@@ -6,8 +6,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class RenameBlackboardVariableCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private string m_variableId;
         private string m_name;
 

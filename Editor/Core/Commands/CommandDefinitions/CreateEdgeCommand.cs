@@ -4,8 +4,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class CreateEdgeCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-        
         private string m_fromNodeId;
         private string m_outportId;
         private string m_toNodeId;
@@ -21,7 +19,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
         {
             if (m_fromNodeId == m_toNodeId)
             {
-                Debug.LogWarning($"[Soup] {nameof(CreateEdgeCommand)}: A node cannot connect to itself.");
+                Debug.LogWarning($"[Soup] {nameof(CreateEdgeCommand)}: a node cannot connect to itself.");
                 return;
             }
 

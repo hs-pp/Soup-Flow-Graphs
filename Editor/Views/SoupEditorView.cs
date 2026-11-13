@@ -217,7 +217,7 @@ namespace Soup.Editor.Views
 
         private void HandleBreadcrumbPressed(int depth)
         {
-            HandleCommandRequested(new NavigateToSubGraphPathCommand(depth));
+            HandleCommandRequested(new NavigateToSubGraphDepthCommand(depth));
         }
 
         // The M shortcut and the canvas/minimap context menus change visibility on the GraphView, so the toggle follows it.

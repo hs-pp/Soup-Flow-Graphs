@@ -11,7 +11,12 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
         public SelectGraphElementsCommand(IReadOnlyList<string> ids, GraphSelectionMode mode)
         {
-            m_ids = ids ?? Array.Empty<string>();
+            m_ids = ids;
+            if (m_ids == null)
+            {
+                m_ids = Array.Empty<string>();
+            }
+            
             m_selectionMode = mode;
         }
 

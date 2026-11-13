@@ -2,8 +2,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class DestroyEdgeCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-        
         private EdgeId m_edge;
 
         public DestroyEdgeCommand(EdgeId edge)

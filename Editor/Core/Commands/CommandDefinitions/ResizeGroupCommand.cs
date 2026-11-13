@@ -7,8 +7,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class ResizeGroupCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private string m_groupId;
         private Vector2 m_size;
 

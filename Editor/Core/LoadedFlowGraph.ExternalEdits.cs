@@ -311,7 +311,8 @@ namespace Soup.Editor.Core
 
             if (nodeEdits.Count > 0 || metaDataEdits.Count > 0 || groupsEdited || blackboardEdited)
             {
-                Execute(new ApplyExternalEditsCommand(nodeEdits, metaDataEdits, groupsEdited, blackboardEdited), null);
+                // No undo name, so its writes join the current undo step instead of opening their own.
+                ExecuteCommands(new[] { new ApplyExternalEditsCommand(nodeEdits, metaDataEdits, groupsEdited, blackboardEdited) }, null, null);
             }
         }
 

@@ -8,8 +8,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class DeleteGraphElementsCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private IReadOnlyList<string> m_nodeIds;
         private IReadOnlyList<EdgeId> m_edges;
         private IReadOnlyList<string> m_groupIds;

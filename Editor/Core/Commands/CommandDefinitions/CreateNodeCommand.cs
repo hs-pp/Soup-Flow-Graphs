@@ -7,8 +7,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class CreateNodeCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private Type m_nodeType;
         private Vector2 m_position;
         private string m_presetNodeId;
@@ -56,7 +54,7 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 || !scope.TryGetOrCreateNodeMetaData(collectionMetaData, node.Id, m_nodeType, out NodeMetaDataRef nodeMetaData)
                 || !CommandUtils.SetNodePosition(scope, nodeMetaData, m_position))
             {
-                Debug.LogError($"[Soup] '{m_nodeType.Name}' was created but its position could not be saved; it will appear at the origin.");
+                Debug.LogError($"[Soup] {nameof(CreateNodeCommand)}: '{m_nodeType.Name}' was created but its position could not be saved; it will appear at the origin.");
             }
         }
     }

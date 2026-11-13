@@ -11,8 +11,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class PasteGraphElementsCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private static readonly Vector2 DUPLICATE_POSITION_OFFSET = new(30f, 30f);
 
         private ClipboardPayload m_payload;
@@ -336,7 +334,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
     public sealed class PasteFromClipboardCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
         public readonly Vector2? CenterPosition;
 
         public PasteFromClipboardCommand(Vector2? centerPosition)
@@ -356,7 +353,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
     public sealed class DuplicateGraphElementsCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
         public readonly IReadOnlyList<string> NodeIds;
         public readonly IReadOnlyList<string> GroupIds;
 

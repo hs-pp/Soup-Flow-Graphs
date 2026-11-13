@@ -6,8 +6,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 {
     public sealed class CreateGroupCommand : IGraphCommand
     {
-        public bool IsUndoable => true;
-
         private Rect m_rect;
 
         public CreateGroupCommand(Rect rect)
