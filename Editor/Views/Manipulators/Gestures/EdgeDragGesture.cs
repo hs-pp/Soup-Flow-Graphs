@@ -81,11 +81,11 @@ namespace Soup.Editor.Views.Manipulators.Gestures
             // Latch the end in place so it enters drag mode without visually jumping.
             if (m_draggedInput)
             {
-                edge.SetInputPositionOverride(edge.To);
+                edge.SetInputPositionOverride(edge.InputPosition);
             }
             else
             {
-                edge.SetOutputPositionOverride(edge.From);
+                edge.SetOutputPositionOverride(edge.OutputPosition);
             }
 
             edge.pickingMode = PickingMode.Ignore;
@@ -149,9 +149,9 @@ namespace Soup.Editor.Views.Manipulators.Gestures
 
                 edge.pickingMode = PickingMode.Position;
 
-                if (edge.IsRealEdge())
+                if (edge.HasModelIdentity)
                 {
-                    edge.UnsetPositionOverrides();
+                    edge.ClearPositionOverrides();
                     edge.Selected = false;
                 }
                 else

@@ -58,7 +58,8 @@ namespace Soup.Editor.Views.Edges
                 max = Vector2.Max(max, m_controlPoints[i]);
             }
 
-            float margin = Mathf.Max(EDGE_WIDTH, MIN_EDGE_WIDTH / edge.Graph.CurrentScale);
+            // Wide enough for the hit band, not just the line, since UI Toolkit only picks inside an element's bounds.
+            float margin = Mathf.Max(INTERCEPT_WIDTH, MIN_EDGE_WIDTH / edge.Graph.CurrentScale);
             edge.SetRenderBounds(new Rect(min.x - margin, min.y - margin, max.x - min.x + margin * 2, max.y - min.y + margin * 2));
         }
 
@@ -198,8 +199,8 @@ namespace Soup.Editor.Views.Edges
                 return;
             }
 
-            Vector2 from = edge.From;
-            Vector2 to = edge.To;
+            Vector2 from = edge.OutputPosition;
+            Vector2 to = edge.InputPosition;
             Vector2 delta = to - from;
             Vector2 fromDirection = GetFlowDirection(edge.OutputOrientation);
             Vector2 toDirection = GetFlowDirection(edge.InputOrientation);

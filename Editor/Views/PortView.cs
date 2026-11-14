@@ -181,7 +181,7 @@ namespace Soup.Editor.Views
         {
             foreach (EdgeView edge in m_connections)
             {
-                if (ignoreCandidateEdges && edge.IsCandidateEdge())
+                if (ignoreCandidateEdges && edge.IsDragged)
                 {
                     continue;
                 }
@@ -200,7 +200,7 @@ namespace Soup.Editor.Views
         {
             foreach (EdgeView e in m_connections)
             {
-                if (ignoreCandidateEdges && e.IsCandidateEdge())
+                if (ignoreCandidateEdges && e.IsDragged)
                 {
                     continue;
                 }
@@ -293,8 +293,7 @@ namespace Soup.Editor.Views
                 return null;
             }
 
-            EdgeView edge = new();
-            edge.SetPort(this);
+            EdgeView edge = new(this);
             graph.AddGraphElement(edge);
             return edge;
         }

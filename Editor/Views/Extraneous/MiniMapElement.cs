@@ -212,15 +212,15 @@ namespace Soup.Editor.Views.Extraneous
 
             foreach (EdgeView edge in m_edges)
             {
-                if (!edge.IsRealEdge() && !edge.IsCandidateEdge())
+                if (!edge.HasModelIdentity && !edge.IsDragged)
                 {
                     continue;
                 }
 
                 painter.strokeColor = edge.Selected ? m_selectedColor : m_edgeColor;
                 painter.BeginPath();
-                painter.MoveTo(ToMiniMap(edge.From));
-                painter.LineTo(ToMiniMap(edge.To));
+                painter.MoveTo(ToMiniMap(edge.OutputPosition));
+                painter.LineTo(ToMiniMap(edge.InputPosition));
                 painter.Stroke();
             }
 

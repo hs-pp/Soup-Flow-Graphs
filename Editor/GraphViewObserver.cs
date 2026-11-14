@@ -265,8 +265,7 @@ namespace Soup.Editor
                     continue;
                 }
 
-                EdgeView edgeView = new();
-                edgeView.BindToModel(outputPort, inputPort);
+                EdgeView edgeView = new(outputPort, inputPort);
                 m_edgeViews[pair.Key] = edgeView;
                 m_graphView.AddGraphElement(edgeView);
                 changed = true;

@@ -18,11 +18,6 @@ namespace Soup.Editor.Views.Nodes
 
         public override int Layer => 0;
 
-        /// <summary>
-        /// Width limits of the node, in graph pixels, read once when the view is built. MaxWidth is rounded down to
-        /// a snap step and never drops below MinWidth. Content wider than MaxWidth overflows, so a view that sets it
-        /// should wrap or truncate its labels.
-        /// </summary>
         protected virtual float MinWidth => 100f;
         protected virtual float MaxWidth => float.PositiveInfinity;
 
@@ -39,9 +34,7 @@ namespace Soup.Editor.Views.Nodes
         private string m_boundPropertyPath;
 
         public PortView InputPort { get; protected set; }
-        protected List<OutportDefinition> m_outportDefinitions = new();
         protected readonly List<PortView> m_outputPorts = new();
-        private bool m_outportDefinitionsFailed; // DefineOutports threw. It has logged, and would again on every refresh.
         
         private NodeCommentElement m_commentElement;
         
@@ -65,8 +58,7 @@ namespace Soup.Editor.Views.Nodes
 
             Id = nodeRef.Id;
             NodeType = nodeType;
-            BuildOutportDefinitions(nodeRef);
-            BuildPorts();
+            BuildPorts(BuildOutportDefinitions(nodeRef));
             UpdateFromModel(nodeRef, metaData);
         }
 
@@ -81,78 +73,19 @@ namespace Soup.Editor.Views.Nodes
             SetUpWidthSnapping();
         }
 
-        // Width snaps up to whole snap steps.
-        private void SetUpWidthSnapping()
-        {
-            style.flexDirection = FlexDirection.Row;
-            style.flexWrap = Wrap.Wrap;
-            m_root.style.flexShrink = 0;
-            ApplyWidthLimits();
-
-            m_widthProbe = new VisualElement { pickingMode = PickingMode.Ignore };
-            m_widthProbe.style.flexBasis = Length.Percent(100); // Always wraps until the first snap.
-            m_widthProbe.style.flexGrow = 1;
-            m_widthProbe.style.flexShrink = 0;
-            m_widthProbe.style.height = 0;
-            hierarchy.Add(m_widthProbe);
-
-            m_root.RegisterCallback<GeometryChangedEvent>(OnRootGeometryChanged);
-        }
-
-        // The snapped width rounds up, so a max between steps is unreachable: the capped root reads as a shrink and
-        // the snap flips between small and large forever. Rounding the max down to a step keeps it reachable.
-        private void ApplyWidthLimits()
-        {
-            const float step = GraphViewConstants.DefaultSnapStep;
-            float minWidth = Mathf.Max(0f, MinWidth);
-            m_root.style.minWidth = minWidth;
-
-            if (MaxWidth < float.PositiveInfinity)
-            {
-                float maxWidth = Mathf.Floor(MaxWidth / step + 0.001f) * step;
-                float snappedMinWidth = Mathf.Ceil(minWidth / step - 0.001f) * step;
-                m_root.style.maxWidth = Mathf.Max(maxWidth, snappedMinWidth);
-            }
-        }
-
-        private void OnRootGeometryChanged(GeometryChangedEvent evt)
-        {
-            const float epsilon = 0.01f;
-            float rootWidth = evt.newRect.width;
-            float contentWidth;
-            if (rootWidth > m_snappedWidth + epsilon)
-            {
-                contentWidth = rootWidth; // Outgrown, so the node is as wide as its content.
-            }
-            else if (rootWidth < m_snappedWidth - epsilon)
-            {
-                // The probe fits beside the root and the two split the spare width evenly.
-                contentWidth = rootWidth - m_widthProbe.layout.width + WIDTH_PROBE_BASIS;
-            }
-            else
-            {
-                return;
-            }
-
-            const float step = GraphViewConstants.DefaultSnapStep;
-            m_snappedWidth = Mathf.Ceil(contentWidth / step - 0.01f) * step; // Tolerance must exceed the probe's shortfall.
-            style.minWidth = m_snappedWidth;
-            m_widthProbe.style.flexBasis = Length.Percent(WIDTH_PROBE_BASIS / m_snappedWidth * 100f);
-        }
-
         public void UpdateFromModel(NodeRef nodeRef, NodeMetaDataRef metaData)
         {
             string previousPath = m_boundPropertyPath;
             NodeRef = nodeRef;
             m_boundPropertyPath = nodeRef.NodeSP?.propertyPath;
 
-            if (previousPath == null || m_boundPropertyPath == null || previousPath != m_boundPropertyPath)
+            if (previousPath == null || previousPath != m_boundPropertyPath)
             {
-                OnPropertyBound(nodeRef,  metaData);
+                OnPropertyBound(nodeRef, metaData);
             }
 
             RefreshOutportNames(nodeRef);
-            OnNodeDataChanged(NodeRef);
+            OnNodeDataChanged(nodeRef);
             UpdateMetaData(metaData);
         }
 
@@ -167,7 +100,7 @@ namespace Soup.Editor.Views.Nodes
 
             SetComment(metaData.Comment);
             OnMetaDataChanged(metaData);
-            Graph?.NotifyContentChanged(); // The minimap draws the node's color, which no position or geometry change reports.
+            Graph?.NotifyContentChanged();
         }
 
         private void SetComment(string comment)
@@ -193,40 +126,38 @@ namespace Soup.Editor.Views.Nodes
             }
         }
         
-        private void BuildOutportDefinitions(NodeRef nodeRef)
+        private List<OutportDefinition> BuildOutportDefinitions(NodeRef nodeRef)
         {
-            // Null when DefineOutports threw, and then every port is labelled with its outport id.
             List<OutportDefinition> definitions = NodeUtils.GetOutportDefinitions(nodeRef.GetNodeInstance());
-            m_outportDefinitionsFailed = definitions == null;
 
-            m_outportDefinitions.Clear();
+            List<OutportDefinition> outportDefinitions = new();
             foreach (OutportRef outport in nodeRef.EnumerateOutports())
             {
                 string name = definitions?.Find(x => x.Id == outport.OutportId).Name;
-                m_outportDefinitions.Add(new OutportDefinition(outport.OutportId, name ?? outport.OutportId));
+                if (name == null)
+                {
+                    name = outport.OutportId;
+                }
+
+                outportDefinitions.Add(new OutportDefinition(outport.OutportId, name));
             }
+
+            return outportDefinitions;
         }
 
-        // Names are only labels, so a node whose labels follow its data relabels in place. Changed keys rebuild the view instead.
         private void RefreshOutportNames(NodeRef nodeRef)
         {
-            // The labels stay keys until the view is rebuilt.
-            if (m_outportDefinitionsFailed)
+            List<OutportDefinition> outportDefinitions = BuildOutportDefinitions(nodeRef);
+            for (int i = 0; i < m_outputPorts.Count && i < outportDefinitions.Count; i++)
             {
-                return;
-            }
-
-            BuildOutportDefinitions(nodeRef);
-            for (int i = 0; i < m_outputPorts.Count && i < m_outportDefinitions.Count; i++)
-            {
-                if (m_outputPorts[i].OutportId == m_outportDefinitions[i].Id)
+                if (m_outputPorts[i].OutportId == outportDefinitions[i].Id)
                 {
-                    m_outputPorts[i].PortName = m_outportDefinitions[i].Name;
+                    m_outputPorts[i].PortName = outportDefinitions[i].Name;
                 }
             }
         }
 
-        private void BuildPorts()
+        private void BuildPorts(List<OutportDefinition> outportDefinitions)
         {
             InputPort = CreateInputPort(); // A view with no input returns null.
             if (InputPort != null)
@@ -234,7 +165,7 @@ namespace Soup.Editor.Views.Nodes
                 AddPort(InputPort);
             }
 
-            foreach (OutportDefinition definition in m_outportDefinitions)
+            foreach (OutportDefinition definition in outportDefinitions)
             {
                 PortView outputPort = CreateOutputPort(definition);
                 m_outputPorts.Add(outputPort);
@@ -261,6 +192,7 @@ namespace Soup.Editor.Views.Nodes
             {
                 return null;
             }
+
             return m_outputPorts.Find(x => x.OutportId == outportId);
         }
 
@@ -279,13 +211,68 @@ namespace Soup.Editor.Views.Nodes
 
             return i == m_outputPorts.Count;
         }
+        
+        private void SetUpWidthSnapping()
+        {
+            style.flexDirection = FlexDirection.Row;
+            style.flexWrap = Wrap.Wrap;
+            m_root.style.flexShrink = 0;
+            ApplyWidthLimits();
+
+            m_widthProbe = new VisualElement { pickingMode = PickingMode.Ignore };
+            m_widthProbe.style.flexBasis = Length.Percent(100); // Always wraps until the first snap.
+            m_widthProbe.style.flexGrow = 1;
+            m_widthProbe.style.flexShrink = 0;
+            m_widthProbe.style.height = 0;
+            hierarchy.Add(m_widthProbe);
+
+            m_root.RegisterCallback<GeometryChangedEvent>(OnRootGeometryChanged);
+        }
+
+        private void ApplyWidthLimits()
+        {
+            float step = GraphViewConstants.DefaultSnapStep;
+            float minWidth = Mathf.Max(0f, MinWidth);
+            m_root.style.minWidth = minWidth;
+
+            if (MaxWidth < float.PositiveInfinity)
+            {
+                float maxWidth = Mathf.Floor(MaxWidth / step + 0.001f) * step;
+                float snappedMinWidth = Mathf.Ceil(minWidth / step - 0.001f) * step;
+                m_root.style.maxWidth = Mathf.Max(maxWidth, snappedMinWidth);
+            }
+        }
+
+        private void OnRootGeometryChanged(GeometryChangedEvent evt)
+        {
+            const float epsilon = 0.01f;
+            float rootWidth = evt.newRect.width;
+            float contentWidth;
+            if (rootWidth > m_snappedWidth + epsilon)
+            {
+                contentWidth = rootWidth;
+            }
+            else if (rootWidth < m_snappedWidth - epsilon)
+            {
+                contentWidth = rootWidth - m_widthProbe.layout.width + WIDTH_PROBE_BASIS;
+            }
+            else
+            {
+                return;
+            }
+
+            const float step = GraphViewConstants.DefaultSnapStep;
+            m_snappedWidth = Mathf.Ceil(contentWidth / step - 0.01f) * step; // Tolerance must exceed the probe's shortfall.
+            style.minWidth = m_snappedWidth;
+            m_widthProbe.style.flexBasis = Length.Percent(WIDTH_PROBE_BASIS / m_snappedWidth * 100f);
+        }
 
         public override void BuildContextMenu(ContextualMenuPopulateEvent evt, GraphView graphView)
         {
-            evt.menu.AppendAction(GraphShortcuts.WithHint("Duplicate", GraphShortcuts.EDIT_DUPLICATE), _ =>
+            evt.menu.AppendAction(GraphShortcuts.WithHint("Duplicate Node", GraphShortcuts.EDIT_DUPLICATE), _ =>
                 graphView.RequestCommand(new DuplicateGraphElementsCommand(new[] { Id })), IsCopiable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
 
-            evt.menu.AppendAction(GraphShortcuts.WithHint("Delete", GraphShortcuts.DeleteSelectionHintId), _ =>
+            evt.menu.AppendAction(GraphShortcuts.WithHint("Delete Node", GraphShortcuts.DeleteSelectionHintId), _ =>
                 graphView.RequestCommand(new DeleteGraphElementsCommand(new[] { Id })), IsDeletable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
 
             evt.menu.AppendSeparator();
@@ -297,9 +284,13 @@ namespace Soup.Editor.Views.Nodes
         {
             base.HandleEventBubbleUp(evt);
 
-            if (evt is DragOfferEvent dragOffer && (evt.target == this || dragOffer.GetDraggedElement() == null))
+            if (evt.eventTypeId == DragOfferEvent.TypeId())
             {
-                OfferSelectionDrag(dragOffer);
+                DragOfferEvent dragOffer = (DragOfferEvent)evt;
+                if (evt.target == this || dragOffer.GetDraggedElement() == null)
+                {
+                    OfferSelectionDrag(dragOffer);
+                }
             }
         }
     }
