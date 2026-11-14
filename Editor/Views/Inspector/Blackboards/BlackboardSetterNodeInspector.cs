@@ -94,7 +94,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
                 }
             }
 
-            m_helpBox.text = problem ?? string.Empty;
+            m_helpBox.text = problem;
             m_helpBox.messageType = string.IsNullOrEmpty(variableId) ? HelpBoxMessageType.Info : HelpBoxMessageType.Warning;
             m_helpBox.style.display = problem != null ? DisplayStyle.Flex : DisplayStyle.None;
 

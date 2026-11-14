@@ -311,7 +311,7 @@ namespace Soup.Editor.Views.Edges
         public override void BuildContextMenu(ContextualMenuPopulateEvent evt, GraphView graphView)
         {
             evt.menu.AppendAction(GraphShortcuts.WithHint("Delete Connection", GraphShortcuts.DeleteSelectionHintId), _ =>
-                graphView.RequestCommand(new DeleteGraphElementsCommand(null, new[] { new EdgeId(FromNodeId, OutportId) })));
+                graphView.RequestCommand(new DeleteGraphElementsCommand(null, edges: new[] { new EdgeId(FromNodeId, OutportId) })));
         }
     }
 }

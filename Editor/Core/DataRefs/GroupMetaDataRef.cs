@@ -12,9 +12,9 @@ namespace Soup.Editor.Core.DataRefs
 
         public bool IsValid => GroupSP != null;
 
-        public SerializedProperty TitleSP => GroupSP?.FindPropertyRelative(GroupMetaData.TitleFieldName);
-        public SerializedProperty RectSP => GroupSP?.FindPropertyRelative(GroupMetaData.RectFieldName);
-        public SerializedProperty ColorSP => GroupSP?.FindPropertyRelative(GroupMetaData.ColorFieldName);
+        public SerializedProperty TitleSP => GroupSP?.FindPropertyRelative(GroupMetaData.TITLE_FIELD_NAME);
+        public SerializedProperty RectSP => GroupSP?.FindPropertyRelative(GroupMetaData.RECT_FIELD_NAME);
+        public SerializedProperty ColorSP => GroupSP?.FindPropertyRelative(GroupMetaData.COLOR_FIELD_NAME);
 
         public string Title => TitleSP?.stringValue;
         public Rect Rect => RectSP?.rectValue ?? default;
@@ -22,7 +22,7 @@ namespace Soup.Editor.Core.DataRefs
         
         public GroupMetaDataRef(SerializedProperty groupSP, int index)
         {
-            GroupId = groupSP?.FindPropertyRelative(GroupMetaData.GroupIdFieldName)?.stringValue;
+            GroupId = groupSP?.FindPropertyRelative(GroupMetaData.GROUP_ID_FIELD_NAME)?.stringValue;
             GroupSP = groupSP;
             Index = index;
         }

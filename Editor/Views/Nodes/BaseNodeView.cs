@@ -299,7 +299,7 @@ namespace Soup.Editor.Views.Nodes
                 graphView.RequestCommand(new DuplicateGraphElementsCommand(new[] { Id })), IsCopiable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
 
             evt.menu.AppendAction(GraphShortcuts.WithHint("Delete", GraphShortcuts.DeleteSelectionHintId), _ =>
-                graphView.RequestCommand(new DeleteGraphElementsCommand(new[] { Id }, null)), IsDeletable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+                graphView.RequestCommand(new DeleteGraphElementsCommand(new[] { Id })), IsDeletable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
 
             evt.menu.AppendSeparator();
             SoupScriptCreator.AppendNodeMenuItems(evt.menu, NodeType);

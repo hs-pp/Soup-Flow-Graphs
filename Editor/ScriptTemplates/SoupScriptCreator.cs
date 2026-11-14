@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using Soup.Editor.Views.Inspector;
 using Soup.Editor.Views.Nodes;
 using UnityEditor;
@@ -64,7 +65,7 @@ namespace Soup.Editor.ScriptTemplates
                 return false;
             }
 
-            SoupScriptTemplates.WriteScript(scriptPath, content);
+            WriteScript(scriptPath, content);
             if (target.IsEditorOnly == true)
             {
                 Debug.LogWarning($"[Soup] {Path.GetFileName(scriptPath)} is in the Editor-only assembly '{target.Name}'. Players can't load graphs that use it.");
@@ -163,7 +164,7 @@ namespace Soup.Editor.ScriptTemplates
                 return false;
             }
 
-            SoupScriptTemplates.WriteScript(scriptPath, content);
+            WriteScript(scriptPath, content);
             return true;
         }
 
@@ -238,6 +239,12 @@ namespace Soup.Editor.ScriptTemplates
 
             error = null;
             return true;
+        }
+
+        private static void WriteScript(string scriptPath, string content)
+        {
+            File.WriteAllText(scriptPath, content, new UTF8Encoding(false));
+            AssetDatabase.ImportAsset(scriptPath);
         }
 
         private static string GetFolder(string assetPath)

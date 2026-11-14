@@ -225,10 +225,10 @@ namespace Soup.Editor.Core
                 int newIndex = collectionMetaData.GroupsSP.arraySize;
                 collectionMetaData.GroupsSP.arraySize++;
                 SerializedProperty entry = collectionMetaData.GroupsSP.GetArrayElementAtIndex(newIndex);
-                entry.FindPropertyRelative(GroupMetaData.GroupIdFieldName).stringValue = groupId;
-                entry.FindPropertyRelative(GroupMetaData.TitleFieldName).stringValue = title;
-                entry.FindPropertyRelative(GroupMetaData.RectFieldName).rectValue = new Rect(rect.position, GroupMetaData.ClampSize(rect.size));
-                entry.FindPropertyRelative(GroupMetaData.ColorFieldName).colorValue = color;
+                entry.FindPropertyRelative(GroupMetaData.GROUP_ID_FIELD_NAME).stringValue = groupId;
+                entry.FindPropertyRelative(GroupMetaData.TITLE_FIELD_NAME).stringValue = title;
+                entry.FindPropertyRelative(GroupMetaData.RECT_FIELD_NAME).rectValue = new Rect(rect.position, GroupMetaData.ClampSize(rect.size));
+                entry.FindPropertyRelative(GroupMetaData.COLOR_FIELD_NAME).colorValue = color;
                 ChangeSet.GroupsDirty = true;
                 ChangeSet.AddedGroups.Add(groupId);
                 return groupId;

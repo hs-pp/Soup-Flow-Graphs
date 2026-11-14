@@ -235,7 +235,7 @@ namespace Soup.Editor.Views
             RequestCommand(new CopyGraphElementsCommand(nodeIds, groupIds)); // This is a window command.
             RequestCommandBatch("Cut", // Batch so we can override the undo name.
                 new DeleteGraphElementsCommand(
-                    CollectIds(ContentContainer.NodesSelected, node => node.IsCopiable() && node.IsDeletable()), null,
+                    CollectIds(ContentContainer.NodesSelected, node => node.IsCopiable() && node.IsDeletable()),
                     CollectIds(ContentContainer.GroupsSelected, group => group.IsCopiable() && group.IsDeletable())));
         }
 
@@ -256,7 +256,7 @@ namespace Soup.Editor.Views
         {
             if (CollectDeletableSelection(out List<string> nodeIds, out List<EdgeId> edges, out List<string> groupIds))
             {
-                RequestCommand(new DeleteGraphElementsCommand(nodeIds, edges, groupIds));
+                RequestCommand(new DeleteGraphElementsCommand(nodeIds, groupIds, edges));
             }
         }
 

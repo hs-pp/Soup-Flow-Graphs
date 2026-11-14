@@ -2,6 +2,9 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Nodes
 {
+    /// <summary>
+    /// Unfinished.
+    /// </summary>
     public class BaseVerticalNodeView : BaseNodeView
     {
         protected VisualElement TitleContainer { get; set; }

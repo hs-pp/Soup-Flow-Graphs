@@ -4,7 +4,7 @@ using Soup.Editor.Views.Inspector;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-#NAMESPACEBEGIN#
+#ROOTNAMESPACEBEGIN#
 [CustomNodeInspector(typeof(#NODETYPE#))]
 public class #SCRIPTNAME# : ANodeInspector
 {
@@ -42,4 +42,4 @@ public class #SCRIPTNAME# : ANodeInspector
         return string.Empty;
     }
 }
-#NAMESPACEEND#
+#ROOTNAMESPACEEND#

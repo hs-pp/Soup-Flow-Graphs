@@ -8,10 +8,6 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Inspector
 {
-    /// <summary>
-    /// Summarizes the sub graph instead of drawing it as fields: the default inspector would expose the whole nested
-    /// collection for editing, bypassing commands, meta data and validation.
-    /// </summary>
     [CustomNodeInspector(typeof(SubGraphNode))]
     public class SubGraphNodeInspector : ANodeInspector
     {
@@ -24,7 +20,6 @@ namespace Soup.Editor.Views.Inspector
 
         protected override bool UseDefaultHeader => true;
 
-        // Node and meta data live on different SerializedObjects, and an element can only track one of them.
         private VisualElement m_nodeTracker;
         private VisualElement m_metaDataTracker;
         private SubGraphPreviewElement m_preview;
@@ -54,8 +49,6 @@ namespace Soup.Editor.Views.Inspector
 
         protected override void OnSetNode(NodeRef nodeRef, NodeMetaDataRef metaDataRef)
         {
-            // Edits inside the sub graph (undo, another window) don't change this node's path, so SetNode early-outs
-            // on them. Tracking the two collections catches those.
             m_nodeTracker.Unbind();
             m_metaDataTracker.Unbind();
             if (nodeRef.TryGetSubGraphCollection(out NodeCollectionRef collection))

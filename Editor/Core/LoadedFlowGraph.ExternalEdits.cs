@@ -36,9 +36,9 @@ namespace Soup.Editor.Core
         private const string GRAPH_BLACKBOARD_PREFIX = AFlowGraph.BLACKBOARD_FIELD_NAME + ".";
         private const string BLACKBOARD_VALUE_PREFIX = ABlackboardVariable.VALUE_FIELD_NAME + ".";
         private const string GRAPH_SUBGRAPH_PREFIX = SubGraphNode.SUBGRAPH_FIELD_NAME + ".";
-        private const string METADATA_ROOT_PREFIX = FlowGraphMetaData.RootCollectionFieldName + ".";
-        private const string METADATA_SUBGRAPH_PREFIX = SubGraphNodeMetaData.SubGraphFieldName + ".";
-        private const string METADATA_GROUPS_PREFIX = NodeCollectionMetaData.GroupsFieldName + ".";
+        private const string METADATA_ROOT_PREFIX = FlowGraphMetaData.ROOT_COLLECTION_FIELD_NAME + ".";
+        private const string METADATA_SUBGRAPH_PREFIX = SubGraphNodeMetaData.SUBGRAPH_FIELD_NAME + ".";
+        private const string METADATA_GROUPS_PREFIX = NodeCollectionMetaData.GROUPS_FIELD_NAME + ".";
 
         private readonly HashSet<string> m_externalNodeEdits = new();
         private readonly HashSet<string> m_externalMetaDataEdits = new();
@@ -217,7 +217,7 @@ namespace Soup.Editor.Core
             {
                 case SubGraphNodeMetaData when localPath.StartsWith(METADATA_SUBGRAPH_PREFIX, StringComparison.Ordinal):
                     return ClassifyCollectionMetaDataEdit(localPath.Substring(METADATA_SUBGRAPH_PREFIX.Length));
-                case NodeMetaData when localPath == NodeMetaData.NodeIdFieldName:
+                case NodeMetaData when localPath == NodeMetaData.NODE_ID_FIELD_NAME:
                     return ExternalEditType.Structure; // Re-keyed to another node, or to none.
                 case NodeMetaData nodeMetaData:
                     nodeId = nodeMetaData.NodeId;

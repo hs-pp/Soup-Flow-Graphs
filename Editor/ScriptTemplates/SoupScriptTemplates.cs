@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Compilation;
@@ -18,22 +17,22 @@ namespace Soup.Editor.ScriptTemplates
 
     /// <summary>
     /// Fills in the .cs.txt templates under Resources/Soup/ScriptTemplates. Tokens: #SCRIPTNAME# is the class name (the
-    /// file name), #NAME# its display name, #NODETYPE# the node class a view or inspector registers for. The lines between
-    /// #NAMESPACEBEGIN# and #NAMESPACEEND# go in the root namespace of the assembly the file lands in, and the node's
-    /// namespace joins the using block when the file can't already see it.
+    /// file name), #DISPLAYNAME# its display name, #NODETYPE# the full name of the node class a view or inspector
+    /// registers for. The lines between #ROOTNAMESPACEBEGIN# and #ROOTNAMESPACEEND# go in the root namespace of the
+    /// assembly the file lands in.
     /// </summary>
     public static class SoupScriptTemplates
     {
         private const string RESOURCES_FOLDER = "Soup/ScriptTemplates/";
-        private const string NAMESPACE_BEGIN = "#NAMESPACEBEGIN#";
-        private const string NAMESPACE_END = "#NAMESPACEEND#";
+        private const string ROOT_NAMESPACE_BEGIN = "#ROOTNAMESPACEBEGIN#";
+        private const string ROOT_NAMESPACE_END = "#ROOTNAMESPACEEND#";
         private const string INDENT = "    ";
 
-        private static readonly Regex s_identifier = new("^[A-Za-z_][A-Za-z0-9_]*$");
+        private static readonly Regex IDENTIFIER_REGEX = new("^[A-Za-z_][A-Za-z0-9_]*$");
 
         public static bool IsValidClassName(string name)
         {
-            return !string.IsNullOrEmpty(name) && s_identifier.IsMatch(name);
+            return !string.IsNullOrEmpty(name) && IDENTIFIER_REGEX.IsMatch(name);
         }
 
         /// <summary>Null when generated code can name the node type in a typeof(...), otherwise why it can't.</summary>
@@ -77,106 +76,48 @@ namespace Soup.Editor.ScriptTemplates
             }
 
             string className = Path.GetFileNameWithoutExtension(scriptPath);
-            string rootNamespace = CompilationPipeline.GetAssemblyRootNamespaceFromScriptPath(scriptPath) ?? string.Empty;
-
             string text = template.text.Replace("\r\n", "\n")
                 .Replace("#SCRIPTNAME#", className)
-                .Replace("#NAME#", ObjectNames.NicifyVariableName(className))
-                .Replace("#NODETYPE#", nodeType != null ? GetTypeName(nodeType) : string.Empty);
+                .Replace("#DISPLAYNAME#", ObjectNames.NicifyVariableName(className))
+                .Replace("#NODETYPE#", nodeType != null ? GetFullTypeName(nodeType) : string.Empty);
 
             List<string> lines = new(text.Split('\n'));
-            if (kind != SoupScriptKind.Node)
-            {
-                AddUsing(lines, nodeType.Namespace, rootNamespace);
-            }
-            WrapInNamespace(lines, rootNamespace);
+            WrapInNamespace(lines, CompilationPipeline.GetAssemblyRootNamespaceFromScriptPath(scriptPath));
 
             content = string.Join(GetLineEnding(), lines);
             error = null;
             return true;
         }
 
-        public static void WriteScript(string scriptPath, string content)
-        {
-            File.WriteAllText(scriptPath, content, new UTF8Encoding(false));
-            AssetDatabase.ImportAsset(scriptPath);
-        }
-
         private static string GetTemplateName(SoupScriptKind kind)
         {
-            return kind switch
+            switch (kind)
             {
-                SoupScriptKind.Node => "NodeTemplate.cs",
-                SoupScriptKind.NodeView => "NodeViewTemplate.cs",
-                SoupScriptKind.NodeInspector => "NodeInspectorTemplate.cs",
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
-            };
-        }
-
-        // Nested types are named through their declaring types, as code in the node's namespace would name them.
-        private static string GetTypeName(Type type)
-        {
-            return type.IsNested ? $"{GetTypeName(type.DeclaringType)}.{type.Name}" : type.Name;
-        }
-
-        // The template's using block is the run of using lines at its top.
-        private static void AddUsing(List<string> lines, string nodeNamespace, string rootNamespace)
-        {
-            if (string.IsNullOrEmpty(nodeNamespace))
-            {
-                return;
-            }
-            // Code in a namespace already sees the types of every namespace enclosing it.
-            if (rootNamespace == nodeNamespace || rootNamespace.StartsWith(nodeNamespace + ".", StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            int count = 0;
-            while (count < lines.Count && lines[count].StartsWith("using ", StringComparison.Ordinal))
-            {
-                count++;
-            }
-
-            List<string> usings = lines.GetRange(0, count);
-            string directive = $"using {nodeNamespace};";
-            if (usings.Contains(directive))
-            {
-                return;
-            }
-
-            usings.Add(directive);
-            usings.Sort(CompareUsings);
-            lines.RemoveRange(0, count);
-            lines.InsertRange(0, usings);
-            if (count == 0)
-            {
-                lines.Insert(1, string.Empty);
+                case SoupScriptKind.Node:
+                    return "NodeTemplate.cs";
+                case SoupScriptKind.NodeView:
+                    return "NodeViewTemplate.cs";
+                case SoupScriptKind.NodeInspector:
+                    return "NodeInspectorTemplate.cs";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
             }
         }
 
-        // System namespaces first, then the rest in ordinal order, the way the existing Soup files are sorted.
-        private static int CompareUsings(string a, string b)
+        /// <summary>
+        /// The node type's full name, so it can't clash with a type that the template's usings bring in, such as a node
+        /// named Image and UnityEngine.UIElements.Image. Nested types are joined with '.', as C# names them, rather than
+        /// the '+' in Type.FullName.
+        /// </summary>
+        private static string GetFullTypeName(Type type)
         {
-            bool aIsSystem = IsSystemUsing(a);
-            bool bIsSystem = IsSystemUsing(b);
-            if (aIsSystem != bIsSystem)
-            {
-                return aIsSystem ? -1 : 1;
-            }
-
-            return string.CompareOrdinal(a, b);
-        }
-
-        private static bool IsSystemUsing(string directive)
-        {
-            return directive == "using System;" || directive.StartsWith("using System.", StringComparison.Ordinal);
+            return type.FullName.Replace('+', '.');
         }
 
         private static void WrapInNamespace(List<string> lines, string rootNamespace)
         {
-            int begin = lines.FindIndex(line => line.Trim() == NAMESPACE_BEGIN);
-            int end = lines.FindIndex(line => line.Trim() == NAMESPACE_END);
+            int begin = lines.FindIndex(line => line.Trim() == ROOT_NAMESPACE_BEGIN);
+            int end = lines.FindIndex(line => line.Trim() == ROOT_NAMESPACE_END);
             if (begin < 0 || end < begin)
             {
                 return;
@@ -204,12 +145,15 @@ namespace Soup.Editor.ScriptTemplates
 
         private static string GetLineEnding()
         {
-            return EditorSettings.lineEndingsForNewScripts switch
+            switch (EditorSettings.lineEndingsForNewScripts)
             {
-                LineEndingsMode.Windows => "\r\n",
-                LineEndingsMode.Unix => "\n",
-                _ => Environment.NewLine,
-            };
+                case LineEndingsMode.Windows:
+                    return "\r\n";
+                case LineEndingsMode.Unix:
+                    return "\n";
+                default:
+                    return Environment.NewLine;
+            }
         }
     }
 }

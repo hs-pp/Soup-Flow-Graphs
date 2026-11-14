@@ -15,8 +15,8 @@ namespace Soup.Editor.Core.DataRefs
         public NodeCollectionMetaDataRef(SerializedProperty collectionSP)
         {
             CollectionSP = collectionSP;
-            NodesSP = collectionSP?.FindPropertyRelative(NodeCollectionMetaData.NodesFieldName);
-            GroupsSP = collectionSP?.FindPropertyRelative(NodeCollectionMetaData.GroupsFieldName);
+            NodesSP = collectionSP?.FindPropertyRelative(NodeCollectionMetaData.NODES_FIELD_NAME);
+            GroupsSP = collectionSP?.FindPropertyRelative(NodeCollectionMetaData.GROUPS_FIELD_NAME);
         }
         
         public IEnumerable<NodeMetaDataRef> GetNodes()

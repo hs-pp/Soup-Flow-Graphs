@@ -13,11 +13,12 @@ namespace Soup.Editor.Views.Inspector
 
         protected NodeRef m_nodeRef;
         protected NodeMetaDataRef m_metaDataRef;
+        
         // We need to check all 3 to be sure it's the same node.
         private SerializedObject m_boundObject;
         private string m_boundPath;
         private string m_boundNodeId;
-        // Meta data entries live in their own list, so a delete can shift this path while the node's stays put.
+
         private string m_boundMetaDataPath;
 
         private Action<string> m_onSaveStateHandler;

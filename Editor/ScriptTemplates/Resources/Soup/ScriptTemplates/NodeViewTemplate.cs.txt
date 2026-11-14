@@ -3,7 +3,7 @@ using Soup.Editor.Core.DataRefs;
 using Soup.Editor.Views.Nodes;
 using UnityEngine.UIElements;
 
-#NAMESPACEBEGIN#
+#ROOTNAMESPACEBEGIN#
 [CustomNodeView(typeof(#NODETYPE#))]
 public class #SCRIPTNAME# : BaseHorizontalNodeView
 {
@@ -18,4 +18,4 @@ public class #SCRIPTNAME# : BaseHorizontalNodeView
         base.OnPropertyBound(nodeRef, metaData);
     }
 }
-#NAMESPACEEND#
+#ROOTNAMESPACEEND#

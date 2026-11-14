@@ -127,7 +127,7 @@ namespace Soup.Editor.Views.Groups
 
             evt.menu.AppendSeparator();
 
-            evt.menu.AppendAction(GraphShortcuts.WithHint("Delete Group", GraphShortcuts.DeleteSelectionHintId), _ => graphView.RequestCommand(new DeleteGraphElementsCommand(null, null, new[] { Id })), IsDeletable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+            evt.menu.AppendAction(GraphShortcuts.WithHint("Delete Group", GraphShortcuts.DeleteSelectionHintId), _ => graphView.RequestCommand(new DeleteGraphElementsCommand(null, new[] { Id })), IsDeletable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
         }
         
         private List<string> CollectIds<T>(IEnumerable<T> elements, Func<T, bool> include) where T : GraphElement

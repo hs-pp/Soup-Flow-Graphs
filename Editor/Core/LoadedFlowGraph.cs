@@ -369,7 +369,7 @@ namespace Soup.Editor.Core
         #region NodeCollectionMetaData
         private bool TryGetRootCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData)
         {
-            collectionMetaData = IsMetaDataAlive ? new NodeCollectionMetaDataRef(m_serializedMetaData.FindProperty(FlowGraphMetaData.RootCollectionFieldName)) : default;
+            collectionMetaData = IsMetaDataAlive ? new NodeCollectionMetaDataRef(m_serializedMetaData.FindProperty(FlowGraphMetaData.ROOT_COLLECTION_FIELD_NAME)) : default;
             return collectionMetaData.IsValid;
         }
 

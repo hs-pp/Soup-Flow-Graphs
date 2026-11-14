@@ -13,9 +13,8 @@ namespace Soup.Editor.State
     {
         [SerializeField]
         private NodeCollectionMetaData m_rootCollection = new();
-        public NodeCollectionMetaData RootCollection => m_rootCollection;
 
-        public const string RootCollectionFieldName = nameof(m_rootCollection);
+        public const string ROOT_COLLECTION_FIELD_NAME = nameof(m_rootCollection);
     }
 
     [Serializable]
@@ -35,8 +34,8 @@ namespace Soup.Editor.State
             m_nodes.Add(new EntryNodeMetaData { NodeId = EntryNode.ENTRY_NODE_ID });
         }
 
-        public const string NodesFieldName = nameof(m_nodes);
-        public const string GroupsFieldName = nameof(m_groups);
+        public const string NODES_FIELD_NAME = nameof(m_nodes);
+        public const string GROUPS_FIELD_NAME = nameof(m_groups);
     }
     
     [Serializable]
@@ -71,10 +70,10 @@ namespace Soup.Editor.State
             m_comment = source.m_comment;
         }
 
-        public const string NodeIdFieldName = nameof(m_nodeId);
-        public const string PositionFieldName = nameof(m_position);
-        public const string ColorFieldName = nameof(m_color);
-        public const string CommentFieldName = nameof(m_comment);
+        public const string NODE_ID_FIELD_NAME = nameof(m_nodeId);
+        public const string POSITION_FIELD_NAME = nameof(m_position);
+        public const string COLOR_FIELD_NAME = nameof(m_color);
+        public const string COMMENT_FIELD_NAME = nameof(m_comment);
     }
     
     // These are built-in meta data's that do not require the CustomNodeMetaData attribute.
@@ -96,7 +95,7 @@ namespace Soup.Editor.State
         private NodeCollectionMetaData m_subGraph = new();
         public NodeCollectionMetaData SubGraph => m_subGraph;
 
-        public const string SubGraphFieldName = nameof(m_subGraph);
+        public const string SUBGRAPH_FIELD_NAME = nameof(m_subGraph);
     }
 
     [Serializable]
@@ -124,9 +123,9 @@ namespace Soup.Editor.State
         private Color m_color;
         public Color Color => m_color;
 
-        public const string GroupIdFieldName = nameof(m_groupId);
-        public const string TitleFieldName = nameof(m_title);
-        public const string RectFieldName = nameof(m_rect);
-        public const string ColorFieldName = nameof(m_color);
+        public const string GROUP_ID_FIELD_NAME = nameof(m_groupId);
+        public const string TITLE_FIELD_NAME = nameof(m_title);
+        public const string RECT_FIELD_NAME = nameof(m_rect);
+        public const string COLOR_FIELD_NAME = nameof(m_color);
     }
 }

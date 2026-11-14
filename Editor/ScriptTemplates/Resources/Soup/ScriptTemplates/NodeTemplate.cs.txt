@@ -1,9 +1,9 @@
 using System;
 using Soup.Runtime;
 
-#NAMESPACEBEGIN#
+#ROOTNAMESPACEBEGIN#
 [Serializable]
-[CustomNode(typeof(AFlowGraph), "Custom/#NAME#")]
+[CustomNode(typeof(AFlowGraph), "Custom/#DISPLAYNAME#")]
 public class #SCRIPTNAME# : ANode
 {
     // Runs when the graph enters this node.
@@ -22,4 +22,4 @@ public class #SCRIPTNAME# : ANode
     {
     }
 }
-#NAMESPACEEND#
+#ROOTNAMESPACEEND#
