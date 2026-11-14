@@ -16,12 +16,6 @@ namespace Soup.Editor
         Vertical
     }
 
-    public enum PortCapacity
-    {
-        Single = 0,
-        Multi = 1,
-    }
-
     [Flags]
     public enum Capabilities
     {

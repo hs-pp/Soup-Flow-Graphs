@@ -364,7 +364,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
         public void ExecuteCommand(LoadedFlowGraph.CommandScope scope)
         {
-            // Ignoring the result: with no meta data, nodes still duplicate and simply land without positions.
             scope.TryGetCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData);
             ClipboardPayload payload = GraphClipboard.Clone(scope.Collection, collectionMetaData, NodeIds, GroupIds);
             if (payload != null)

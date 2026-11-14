@@ -1044,7 +1044,7 @@ namespace Soup.Editor.Views
         {
             foreach (PortView otherPort in ContentContainer.Ports)
             {
-                otherPort.Highlight = port.CanConnectTo(otherPort);
+                otherPort.Dimmed = !port.CanConnectTo(otherPort);
             }
         }
 
@@ -1052,7 +1052,7 @@ namespace Soup.Editor.Views
         {
             foreach (PortView otherPort in ContentContainer.Ports)
             {
-                otherPort.Highlight = true;
+                otherPort.Dimmed = false;
             }
         }
         

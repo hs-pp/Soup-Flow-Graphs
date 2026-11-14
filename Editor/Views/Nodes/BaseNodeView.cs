@@ -43,7 +43,7 @@ namespace Soup.Editor.Views.Nodes
         protected virtual void OnNodeDataChanged(NodeRef nodeRef) { }
 
         protected virtual void OnMetaDataChanged(NodeMetaDataRef metaData) { }
-        protected virtual void AddPort(PortView port) { port.SetParent(this); }
+        protected virtual void AddPort(PortView port) { port.SetNodeView(this); }
         
         protected override void OnSelectedChanged() => EnableInClassList("nodeSelected", Selected);
 
@@ -175,12 +175,12 @@ namespace Soup.Editor.Views.Nodes
 
         protected virtual PortView CreateInputPort()
         {
-            return new PortView(Id, null, Direction.Input, PortCapacity.Multi);
+            return new PortView(Id, null, Direction.Input);
         }
 
         protected virtual PortView CreateOutputPort(OutportDefinition definition)
         {
-            return new PortView(Id, definition.Id, Direction.Output, PortCapacity.Single)
+            return new PortView(Id, definition.Id, Direction.Output)
             {
                 PortName = definition.Name
             };

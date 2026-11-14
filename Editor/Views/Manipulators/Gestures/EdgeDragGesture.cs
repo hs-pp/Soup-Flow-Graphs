@@ -54,7 +54,7 @@ namespace Soup.Editor.Views.Manipulators.Gestures
             PortView draggedPort = m_draggedInput ? draggedEdge.InputPort : draggedEdge.OutputPort;
 
             // Collect selection and set them to drag mode
-            if (draggedPort != null && draggedPort.AllowMultiDrag)
+            if (draggedPort != null)
             {
                 foreach (EdgeView edge in draggedPort.Connections)
                 {
