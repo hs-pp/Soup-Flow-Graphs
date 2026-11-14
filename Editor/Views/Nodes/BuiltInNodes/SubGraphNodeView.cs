@@ -17,9 +17,9 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
             extensionsContainer.Add(icon);
         }
 
-        protected override void BindManipulators()
+        protected override void AddManipulators()
         {
-            base.BindManipulators();
+            base.AddManipulators();
             RegisterCallback<MouseDownEvent>(OnMouseDown);
         }
         

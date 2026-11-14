@@ -1,0 +1,16 @@
+.flowGraphControllerOverridesBox {
+    margin: 2px 0 2px 3px;
+    padding: 4px 4px 4px 6px;
+    border-width: 1px;
+    border-color: var(--unity-colors-box-border);
+    border-radius: 3px;
+}
+
+.flowGraphControllerResetButton {
+    align-self: flex-end;
+    margin-top: 4px;
+}
+
+.flowGraphControllerEvents {
+    margin-top: 8px;
+}

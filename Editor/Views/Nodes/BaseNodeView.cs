@@ -52,20 +52,7 @@ namespace Soup.Editor.Views.Nodes
         protected virtual void OnMetaDataChanged(NodeMetaDataRef metaData) { }
         protected virtual void AddPort(PortView port) { port.SetParent(this); }
         
-        public override bool Selected
-        {
-            get => base.Selected;
-            set
-            {
-                if (base.Selected == value)
-                {
-                    return;
-                }
-
-                base.Selected = value;
-                EnableInClassList("nodeSelected", value);
-            }
-        }
+        protected override void OnSelectedChanged() => EnableInClassList("nodeSelected", Selected);
 
         public void InitializeView(NodeRef nodeRef, NodeMetaDataRef metaData, Type nodeType)
         {

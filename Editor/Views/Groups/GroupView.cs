@@ -26,20 +26,7 @@ namespace Soup.Editor.Views.Groups
         private Vector2 m_size;
         private int m_modelIndex;
         
-        public override bool Selected
-        {
-            get => base.Selected;
-            set
-            {
-                if (base.Selected == value)
-                {
-                    return;
-                }
-
-                base.Selected = value;
-                EnableInClassList("groupSelected", base.Selected);
-            }
-        }
+        protected override void OnSelectedChanged() => EnableInClassList("groupSelected", Selected);
 
         public override Rect CanvasRect => new(GetPosition(), m_size);
 

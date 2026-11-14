@@ -20,7 +20,7 @@ namespace Soup.Editor.Views
         private const string LEFT_PANEL_TAG = "main-panel-left";
         private const string RIGHT_PANEL_TAG = "main-panel-right";
         private const string TOOLBAR_TAG = "toolbar";
-        
+
         private TwoPaneSplitView m_splitView;
         private VisualElement m_leftPanel;
         private VisualElement m_rightPanel;
@@ -30,12 +30,12 @@ namespace Soup.Editor.Views
 
         private GraphViewObserver m_observer;
         private GraphView m_graphView;
-        private InspectorView m_inspector;
+        private InspectorView m_inspectorView;
         private BreadcrumbsView m_breadcrumbsView;
-        
+
         private LoadedFlowGraph m_loadedFlowGraph;
         private GraphEditorState m_state;
-        
+
         public SoupEditorView(GraphEditorState state)
         {
             m_state = state;
@@ -45,13 +45,6 @@ namespace Soup.Editor.Views
             m_state.OnGraphLoaded += HandleGraphLoaded;
             m_state.OnNavigationChanged += HandleNavigationChanged;
 
-            m_graphView = new GraphView();
-            m_graphView.style.flexGrow = 1;
-            m_leftPanel.Add(m_graphView);
-            m_leftPanel.Add(new PanelEdgeShadowElement(PanelEdgeShadowElement.Edge.Top));
-            m_leftPanel.Add(new PanelEdgeShadowElement(PanelEdgeShadowElement.Edge.Right));
-            m_leftPanel.Add(new PanelEdgeShadowElement(PanelEdgeShadowElement.Edge.Bottom));
-            m_leftPanel.Add(new PanelEdgeShadowElement(PanelEdgeShadowElement.Edge.Left));
             m_graphView.OnCommandRequested += HandleCommandRequested;
             m_graphView.OnCommandBatchRequested += HandleCommandBatchRequested;
             m_graphView.OnViewTransformChanged += _ => SaveViewTransformState();
@@ -65,32 +58,39 @@ namespace Soup.Editor.Views
             m_snapToGridToggle.RegisterValueChangedCallback(HandleSnapToGridToggleChanged);
 
             m_observer = new GraphViewObserver(m_state, m_graphView);
-            m_observer.OnFlowGraphReloaded += m_inspector.Refresh;
+            m_observer.OnFlowGraphReloaded += m_inspectorView.Refresh;
 
-            m_inspector.SetState(m_state);
-            m_inspector.OnCommandRequested += HandleCommandRequested;
+            m_inspectorView.SetState(m_state);
+            m_inspectorView.OnCommandRequested += HandleCommandRequested;
             m_rightPanel.RegisterCallback<GeometryChangedEvent>(evt => m_state.InspectorState.InspectorSize = evt.newRect.width);
-            
+
             if (!string.IsNullOrEmpty(m_state.AssetGuid))
             {
                 LoadGraph(m_state.AssetGuid);
             }
         }
-        
+
         private void CreateLayout()
         {
             var uxmlAsset = Resources.Load<VisualTreeAsset>(UXML_PATH);
             uxmlAsset.CloneTree(this);
 
-            m_splitView = this.Q<TwoPaneSplitView>();
+            m_splitView = this.Q<TwoPaneSplitView>(SPLITVIEW_TAG);
             m_leftPanel = this.Q<VisualElement>(LEFT_PANEL_TAG);
             m_rightPanel = this.Q<VisualElement>(RIGHT_PANEL_TAG);
-            m_toolbar =  this.Q<Toolbar>(TOOLBAR_TAG);
-            
-            m_inspector = new InspectorView();
-            m_rightPanel.Add(m_inspector);
+            m_toolbar = this.Q<Toolbar>(TOOLBAR_TAG);
 
-            m_breadcrumbsView = new BreadcrumbsView(HandleBreadcrumbPressed);
+            m_graphView = new GraphView();
+            m_leftPanel.Add(m_graphView);
+            m_leftPanel.Add(new PanelEdgeShadowElement(PanelEdgeShadowElement.Edge.Top));
+            m_leftPanel.Add(new PanelEdgeShadowElement(PanelEdgeShadowElement.Edge.Right));
+            m_leftPanel.Add(new PanelEdgeShadowElement(PanelEdgeShadowElement.Edge.Bottom));
+            m_leftPanel.Add(new PanelEdgeShadowElement(PanelEdgeShadowElement.Edge.Left));
+
+            m_inspectorView = new InspectorView();
+            m_rightPanel.Add(m_inspectorView);
+
+            m_breadcrumbsView = new BreadcrumbsView(HandleBreadcrumbClicked);
             m_toolbar.Add(m_breadcrumbsView);
 
             m_toolbar.Add(new ToolbarSpacer { flex = true });
@@ -99,7 +99,7 @@ namespace Soup.Editor.Views
             m_miniMapToggle = new ToolbarToggle { text = "Show MiniMap", tooltip = GraphShortcuts.WithHint("Show MiniMap", GraphShortcuts.TOGGLE_MINIMAP) };
             m_toolbar.Add(m_miniMapToggle);
         }
-        
+
         public void Dispose()
         {
             if (m_observer == null)
@@ -111,10 +111,10 @@ namespace Soup.Editor.Views
 
             m_state.OnGraphLoaded -= HandleGraphLoaded;
             m_state.OnNavigationChanged -= HandleNavigationChanged;
-            m_inspector.OnCommandRequested -= HandleCommandRequested;
-            m_inspector.Dispose();
+            m_inspectorView.OnCommandRequested -= HandleCommandRequested;
+            m_inspectorView.Dispose();
 
-            m_observer.OnFlowGraphReloaded -= m_inspector.Refresh;
+            m_observer.OnFlowGraphReloaded -= m_inspectorView.Refresh;
             m_observer.Dispose();
             m_observer = null;
 
@@ -131,7 +131,7 @@ namespace Soup.Editor.Views
             }
             m_loadedFlowGraph = null;
         }
-        
+
         public void LoadGraph(string assetGuid)
         {
             SetLoadedFlowGraph(SoupEditorCore.RequestLoadedGraph(assetGuid, this));
@@ -149,7 +149,7 @@ namespace Soup.Editor.Views
 
             m_graphView.GraphType = loadedFlowGraph != null && loadedFlowGraph.IsGraphAlive ? loadedFlowGraph.GraphAsset.GetType() : null;
             m_observer.SetLoadedFlowGraph(loadedFlowGraph);
-            m_inspector.SetLoadedFlowGraph(loadedFlowGraph);
+            m_inspectorView.SetLoadedFlowGraph(loadedFlowGraph);
             m_state.Load(loadedFlowGraph);
             LoadViewTransformState();
 
@@ -172,7 +172,7 @@ namespace Soup.Editor.Views
                     windowCommand.ExecuteCommand(m_state, m_loadedFlowGraph);
                     break;
                 case IGraphCommand graphCommand:
-                    ApplyEditResult(m_loadedFlowGraph.Execute(graphCommand, m_state.SubGraphPath));
+                    SelectAddedElements(m_loadedFlowGraph.Execute(graphCommand, m_state.SubGraphPath));
                     break;
             }
         }
@@ -184,18 +184,18 @@ namespace Soup.Editor.Views
                 return;
             }
 
-            ApplyEditResult(m_loadedFlowGraph.ExecuteBatch(commands, m_state.SubGraphPath, undoName));
+            SelectAddedElements(m_loadedFlowGraph.ExecuteBatch(commands, m_state.SubGraphPath, undoName));
         }
 
-        private void ApplyEditResult(GraphChangeSet result)
+        private void SelectAddedElements(GraphChangeSet changeSet)
         {
-            if (result == null || (result.AddedNodes.Count == 0 && result.AddedGroups.Count == 0))
+            if (changeSet == null || (changeSet.AddedNodes.Count == 0 && changeSet.AddedGroups.Count == 0))
             {
                 return;
             }
 
-            List<string> added = new(result.AddedNodes);
-            added.AddRange(result.AddedGroups);
+            List<string> added = new(changeSet.AddedNodes);
+            added.AddRange(changeSet.AddedGroups);
             m_state.ApplySelection(GraphSelectionMode.Replace, added);
         }
 
@@ -215,12 +215,14 @@ namespace Soup.Editor.Views
             m_breadcrumbsView.SetPath(m_state.GetSubGraphPathTitles(m_loadedFlowGraph));
         }
 
-        private void HandleBreadcrumbPressed(int depth)
+        private void HandleBreadcrumbClicked(int depth)
         {
             HandleCommandRequested(new NavigateToSubGraphDepthCommand(depth));
         }
 
-        // The M shortcut and the canvas/minimap context menus change visibility on the GraphView, so the toggle follows it.
+        /// <summary>
+        /// The M shortcut and the canvas/minimap context menus change visibility on the GraphView, so the toggle follows it.
+        /// </summary>
         private void HandleMiniMapVisibilityChanged(bool visible)
         {
             m_state.MiniMapIsVisible = visible;
@@ -232,7 +234,9 @@ namespace Soup.Editor.Views
             m_graphView.MiniMapVisible = evt.newValue;
         }
 
-        // The canvas context menu also flips snapping on the GraphView, so the toggle follows it.
+        /// <summary>
+        /// The canvas context menu also flips snapping on the GraphView, so the toggle follows it.
+        /// </summary>
         private void HandleSnapToGridChanged(bool enabled)
         {
             m_state.SnapToGridIsEnabled = enabled;
@@ -242,19 +246,6 @@ namespace Soup.Editor.Views
         private void HandleSnapToGridToggleChanged(ChangeEvent<bool> evt)
         {
             m_graphView.SnapToGrid = evt.newValue;
-        }
-        
-        private void RefreshTitle()
-        {
-            // if (m_state is { IsLoaded: true })
-            // {
-            //     string dirtyMarker = EditorUtility.IsDirty(m_state.GraphAsset) ? "*" : string.Empty;
-            //     titleContent = new GUIContent(m_state.GraphAsset.name + dirtyMarker);
-            // }
-            // else
-            // {
-            //     titleContent = new GUIContent("Soup");
-            // }
         }
 
         private void LoadViewTransformState()

@@ -15,12 +15,6 @@ namespace Soup.Editor.ScriptTemplates
         NodeInspector,
     }
 
-    /// <summary>
-    /// Fills in the .cs.txt templates under Resources/Soup/ScriptTemplates. Tokens: #SCRIPTNAME# is the class name (the
-    /// file name), #DISPLAYNAME# its display name, #NODETYPE# the full name of the node class a view or inspector
-    /// registers for. The lines between #ROOTNAMESPACEBEGIN# and #ROOTNAMESPACEEND# go in the root namespace of the
-    /// assembly the file lands in.
-    /// </summary>
     public static class SoupScriptTemplates
     {
         private const string RESOURCES_FOLDER = "Soup/ScriptTemplates/";
@@ -35,7 +29,6 @@ namespace Soup.Editor.ScriptTemplates
             return !string.IsNullOrEmpty(name) && IDENTIFIER_REGEX.IsMatch(name);
         }
 
-        /// <summary>Null when generated code can name the node type in a typeof(...), otherwise why it can't.</summary>
         public static string GetUnsupportedNodeTypeReason(Type nodeType)
         {
             if (nodeType == null)
@@ -104,11 +97,6 @@ namespace Soup.Editor.ScriptTemplates
             }
         }
 
-        /// <summary>
-        /// The node type's full name, so it can't clash with a type that the template's usings bring in, such as a node
-        /// named Image and UnityEngine.UIElements.Image. Nested types are joined with '.', as C# names them, rather than
-        /// the '+' in Type.FullName.
-        /// </summary>
         private static string GetFullTypeName(Type type)
         {
             return type.FullName.Replace('+', '.');

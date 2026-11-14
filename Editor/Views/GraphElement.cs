@@ -5,30 +5,19 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views
 {
-    public struct PositionData
-    {
-        public Vector2 Position;
-        public VisualElement Element;
-    }
-        
     public abstract class GraphElement : VisualElement
     {
-        public virtual string Id { get; protected set; }
-        public abstract int Layer { get; }
-
-        private SelectableManipulator m_selectableManipulator;
-
-        private Vector2 m_position;
-        public virtual event Action<PositionData> OnPositionChange;
-        public virtual Vector2 GetGlobalCenter() => Graph.ContentContainer.LocalToWorld(GetCenter());
-        public virtual Vector2 GetCenter() => layout.center + m_position;
-        public virtual Vector2 GetPosition() => m_position;
-        public virtual Rect CanvasRect => new(layout.position + m_position, layout.size);
-        public virtual void BuildContextMenu(ContextualMenuPopulateEvent evt, GraphView graphView) { }
-
-        protected Capabilities Capabilities { get; set; }
+        private const string STYLECLASS_NAME = "graphElement";
 
         private GraphView m_graphView;
+        private SelectableManipulator m_selectableManipulator;
+        private Vector2 m_position;
+        private bool m_selected;
+
+        public virtual string Id { get; protected set; }
+        public abstract int Layer { get; }
+        protected Capabilities Capabilities { get; set; }
+
         public GraphView Graph
         {
             get => m_graphView;
@@ -51,44 +40,41 @@ namespace Soup.Editor.Views
                 }
             }
         }
-        
-        private bool m_selected;
-        public virtual bool Selected
+
+        public bool Selected
         {
             get => m_selected;
             set
             {
-                if (m_selected == value)
+                if (m_selected == value || (value && !IsSelectable()))
                 {
                     return;
                 }
 
-                if (value && IsSelectable())
+                m_selected = value;
+                if (value && IsAscendable() && resolvedStyle.position != Position.Relative)
                 {
-                    m_selected = true;
-                    if (IsAscendable() && resolvedStyle.position != Position.Relative)
-                    {
-                        BringToFront();
-                    }
-                }
-                else
-                {
-                    m_selected = false;
+                    BringToFront();
                 }
 
+                OnSelectedChanged();
                 m_graphView?.NotifyContentChanged();
             }
         }
 
+        public virtual Rect CanvasRect => new(layout.position + m_position, layout.size);
+
+        public event Action<VisualElement> OnPositionChanged;
+
         protected GraphElement()
         {
-            AddToClassList("graphElement");
+            AddToClassList(STYLECLASS_NAME);
             RegisterCallback<GeometryChangedEvent>(_ => m_graphView?.NotifyContentChanged());
         }
-        
+
         protected virtual void OnAddedToGraphView()
         {
-            BindManipulators();
+            AddManipulators();
         }
 
         protected virtual void OnRemovedFromGraphView()
@@ -96,8 +82,8 @@ namespace Soup.Editor.Views
             pickingMode = PickingMode.Position;
             Selected = false;
         }
-        
-        protected virtual void BindManipulators()
+
+        protected virtual void AddManipulators()
         {
             if (m_selectableManipulator != null)
             {
@@ -108,28 +94,36 @@ namespace Soup.Editor.Views
             m_selectableManipulator = new SelectableManipulator();
             this.AddManipulator(m_selectableManipulator);
         }
-        
-        protected void SetElementPosition(Vector2 newPosition)
-        {
-            m_position = newPosition;
-            style.translate = new Translate(newPosition.x, newPosition.y);
-        }
+
+        public virtual void BuildContextMenu(ContextualMenuPopulateEvent evt, GraphView graphView) { }
+
+        /// <summary>
+        /// Called after Selected changes, so Selected already holds the new value.
+        /// </summary>
+        protected virtual void OnSelectedChanged() { }
+
+        public virtual Vector2 GetPosition() => m_position;
 
         public virtual void SetPosition(Vector2 newPosition)
         {
-            SetElementPosition(newPosition);
-            OnPositionChange?.Invoke(new()
-            {
-                Element = this,
-                Position = newPosition
-            });
+            SetPositionWithoutNotify(newPosition);
+            OnPositionChanged?.Invoke(this);
             m_graphView?.NotifyContentChanged();
+        }
+
+        protected void SetPositionWithoutNotify(Vector2 newPosition)
+        {
+            m_position = newPosition;
+            style.translate = new Translate(newPosition.x, newPosition.y);
         }
 
         public virtual void ApplyDeltaToPosition(Vector2 delta)
         {
             SetPosition(m_position + delta);
         }
+
+        public virtual Vector2 GetCenter() => layout.center + m_position;
+        public Vector2 GetGlobalCenter() => Graph.ContentContainer.LocalToWorld(GetCenter());
 
         protected void OfferSelectionDrag(DragOfferEvent e) => OfferDrag(e, Graph, this, IsMovable());
 
@@ -144,17 +138,12 @@ namespace Soup.Editor.Views
                 e.AcceptDrag(dragged);
             }
         }
-        
-        public virtual bool IsMovable() => (Capabilities & Capabilities.Movable) == Capabilities.Movable;
-        public virtual bool IsDroppable() => (Capabilities & Capabilities.Droppable) == Capabilities.Droppable;
-        public virtual bool IsAscendable() => (Capabilities & Capabilities.Ascendable) == Capabilities.Ascendable;
-        public virtual bool IsRenamable() => (Capabilities & Capabilities.Renamable) == Capabilities.Renamable;
-        public virtual bool IsCopiable() => (Capabilities & Capabilities.Copiable) == Capabilities.Copiable;
-        public virtual bool IsSnappable() => (Capabilities & Capabilities.Snappable) == Capabilities.Snappable;
-        public virtual bool IsDeletable() => (Capabilities & Capabilities.Deletable) == Capabilities.Deletable;
-        public virtual bool IsResizable() => (Capabilities & Capabilities.Resizable) == Capabilities.Resizable;
-        public virtual bool IsGroupable() => false;
-        public virtual bool IsStackable() => false;
-        public virtual bool IsSelectable() => (Capabilities & Capabilities.Selectable) == Capabilities.Selectable && visible;
+
+        public bool IsMovable() => (Capabilities & Capabilities.Movable) == Capabilities.Movable;
+        public bool IsAscendable() => (Capabilities & Capabilities.Ascendable) == Capabilities.Ascendable;
+        public bool IsCopiable() => (Capabilities & Capabilities.Copiable) == Capabilities.Copiable;
+        public bool IsDeletable() => (Capabilities & Capabilities.Deletable) == Capabilities.Deletable;
+        public bool IsResizable() => (Capabilities & Capabilities.Resizable) == Capabilities.Resizable;
+        public bool IsSelectable() => (Capabilities & Capabilities.Selectable) == Capabilities.Selectable && visible;
     }
 }

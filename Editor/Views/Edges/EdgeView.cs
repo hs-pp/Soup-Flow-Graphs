@@ -35,20 +35,7 @@ namespace Soup.Editor.Views.Edges
         
         private readonly IEdgeRenderStrategy m_renderer;
 
-        public override bool Selected
-        {
-            get => base.Selected;
-            set
-            {
-                if (base.Selected == value)
-                {
-                    return;
-                }
-
-                base.Selected = value;
-                m_renderer.SetSelected(this, base.Selected);
-            }
-        }
+        protected override void OnSelectedChanged() => m_renderer.SetSelected(this, Selected);
         
         public EdgeView()
         {
@@ -173,7 +160,7 @@ namespace Soup.Editor.Views.Edges
 
         public void SetRenderBounds(Rect bounds)
         {
-            SetElementPosition(bounds.position);
+            SetPositionWithoutNotify(bounds.position);
             style.width = bounds.width;
             style.height = bounds.height;
         }
@@ -236,19 +223,19 @@ namespace Soup.Editor.Views.Edges
 
         private void TrackPort(PortView port)
         {
-            port.OnPositionChange += OnPortPositionChanged;
+            port.OnPositionChanged += OnPortPositionChanged;
 
             for (VisualElement current = port.hierarchy.parent; current != null && current is not GraphViewLayer; current = current.hierarchy.parent)
             {
                 current.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
             }
 
-            OnPortPositionChanged(new PositionData { Element = port });
+            OnPortPositionChanged(port);
         }
 
         private void UntrackPort(PortView port)
         {
-            port.OnPositionChange -= OnPortPositionChanged;
+            port.OnPositionChanged -= OnPortPositionChanged;
 
             for (VisualElement current = port.hierarchy.parent; current != null && current is not GraphViewLayer; current = current.hierarchy.parent)
             {
@@ -256,13 +243,13 @@ namespace Soup.Editor.Views.Edges
             }
         }
 
-        private void OnPortPositionChanged(PositionData changeData)
+        private void OnPortPositionChanged(VisualElement port)
         {
-            if (changeData.Element == m_inputPort)
+            if (port == m_inputPort)
             {
                 UpdateCachedInputPortPosition();
             }
-            else if (changeData.Element == m_outputPort)
+            else if (port == m_outputPort)
             {
                 UpdateCachedOutputPortPosition();
             }

@@ -40,7 +40,7 @@ namespace Soup.Editor.Views
         public IEnumerable<EdgeView> Connections => m_connections;
         private BaseNodeView m_parentNodeView;
         public BaseNodeView ParentNodeView => m_parentNodeView;
-        public event Action<PositionData> OnPositionChange;
+        public event Action<VisualElement> OnPositionChanged;
 
         private VisualElement m_root;
         private VisualElement m_connectorBox;
@@ -137,7 +137,7 @@ namespace Soup.Editor.Views
 
             if (m_parentNodeView != null)
             {
-                m_parentNodeView.OnPositionChange -= OnParentPositionChange;
+                m_parentNodeView.OnPositionChanged -= OnParentPositionChanged;
             }
 
             if (nodeView == null)
@@ -147,7 +147,7 @@ namespace Soup.Editor.Views
             else
             {
                 m_parentNodeView = nodeView;
-                m_parentNodeView.OnPositionChange += OnParentPositionChange;
+                m_parentNodeView.OnPositionChanged += OnParentPositionChanged;
             }
         }
 
@@ -236,9 +236,9 @@ namespace Soup.Editor.Views
         public Vector2 GetGlobalCenter() => m_connectorBox.LocalToWorld(GetCenter());
         public Vector2 GetCenter() => new Rect(Vector2.zero, m_connectorBox.layout.size).center;
 
-        private void OnParentPositionChange(PositionData positionData)
+        private void OnParentPositionChanged(VisualElement nodeView)
         {
-            OnPositionChange?.Invoke(new() { Element = this });
+            OnPositionChanged?.Invoke(this);
         }
 
         #region Style

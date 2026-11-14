@@ -1,0 +1,43 @@
+.conditionalInspectorCaption {
+    -unity-font-style: bold;
+    margin-top: 6px;
+    margin-left: 3px;
+}
+
+.conditionalInspectorEntry {
+    margin: 2px 0 2px 3px;
+    padding: 3px 4px 3px 6px;
+    border-width: 1px;
+    border-color: rgb(36, 36, 36);
+    border-radius: 3px;
+    background-color: rgb(59, 59, 59);
+}
+
+.conditionalInspectorEntryHeader {
+    flex-direction: row;
+    align-items: center;
+}
+
+.conditionalInspectorEntryLabel {
+    flex-grow: 1;
+    -unity-font-style: bold;
+}
+
+.conditionalInspectorEntryButton {
+    width: 20px;
+    height: 18px;
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 9px;
+}
+
+.conditionalInspectorAddButton {
+    align-self: flex-end;
+}
+
+.conditionalInspectorElseNote {
+    -unity-font-style: italic;
+    color: rgb(153, 153, 153);
+    margin-left: 3px;
+    margin-top: 2px;
+}

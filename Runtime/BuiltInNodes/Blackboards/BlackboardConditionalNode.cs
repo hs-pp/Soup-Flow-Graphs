@@ -13,6 +13,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
     public sealed class BlackboardConditionalNode : ANode
     {
         public const string ELSE_OUTPORT = "Else";
+        public const string NO_CONDITION_LABEL = "(no condition)";
 
         [SerializeField]
         private BlackboardKey m_variable = new();
@@ -26,7 +27,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
             {
                 if (entry != null && !string.IsNullOrEmpty(entry.OutportId))
                 {
-                    string label = "(no condition)";
+                    string label = NO_CONDITION_LABEL;
                     if (entry.Conditional != null)
                     {
                         label = entry.Conditional.GetLabel();

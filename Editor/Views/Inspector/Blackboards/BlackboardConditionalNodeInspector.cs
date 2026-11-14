@@ -10,16 +10,17 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Inspector.Blackboards
 {
-    /// <summary>
-    /// The variable and the conditions, in the order they are tested. Picking the variable and adding, moving or removing a
-    /// condition go through commands, since each changes the node's outports; a condition's own fields are plain bindings.
-    /// </summary>
     [CustomNodeInspector(typeof(BlackboardConditionalNode))]
     public class BlackboardConditionalNodeInspector : ANodeInspector
     {
-        private const string NO_CONDITION_LABEL = "(no condition)";
-        private static readonly Color s_entryBackground = new(0.23f, 0.23f, 0.23f);
-        private static readonly Color s_entryBorder = new(0.14f, 0.14f, 0.14f);
+        private const string STYLESHEET_PATH = "Soup/BlackboardConditionalNodeInspector";
+        private const string CAPTION_CLASS = "conditionalInspectorCaption";
+        private const string ENTRY_CLASS = "conditionalInspectorEntry";
+        private const string ENTRY_HEADER_CLASS = "conditionalInspectorEntryHeader";
+        private const string ENTRY_LABEL_CLASS = "conditionalInspectorEntryLabel";
+        private const string ENTRY_BUTTON_CLASS = "conditionalInspectorEntryButton";
+        private const string ADD_BUTTON_CLASS = "conditionalInspectorAddButton";
+        private const string ELSE_NOTE_CLASS = "conditionalInspectorElseNote";
 
         protected override bool UseDefaultHeader => true;
 
@@ -35,6 +36,7 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         protected override VisualElement CreateCustomLayout()
         {
             VisualElement layout = new();
+            layout.styleSheets.Add(Resources.Load<StyleSheet>(STYLESHEET_PATH));
 
             m_tracker = new VisualElement();
             layout.Add(m_tracker);
@@ -46,20 +48,19 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             m_helpBox = new HelpBox(string.Empty, HelpBoxMessageType.Warning);
             layout.Add(m_helpBox);
 
-            Label caption = new("Conditions") { style = { unityFontStyleAndWeight = FontStyle.Bold, marginTop = 6, marginLeft = 3 } };
+            Label caption = new("Conditions");
+            caption.AddToClassList(CAPTION_CLASS);
             layout.Add(caption);
 
             m_entriesContainer = new VisualElement();
             layout.Add(m_entriesContainer);
 
             m_addButton = new Button(HandleAddClicked) { text = "Add Condition" };
-            m_addButton.style.alignSelf = Align.FlexEnd;
+            m_addButton.AddToClassList(ADD_BUTTON_CLASS);
             layout.Add(m_addButton);
 
-            Label elseNote = new("Else is taken when no condition holds.")
-            {
-                style = { unityFontStyleAndWeight = FontStyle.Italic, color = new Color(0.6f, 0.6f, 0.6f), marginLeft = 3, marginTop = 2 },
-            };
+            Label elseNote = new("Else is taken when no condition holds.");
+            elseNote.AddToClassList(ELSE_NOTE_CLASS);
             layout.Add(elseNote);
             return layout;
         }
@@ -112,11 +113,11 @@ namespace Soup.Editor.Views.Inspector.Blackboards
                 }
                 else if (!AllConditionsWorkOn(entriesSP, valueType))
                 {
-                    problem = $"Some conditions work on another type than '{variable.Name}'. They take Else when the graph runs. Pick the variable again to clear them.";
+                    problem = $"Some conditions don't work on type '{variable.Name}'.";
                 }
             }
 
-            m_helpBox.text = problem ?? string.Empty;
+            m_helpBox.text = problem;
             m_helpBox.messageType = string.IsNullOrEmpty(variableId) ? HelpBoxMessageType.Info : HelpBoxMessageType.Warning;
             m_helpBox.style.display = problem != null ? DisplayStyle.Flex : DisplayStyle.None;
             m_addButton.SetEnabled(canAdd);
@@ -124,11 +125,19 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             BindEntries(entriesSP, valueType);
         }
 
-        // Rebinding steals focus mid-edit, so entries are only rebuilt when the list changed. Edits to a condition relabel it.
+        /// <summary>
+        /// Rebinding steals focus mid-edit, so entries are only rebuilt when the list changed. Edits to a condition relabel it.
+        /// </summary>
         private void BindEntries(SerializedProperty entriesSP, Type valueType)
         {
+            int entryCount = 0;
+            if (entriesSP != null)
+            {
+                entryCount = entriesSP.arraySize;
+            }
+
             List<string> entryKeys = new();
-            for (int i = 0; i < (entriesSP?.arraySize ?? 0); i++)
+            for (int i = 0; i < entryCount; i++)
             {
                 SerializedProperty entrySP = entriesSP.GetArrayElementAtIndex(i);
                 entryKeys.Add($"{entrySP.propertyPath}|{GetEntryId(entrySP)}|{GetConditionalSP(entrySP).managedReferenceFullTypename}");
@@ -177,23 +186,15 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         private VisualElement CreateEntryRow(SerializedProperty entrySP, int index, int count, Type valueType)
         {
             string entryId = GetEntryId(entrySP);
-            VisualElement row = new()
-            {
-                style =
-                {
-                    marginTop = 2, marginBottom = 2, marginLeft = 3,
-                    paddingTop = 3, paddingBottom = 3, paddingLeft = 6, paddingRight = 4,
-                    borderTopWidth = 1, borderBottomWidth = 1, borderLeftWidth = 1, borderRightWidth = 1,
-                    borderTopColor = s_entryBorder, borderBottomColor = s_entryBorder, borderLeftColor = s_entryBorder, borderRightColor = s_entryBorder,
-                    borderTopLeftRadius = 3, borderTopRightRadius = 3, borderBottomLeftRadius = 3, borderBottomRightRadius = 3,
-                    backgroundColor = s_entryBackground,
-                },
-            };
+            VisualElement row = new();
+            row.AddToClassList(ENTRY_CLASS);
 
-            VisualElement header = new() { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            VisualElement header = new();
+            header.AddToClassList(ENTRY_HEADER_CLASS);
             row.Add(header);
 
-            Label label = new(GetEntryLabel(entrySP, index, valueType)) { style = { flexGrow = 1, unityFontStyleAndWeight = FontStyle.Bold } };
+            Label label = new(GetEntryLabel(entrySP, index, valueType));
+            label.AddToClassList(ENTRY_LABEL_CLASS);
             header.Add(label);
             m_entryLabels.Add(label);
 
@@ -211,8 +212,8 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             {
                 text = text,
                 tooltip = tooltip,
-                style = { width = 20, height = 18, paddingLeft = 0, paddingRight = 0, fontSize = 9 },
             };
+            button.AddToClassList(ENTRY_BUTTON_CLASS);
             button.SetEnabled(enabled);
             return button;
         }
@@ -220,7 +221,12 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         private static string GetEntryLabel(SerializedProperty entrySP, int index, Type valueType)
         {
             ABlackboardConditional conditional = GetConditionalSP(entrySP).managedReferenceValue as ABlackboardConditional;
-            string label = conditional?.GetLabel() ?? NO_CONDITION_LABEL;
+            string label = BlackboardConditionalNode.NO_CONDITION_LABEL;
+            if (conditional != null)
+            {
+                label = conditional.GetLabel();
+            }
+
             bool mismatched = conditional == null || (valueType != null && conditional.ValueType != valueType);
             return $"{index + 1}.  {label}{(mismatched ? "  ⚠" : string.Empty)}";
         }
