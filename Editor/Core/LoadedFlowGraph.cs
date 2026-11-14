@@ -32,6 +32,9 @@ namespace Soup.Editor.Core
         public bool IsGraphAlive => GraphAsset != null;
         public bool IsMetaDataAlive => m_metaData != null;
 
+        /** True while the graph or its meta data has changes that aren't saved. */
+        public bool IsDirty => (IsGraphAlive && EditorUtility.IsDirty(GraphAsset)) || (IsMetaDataAlive && EditorUtility.IsDirty(m_metaData));
+
         public static bool TryLoad(string assetGuid, out LoadedFlowGraph loadedFlowGraph)
         {
             string path = AssetDatabase.GUIDToAssetPath(assetGuid);

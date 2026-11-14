@@ -20,6 +20,7 @@ namespace Soup.Editor.Views
         private const string LEFT_PANEL_TAG = "main-panel-left";
         private const string RIGHT_PANEL_TAG = "main-panel-right";
         private const string TOOLBAR_TAG = "toolbar";
+        private const string DIRTY_MARKER = "*";
 
         private TwoPaneSplitView m_splitView;
         private VisualElement m_leftPanel;
@@ -35,6 +36,7 @@ namespace Soup.Editor.Views
 
         private LoadedFlowGraph m_loadedFlowGraph;
         private GraphEditorState m_state;
+        private bool m_showsDirtyMarker;
 
         public SoupEditorView(GraphEditorState state)
         {
@@ -44,6 +46,7 @@ namespace Soup.Editor.Views
 
             m_state.OnGraphLoaded += HandleGraphLoaded;
             m_state.OnNavigationChanged += HandleNavigationChanged;
+            SoupAssetModificationProcessor.OnAssetsSaved += RefreshDirtyMarker;
 
             m_graphView.OnCommandRequested += HandleCommandRequested;
             m_graphView.OnCommandBatchRequested += HandleCommandBatchRequested;
@@ -59,6 +62,7 @@ namespace Soup.Editor.Views
 
             m_observer = new GraphViewObserver(m_state, m_graphView);
             m_observer.OnFlowGraphReloaded += m_inspectorView.Refresh;
+            m_observer.OnFlowGraphReloaded += RefreshBreadcrumbs; // A rename arrives as a reload.
 
             m_inspectorView.SetState(m_state);
             m_inspectorView.OnCommandRequested += HandleCommandRequested;
@@ -111,10 +115,12 @@ namespace Soup.Editor.Views
 
             m_state.OnGraphLoaded -= HandleGraphLoaded;
             m_state.OnNavigationChanged -= HandleNavigationChanged;
+            SoupAssetModificationProcessor.OnAssetsSaved -= RefreshDirtyMarker;
             m_inspectorView.OnCommandRequested -= HandleCommandRequested;
             m_inspectorView.Dispose();
 
             m_observer.OnFlowGraphReloaded -= m_inspectorView.Refresh;
+            m_observer.OnFlowGraphReloaded -= RefreshBreadcrumbs;
             m_observer.Dispose();
             m_observer = null;
 
@@ -127,6 +133,7 @@ namespace Soup.Editor.Views
 
             if (m_loadedFlowGraph != null)
             {
+                m_loadedFlowGraph.OnFlowGraphChanged -= HandleFlowGraphChanged;
                 SoupEditorCore.ReleaseLoadedGraph(m_loadedFlowGraph.AssetGuid, this);
             }
             m_loadedFlowGraph = null;
@@ -145,7 +152,16 @@ namespace Soup.Editor.Views
         private void SetLoadedFlowGraph(LoadedFlowGraph loadedFlowGraph)
         {
             LoadedFlowGraph previous = m_loadedFlowGraph;
+            if (previous != null)
+            {
+                previous.OnFlowGraphChanged -= HandleFlowGraphChanged;
+            }
+
             m_loadedFlowGraph = loadedFlowGraph;
+            if (loadedFlowGraph != null)
+            {
+                loadedFlowGraph.OnFlowGraphChanged += HandleFlowGraphChanged;
+            }
 
             m_graphView.GraphType = loadedFlowGraph != null && loadedFlowGraph.IsGraphAlive ? loadedFlowGraph.GraphAsset.GetType() : null;
             m_observer.SetLoadedFlowGraph(loadedFlowGraph);
@@ -210,9 +226,29 @@ namespace Soup.Editor.Views
             RefreshBreadcrumbs();
         }
 
+        private void HandleFlowGraphChanged(GraphChangeSet changeSet)
+        {
+            RefreshDirtyMarker();
+        }
+
+        private void RefreshDirtyMarker()
+        {
+            if (m_loadedFlowGraph != null && m_loadedFlowGraph.IsDirty != m_showsDirtyMarker)
+            {
+                RefreshBreadcrumbs();
+            }
+        }
+
         private void RefreshBreadcrumbs()
         {
-            m_breadcrumbsView.SetPath(m_state.GetSubGraphPathTitles(m_loadedFlowGraph));
+            List<string> titles = m_state.GetSubGraphPathTitles(m_loadedFlowGraph);
+            m_showsDirtyMarker = titles.Count > 0 && m_loadedFlowGraph.IsDirty;
+            if (m_showsDirtyMarker)
+            {
+                titles[0] += DIRTY_MARKER;
+            }
+
+            m_breadcrumbsView.SetPath(titles);
         }
 
         private void HandleBreadcrumbClicked(int depth)
@@ -220,9 +256,6 @@ namespace Soup.Editor.Views
             HandleCommandRequested(new NavigateToSubGraphDepthCommand(depth));
         }
 
-        /// <summary>
-        /// The M shortcut and the canvas/minimap context menus change visibility on the GraphView, so the toggle follows it.
-        /// </summary>
         private void HandleMiniMapVisibilityChanged(bool visible)
         {
             m_state.MiniMapIsVisible = visible;
@@ -234,9 +267,6 @@ namespace Soup.Editor.Views
             m_graphView.MiniMapVisible = evt.newValue;
         }
 
-        /// <summary>
-        /// The canvas context menu also flips snapping on the GraphView, so the toggle follows it.
-        /// </summary>
         private void HandleSnapToGridChanged(bool enabled)
         {
             m_state.SnapToGridIsEnabled = enabled;
