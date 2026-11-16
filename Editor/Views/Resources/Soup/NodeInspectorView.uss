@@ -33,10 +33,10 @@
     flex-shrink: 0;
     width: 18px;
     height: 18px;
-    margin-top: 8px;
+    margin-top: 4px;
     margin-right: 0;
     margin-bottom: 0;
-    margin-left: 6px;
+    margin-left: 4px;
 }
 
 .nodeInspectorColorSwatch > .unity-color-field__input,

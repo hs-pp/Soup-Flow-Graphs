@@ -157,7 +157,7 @@ namespace Soup.Editor.ScriptTemplates
             string text = LoadTemplate(kind).text
                 .Replace("\r\n", "\n")
                 .Replace("#SCRIPTNAME#", Path.GetFileNameWithoutExtension(scriptPath))
-                .Replace("#NODETYPE#", nodeType.FullName);
+                .Replace("#NODETYPE#", nodeType.FullName.Replace('+', '.'));
 
             List<string> lines = new(text.Split('\n'));
             WrapInNamespace(lines, CompilationPipeline.GetAssemblyRootNamespaceFromScriptPath(scriptPath));

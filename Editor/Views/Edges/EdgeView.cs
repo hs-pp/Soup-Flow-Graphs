@@ -61,20 +61,15 @@ namespace Soup.Editor.Views.Edges
         protected override void OnAddedToGraphView()
         {
             base.OnAddedToGraphView();
-            Graph.OnViewTransformChanged += OnViewTransformChanged;
+            Graph.OnViewTransformChanged += MarkDirtyRepaint;
             Refresh();
         }
 
         protected override void OnRemovedFromGraphView()
         {
             base.OnRemovedFromGraphView();
-            Graph.OnViewTransformChanged -= OnViewTransformChanged;
+            Graph.OnViewTransformChanged -= MarkDirtyRepaint;
             Disconnect();
-        }
-
-        private void OnViewTransformChanged(GraphElementContainer contentContainer)
-        {
-            MarkDirtyRepaint();
         }
 
         private void SetPort(PortView port)

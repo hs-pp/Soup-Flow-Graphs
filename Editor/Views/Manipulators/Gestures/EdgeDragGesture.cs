@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Soup.Editor.Core.Commands.CommandDefinitions;
 using Soup.Editor.Views.Edges;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,6 +13,8 @@ namespace Soup.Editor.Views.Manipulators.Gestures
         public IReadOnlyList<EdgeView> Edges => m_edges;
         private readonly HashSet<EdgeView> m_taken = new();
         private bool m_draggedInput;
+        private VisualElement m_dropTarget;
+        private Vector2 m_mousePosition;
 
         private EdgeDragGesture(GraphView graphView, PortView port, EdgeView edge) : base(graphView)
         {
@@ -71,8 +74,7 @@ namespace Soup.Editor.Views.Manipulators.Gestures
                 Latch(draggedEdge);
             }
 
-            Graph.IlluminateCompatiblePorts(GetAnchoredPort(draggedEdge));
-            e.SetUserData(this);
+            IlluminateCompatiblePorts(GetAnchoredPort(draggedEdge));
             return true;
         }
 
@@ -108,6 +110,47 @@ namespace Soup.Editor.Views.Manipulators.Gestures
                     edge.SetOutputPositionOverride(newPosition);
                 }
             }
+
+            m_mousePosition = e.mousePosition;
+            SetDropTarget(Graph.panel.Pick(e.mousePosition));
+        }
+
+        /// <summary>
+        /// Tracks the element under the mouse, and lights up a port under it that every dragged edge can connect to.
+        /// </summary>
+        private void SetDropTarget(VisualElement dropTarget)
+        {
+            if (dropTarget == m_dropTarget)
+            {
+                return;
+            }
+
+            if (m_dropTarget is PortView oldPort)
+            {
+                oldPort.IsDropTarget = false;
+            }
+
+            m_dropTarget = dropTarget;
+            if (m_dropTarget is PortView newPort)
+            {
+                newPort.IsDropTarget = newPort.CanConnectAll(this);
+            }
+        }
+
+        private void IlluminateCompatiblePorts(PortView port)
+        {
+            foreach (PortView otherPort in Content.Ports)
+            {
+                otherPort.Dimmed = !port.CanConnectTo(otherPort);
+            }
+        }
+
+        private void IlluminateAllPorts()
+        {
+            foreach (PortView otherPort in Content.Ports)
+            {
+                otherPort.Dimmed = false;
+            }
         }
 
         public override void ApplyPanDelta(Vector2 delta)
@@ -131,9 +174,65 @@ namespace Soup.Editor.Views.Manipulators.Gestures
 
         public PortView GetAnchoredPort(EdgeView edge) => m_draggedInput ? edge.OutputPort : edge.InputPort;
 
-        public override void End() => Release();
+        public override void End()
+        {
+            VisualElement dropTarget = m_dropTarget;
+            SetDropTarget(null);
 
-        public override void Cancel(bool keepPositions) => Release();
+            if (dropTarget is PortView port)
+            {
+                port.ConnectDraggedEdges(this);
+            }
+            else if (dropTarget == Graph || Graph.Contains(dropTarget))
+            {
+                DropOnCanvas();
+            }
+
+            Release();
+        }
+
+        public override void Cancel(bool keepPositions)
+        {
+            SetDropTarget(null);
+            Release();
+        }
+
+        private void DropOnCanvas()
+        {
+            bool candidateHookFired = false;
+
+            for (int i = m_edges.Count - 1; i >= 0; i--)
+            {
+                EdgeView edge = m_edges[i];
+
+                // A real edge dropped in space is disconnected from the model
+                if (edge.HasModelIdentity)
+                {
+                    Graph.RequestCommand(new DestroyEdgeCommand(new EdgeId(edge.FromNodeId, edge.OutportId)));
+                    Take(edge);
+                }
+                else
+                {
+                    PendingPortConnection? pending = null;
+                    PortView anchoredPort = GetAnchoredPort(edge);
+                    if (anchoredPort != null)
+                    {
+                        pending = new PendingPortConnection(
+                            anchoredPort.NodeId,
+                            anchoredPort.OutportId,
+                            anchoredPort.Direction == Direction.Output);
+                    }
+
+                    Take(edge);
+
+                    if (!candidateHookFired)
+                    {
+                        candidateHookFired = true;
+                        Graph.OpenNodeSearch(m_mousePosition, pending);
+                    }
+                }
+            }
+        }
 
         private void Release()
         {
@@ -160,7 +259,7 @@ namespace Soup.Editor.Views.Manipulators.Gestures
                 }
             }
 
-            Graph.IlluminateAllPorts();
+            IlluminateAllPorts();
         }
 
         public override bool IsStale()

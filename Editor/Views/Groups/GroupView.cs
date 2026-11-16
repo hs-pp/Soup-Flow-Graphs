@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Soup.Editor.Core.Commands.CommandDefinitions;
 using Soup.Editor.Core.DataRefs;
@@ -109,26 +108,12 @@ namespace Soup.Editor.Views.Groups
 
         public override void BuildContextMenu(ContextualMenuPopulateEvent evt, GraphView graphView)
         {
-            List<string> contentIds = CollectIds(graphView.GetGroupContents(this), element => element.IsSelectable());
+            List<string> contentIds = GraphView.CollectIds(graphView.ContentContainer.GetGroupContents(this), element => element.IsSelectable());
             evt.menu.AppendAction("Select Contents", _ => graphView.RequestCommand(new SelectGraphElementsCommand(contentIds, GraphSelectionMode.Replace)), contentIds.Count > 0 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
 
             evt.menu.AppendSeparator();
 
             evt.menu.AppendAction(GraphShortcuts.WithHint("Delete Group", GraphShortcuts.DeleteSelectionHintId), _ => graphView.RequestCommand(new DeleteGraphElementsCommand(null, new[] { Id })), IsDeletable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-        }
-        
-        private List<string> CollectIds<T>(IEnumerable<T> elements, Func<T, bool> include) where T : GraphElement
-        {
-            List<string> ids = new();
-            foreach (T element in elements)
-            {
-                if (element.Id != null && include(element))
-                {
-                    ids.Add(element.Id);
-                }
-            }
-
-            return ids;
         }
     }
 }

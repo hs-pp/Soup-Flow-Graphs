@@ -8,7 +8,6 @@ using Soup.Editor.Views.Edges;
 using Soup.Editor.Views.Extraneous;
 using Soup.Editor.Views.Groups;
 using Soup.Editor.Views.Manipulators;
-using Soup.Editor.Views.Manipulators.Gestures;
 using Soup.Editor.Views.Nodes;
 using Soup.Runtime;
 using UnityEngine;
@@ -16,19 +15,6 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views
 {
-    public static class GraphViewConstants
-    {
-        public const int FrameBorder = 30;
-        public const int PanAreaWidth = 100;
-        public const int PanSpeed = 4;
-        public const int PanInterval = 10;
-        private const float MinSpeedFactor = 0.5f;
-        private const float MaxSpeedFactor = 2.5f;
-        public const float MaxPanSpeed = MaxSpeedFactor * PanSpeed;
-        public const float PanAreaWidthAndMinSpeedFactor = PanAreaWidth + MinSpeedFactor;
-        public const float DefaultSnapStep = 10f;
-    }
-    
     public class GraphViewLayer : VisualElement
     {
         public GraphViewLayer() => pickingMode = PickingMode.Ignore;
@@ -50,18 +36,18 @@ namespace Soup.Editor.Views
     
     public class GraphView : VisualElement
     {
+        public const float SNAP_STEP = 10f;
+
         private const string STYLESHEET_PATH = "Soup/GraphView";
         private const string STYLECLASS_NAME = "graphView";
         private const float GROUP_PADDING = 30f;
-        
+        private const float FRAME_BORDER = 30f;
+
         // GraphView
         public GraphElementContainer ContentContainer { get; }
         private Dictionary<int, GraphViewLayer> m_layers = new();
         private Vector2 m_mousePosition;
-        
-        private GridBackgroundElement m_gridBackgroundElement;
 
-        /** The loaded graph asset's type. The node search only offers node types it allows. */
         public Type GraphType { get; set; }
 
         // Commands
@@ -69,8 +55,7 @@ namespace Soup.Editor.Views
         public event Action<IReadOnlyList<IGraphCommand>, string> OnCommandBatchRequested;
         
         // View Transform
-        public delegate void ViewTransformChanged(GraphElementContainer contentContainer);
-        public event ViewTransformChanged OnViewTransformChanged;
+        public event Action OnViewTransformChanged;
 
         // Content
         public event Action OnContentChanged;
@@ -83,15 +68,9 @@ namespace Soup.Editor.Views
         private bool m_snapToGrid = true;
         public event Action<bool> OnSnapToGridChanged;
 
-        // Pan
-        private readonly IVisualElementScheduledItem m_panSchedule;
-        private bool m_panning;
-        private Vector2 m_panOriginDiff;
-        
         // Zoom
         private ZoomManipulator m_zoomer = new();
-        public float CurrentScale => GetViewTransformScale().x;
-        
+
         // Drag and Drop
         private DragAndDropManipulator m_dragAndDrop;
         private ElementDragManipulator m_elementDrags;
@@ -107,49 +86,37 @@ namespace Soup.Editor.Views
             StyleSheet styleSheet = Resources.Load<StyleSheet>(STYLESHEET_PATH);
             styleSheets.Add(styleSheet);
             AddToClassList(STYLECLASS_NAME);
-            usageHints = UsageHints.MaskContainer; // Should equate to RenderHints.ClipWithScissors
+            usageHints = UsageHints.MaskContainer;
 
-            m_gridBackgroundElement = new GridBackgroundElement(this);
-            hierarchy.Add(m_gridBackgroundElement);
+            GridBackgroundElement gridBackgroundElement = new(this);
+            hierarchy.Add(gridBackgroundElement);
 
             ContentContainer = new GraphElementContainer();
-            m_gridBackgroundElement.Add(ContentContainer);
+            gridBackgroundElement.Add(ContentContainer);
 
             m_miniMapElement = new MiniMapElement(this);
             hierarchy.Add(m_miniMapElement);
 
             // Manipulators
-            m_panSchedule = schedule
-                .Execute(Pan)
-                .Every(GraphViewConstants.PanInterval)
-                .StartingIn(GraphViewConstants.PanInterval);
-            m_panSchedule.Pause();
             this.AddManipulator(m_zoomer);
-            m_dragAndDrop = new DragAndDropManipulator(this);
+            m_dragAndDrop = new DragAndDropManipulator();
             this.AddManipulator(m_dragAndDrop);
             m_elementDrags = new ElementDragManipulator(this);
             ContentContainer.AddManipulator(m_elementDrags);
             this.AddManipulator(new ContextualMenuManipulator(BuildContextualMenu));
 
-            focusable = true; // Shortcuts and Edit-menu commands only reach the graph while it holds focus.
+            focusable = true; // Shortcuts only reach the graph while it holds focus.
             GraphShortcutContext.EnsureRegistered();
         }
         
         #region GraphViewLayers
-        public void AddToViewLayer(GraphElement element)
-        {
-            GetViewLayer(element.Layer).Add(element);
-        }
-        
         private VisualElement GetViewLayer(int index)
         {
             if (!m_layers.TryGetValue(index, out GraphViewLayer layer))
             {
                 layer = new() { name = $"Layer {index}" };
+                ContentContainer.Insert(m_layers.Keys.Count(key => key < index), layer);
                 m_layers[index] = layer;
-
-                int indexOfLayer = m_layers.OrderBy(t => t.Key).Select(t => t.Value).ToList().IndexOf(layer);
-                ContentContainer.Insert(indexOfLayer, layer);
             }
 
             return layer;
@@ -175,7 +142,7 @@ namespace Soup.Editor.Views
             OnCommandBatchRequested?.Invoke(commands, undoName);
         }
         
-        private static List<string> CollectIds<T>(IEnumerable<T> elements, Func<T, bool> include) where T : GraphElement
+        internal static List<string> CollectIds<T>(IEnumerable<T> elements, Func<T, bool> include) where T : GraphElement
         {
             List<string> ids = new();
             foreach (T element in elements)
@@ -241,7 +208,7 @@ namespace Soup.Editor.Views
 
         private void PasteFromClipboard(Vector2 panelPosition)
         {
-            float snapStep = SnapToGrid ? GraphViewConstants.DefaultSnapStep : 0f;
+            float snapStep = SnapToGrid ? SNAP_STEP : 0f;
             RequestCommand(new PasteFromClipboardCommand(ContentContainer.WorldToLocal(panelPosition), snapStep));
         }
 
@@ -253,7 +220,7 @@ namespace Soup.Editor.Views
             }
         }
 
-        internal void RequestDeleteSelection()
+        internal void DeleteSelection()
         {
             if (CollectDeletableSelection(out List<string> nodeIds, out List<EdgeId> edges, out List<string> groupIds))
             {
@@ -271,7 +238,7 @@ namespace Soup.Editor.Views
 
         internal bool GroupSelection()
         {
-            if (!TryGetSelectionBounds(out Rect bounds))
+            if (!TryGetBounds(element => element.Selected && element is (BaseNodeView or GroupView), out Rect bounds))
             {
                 return false;
             }
@@ -280,13 +247,13 @@ namespace Soup.Editor.Views
             return true;
         }
 
-        private bool TryGetSelectionBounds(out Rect bounds)
+        private bool TryGetBounds(Func<GraphElement, bool> include, out Rect bounds)
         {
             bounds = default;
             bool found = false;
             foreach (GraphElement element in ContentContainer.ElementsAll)
             {
-                if (!element.Selected || element is not (BaseNodeView or GroupView))
+                if (!include(element))
                 {
                     continue;
                 }
@@ -309,85 +276,80 @@ namespace Soup.Editor.Views
             Vector2 graphPosition = SnapPosition(ContentContainer.WorldToLocal(panelPosition));
 
             string newNodeId = Guid.NewGuid().ToString("N");
-            List<IGraphCommand> commands = new()
-            {
-                new CreateNodeCommand(nodeType, graphPosition, newNodeId),
-            };
+            CreateNodeCommand createNode = new(nodeType, graphPosition, newNodeId);
 
+            CreateEdgeCommand connectNode = null;
             if (pending.HasValue)
             {
-                if (pending.Value.AnchoredIsOutput)
+                PendingPortConnection connection = pending.Value;
+                if (connection.AnchoredIsOutput)
                 {
-                    commands.Add(new CreateEdgeCommand(pending.Value.NodeId, pending.Value.OutportId, newNodeId));
+                    connectNode = new CreateEdgeCommand(connection.NodeId, connection.OutportId, newNodeId);
                 }
                 else
                 {
                     List<OutportDefinition> definitions = NodeUtils.GetOutportDefinitions(nodeType);
                     if (definitions != null && definitions.Count > 0)
                     {
-                        commands.Add(new CreateEdgeCommand(newNodeId, definitions[0].Id, pending.Value.NodeId));
+                        connectNode = new CreateEdgeCommand(newNodeId, definitions[0].Id, connection.NodeId);
                     }
                 }
             }
 
-            if (commands.Count > 1)
+            if (connectNode == null)
             {
-                RequestCommandBatch("Create and Connect Node", commands.ToArray());
+                RequestCommand(createNode);
             }
             else
             {
-                RequestCommand(commands[0]);
+                RequestCommandBatch("Create and Connect Node", createNode, connectNode);
             }
         }
         #endregion
 
         #region View Transform
-        private void UpdateViewTransform(Vector3 newPosition) => UpdateViewTransform(newPosition, GetViewTransformScale());
-        public void UpdateViewTransform(Vector3 newPosition, Vector3 newScale)
+        public void SetViewTransform(Vector2 position, float scale)
         {
             // Make sure we dont accidentally override this change later.
             UnregisterCallback<GeometryChangedEvent>(OnFirstLayoutResetViewTransform);
 
-            // Early out if Position and Scale didnt change.
-            if (GetViewTransformPosition() == newPosition && GetViewTransformScale() == newScale)
+            if (ViewPosition == position && ViewScale == scale)
             {
                 return;
             }
 
-            float validateFloat = newPosition.x + newPosition.y + newPosition.z + newScale.x + newScale.y + newScale.z;
-            if (float.IsInfinity(validateFloat) || float.IsNaN(validateFloat))
+            if (!float.IsFinite(position.x) || !float.IsFinite(position.y) || !float.IsFinite(scale))
             {
                 return;
             }
 
-            ContentContainer.style.translate = newPosition;
-            ContentContainer.style.scale = newScale;
+            ContentContainer.style.translate = new Translate(position.x, position.y);
+            ContentContainer.style.scale = new Vector3(scale, scale, 1f);
 
-            OnViewTransformChanged?.Invoke(ContentContainer);
+            OnViewTransformChanged?.Invoke();
         }
 
-        public Vector3 GetViewTransformPosition()
+        public Vector2 ViewPosition
         {
-            Translate translate = ContentContainer.style.translate.value;
-            return new Vector3(translate.x.value, translate.y.value, translate.z);
+            get
+            {
+                Translate translate = ContentContainer.style.translate.value;
+                return new Vector2(translate.x.value, translate.y.value);
+            }
         }
 
-        public Vector3 GetViewTransformScale()
-        {
-            return ContentContainer.style.scale.value.value;
-        }
+        public float ViewScale => ContentContainer.style.scale.value.value.x;
 
         public void ResetViewTransform()
         {
             Vector2 size = layout.size;
             if (float.IsNaN(size.x) || float.IsNaN(size.y) || size.x <= 0f || size.y <= 0f)
             {
-                // Layout hasn't resolved yet. Center once the first geometry pass lands.
                 RegisterCallback<GeometryChangedEvent>(OnFirstLayoutResetViewTransform);
                 return;
             }
 
-            UpdateViewTransform(new Vector2(size.x * 0.3f, size.y * 0.3f), Vector3.one);
+            SetViewTransform(size * 0.3f, 1f);
         }
 
         private void OnFirstLayoutResetViewTransform(GeometryChangedEvent evt)
@@ -397,130 +359,11 @@ namespace Soup.Editor.Views
         }
         #endregion
 
-        #region Pan
-        /// <summary>
-        /// Auto-pans while the element drag nears the edges, until <see cref="StopPan"/>.
-        /// </summary>
-        internal void StartPan()
-        {
-            m_panOriginDiff = Vector2.zero;
-            m_panning = true;
-            m_panSchedule.Resume();
-        }
-
-        internal void StopPan(bool resetView)
-        {
-            if (!m_panning)
-            {
-                return;
-            }
-
-            m_panSchedule.Pause();
-            m_panning = false;
-            if (resetView)
-            {
-                UpdateViewTransform((Vector2)GetViewTransformPosition() + m_panOriginDiff);
-            }
-        }
-
-        private Vector2 GetEffectivePanSpeed(Vector2 mousePos)
-        {
-            Vector2 effectiveSpeed = Vector2.zero;
-
-            if (mousePos.x <= GraphViewConstants.PanAreaWidth)
-            {
-                effectiveSpeed.x = -((GraphViewConstants.PanAreaWidth - mousePos.x) / GraphViewConstants.PanAreaWidthAndMinSpeedFactor) * GraphViewConstants.PanSpeed;
-            }
-            else if (mousePos.x >= m_gridBackgroundElement.layout.width - GraphViewConstants.PanAreaWidth)
-            {
-                effectiveSpeed.x = (mousePos.x - (m_gridBackgroundElement.layout.width - GraphViewConstants.PanAreaWidth)) / GraphViewConstants.PanAreaWidthAndMinSpeedFactor * GraphViewConstants.PanSpeed;
-            }
-
-            if (mousePos.y <= GraphViewConstants.PanAreaWidth)
-            {
-                effectiveSpeed.y = -((GraphViewConstants.PanAreaWidth - mousePos.y) / GraphViewConstants.PanAreaWidthAndMinSpeedFactor) * GraphViewConstants.PanSpeed;
-            }
-            else if (mousePos.y >= m_gridBackgroundElement.layout.height - GraphViewConstants.PanAreaWidth)
-            {
-                effectiveSpeed.y = (mousePos.y - (m_gridBackgroundElement.layout.height - GraphViewConstants.PanAreaWidth)) / GraphViewConstants.PanAreaWidthAndMinSpeedFactor * GraphViewConstants.PanSpeed;
-            }
-
-            return Vector2.ClampMagnitude(effectiveSpeed, GraphViewConstants.MaxPanSpeed);
-        }
-
-        private void Pan()
-        {
-            // The pan zones are measured from the grid's own edges, not the window's.
-            Vector2 elementPosition = m_gridBackgroundElement.WorldToLocal(m_elementDrags.PanAnchor);
-            Vector2 speed = GetEffectivePanSpeed(elementPosition);
-            if (Vector2.zero == speed)
-            {
-                return;
-            }
-
-            m_panOriginDiff += speed;
-
-            UpdateViewTransform((Vector2)GetViewTransformPosition() - speed);
-            Vector2 localSpeed = speed / CurrentScale;
-            m_elementDrags.ApplyPanDelta(localSpeed);
-        }
-        #endregion
-
         #region Zoom
-        public float MinScale
-        {
-            get => m_zoomer.MinScale;
-            set
-            {
-                m_zoomer.MinScale = Math.Min(value, ZoomManipulator.DefaultMinScale);
-                ValidateTransform();
-            }
-        }
-
-        public float MaxScale
-        {
-            get => m_zoomer.MaxScale;
-            set
-            {
-                m_zoomer.MaxScale = Math.Max(value, ZoomManipulator.DefaultMaxScale);
-                ValidateTransform();
-            }
-        }
-
-        public float ScaleStep
-        {
-            get => m_zoomer.ScaleStep;
-            set
-            {
-                m_zoomer.ScaleStep = Math.Min(value, (MaxScale - MinScale) / 2);
-                ValidateTransform();
-            }
-        }
-
-        public float ReferenceScale
-        {
-            get => m_zoomer.ReferenceScale;
-            set
-            {
-                m_zoomer.ReferenceScale = Math.Clamp(value, MinScale, MaxScale);
-                ValidateTransform();
-            }
-        }
-
-        private void ValidateTransform()
-        {
-            if (ContentContainer == null)
-            {
-                return;
-            }
-
-            Vector3 transformScale = GetViewTransformScale();
-
-            transformScale.x = Mathf.Clamp(transformScale.x, MinScale, MaxScale);
-            transformScale.y = Mathf.Clamp(transformScale.y, MinScale, MaxScale);
-
-            UpdateViewTransform(GetViewTransformPosition(), transformScale);
-        }
+        public float MinScale => m_zoomer.MinScale;
+        public float MaxScale => m_zoomer.MaxScale;
+        public float ScaleStep => m_zoomer.ScaleStep;
+        public float ReferenceScale => m_zoomer.ReferenceScale;
         #endregion
 
         #region Snapping
@@ -546,13 +389,29 @@ namespace Soup.Editor.Views
                 return position;
             }
 
-            const float step = GraphViewConstants.DefaultSnapStep;
-            return new Vector2(Mathf.Round(position.x / step) * step, Mathf.Round(position.y / step) * step);
+            return new Vector2(Mathf.Round(position.x / SNAP_STEP) * SNAP_STEP, Mathf.Round(position.y / SNAP_STEP) * SNAP_STEP);
+        }
+        #endregion
+
+        #region MiniMap
+        public bool MiniMapVisible
+        {
+            get => m_miniMapElement.style.display != DisplayStyle.None;
+            set
+            {
+                if (MiniMapVisible == value)
+                {
+                    return;
+                }
+
+                m_miniMapElement.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+                OnMiniMapVisibilityChanged?.Invoke(value);
+            }
         }
         #endregion
 
         #region Event Handlers
-        [EventInterest(typeof(MouseMoveEvent), typeof(DragOfferEvent), typeof(DragEvent), typeof(DragEndEvent), typeof(DragCancelEvent), typeof(DropEnterEvent), typeof(DropEvent), typeof(DropExitEvent), typeof(ValidateCommandEvent), typeof(ExecuteCommandEvent))]
+        [EventInterest(typeof(MouseMoveEvent), typeof(DragOfferEvent), typeof(DragEvent), typeof(DragEndEvent), typeof(DragCancelEvent), typeof(ValidateCommandEvent), typeof(ExecuteCommandEvent))]
         protected override void HandleEventBubbleUp(EventBase evt)
         {
             base.HandleEventBubbleUp(evt);
@@ -592,23 +451,11 @@ namespace Soup.Editor.Views
             {
                 OnDragCancel((DragCancelEvent)evt);
             }
-            else if (typeId == DropEnterEvent.TypeId())
-            {
-                OnDropEnter((DropEnterEvent)evt);
-            }
-            else if (typeId == DropEvent.TypeId())
-            {
-                OnDrop((DropEvent)evt);
-            }
-            else if (typeId == DropExitEvent.TypeId())
-            {
-                OnDropExit((DropExitEvent)evt);
-            }
         }
 
-        public void OnDragOffer(DragOfferEvent e, bool forceViewDrag = false)
+        public void OnDragOffer(DragOfferEvent e)
         {
-            if (forceViewDrag || IsViewDrag(e))
+            if (IsViewDrag(e))
             {
                 e.AcceptDrag(this);
                 e.StopImmediatePropagation();
@@ -622,10 +469,7 @@ namespace Soup.Editor.Views
                 e.StopImmediatePropagation();
                 m_draggingMarquee = true;
 
-                bool additive = e.modifiers.IsShift();
-                bool subtractive = e.modifiers.IsActionKey();
-                bool exclusive = !(additive ^ subtractive);
-                if (exclusive)
+                if (GetMarqueeSelectionMode(e.modifiers) == GraphSelectionMode.Replace)
                 {
                     RequestCommand(new SelectGraphElementsCommand(null, GraphSelectionMode.Replace));
                 }
@@ -649,7 +493,7 @@ namespace Soup.Editor.Views
             else if (m_draggingView)
             {
                 e.StopImmediatePropagation();
-                UpdateViewTransform(GetViewTransformPosition() + (Vector3)e.mouseDelta);
+                SetViewTransform(ViewPosition + e.mouseDelta, ViewScale);
             }
         }
 
@@ -659,21 +503,17 @@ namespace Soup.Editor.Views
             {
                 // Remove marquee
                 e.StopImmediatePropagation();
+                m_draggingMarquee = false;
                 m_marqueeElement.RemoveFromHierarchy();
 
                 // Ignore if the rectangle is infinitely small
                 Rect selectionRect = m_marqueeElement.SelectionRect;
                 if (selectionRect.size == Vector2.zero)
                 {
-                    m_draggingMarquee = false;
                     return;
                 }
 
                 // Select elements that overlap the marquee
-                bool additive = e.modifiers.IsShift();
-                bool subtractive = e.modifiers.IsActionKey();
-                bool exclusive = !(additive ^ subtractive);
-
                 List<string> overlappingIds = new();
                 foreach (GraphElement element in ContentContainer.ElementsAll)
                 {
@@ -689,10 +529,7 @@ namespace Soup.Editor.Views
                     }
                 }
 
-                GraphSelectionMode mode = exclusive ? GraphSelectionMode.Replace : additive ? GraphSelectionMode.Add : GraphSelectionMode.Remove;
-                RequestCommand(new SelectGraphElementsCommand(overlappingIds, mode));
-
-                m_draggingMarquee = false;
+                RequestCommand(new SelectGraphElementsCommand(overlappingIds, GetMarqueeSelectionMode(e.modifiers)));
             }
             else if (m_draggingView)
             {
@@ -712,119 +549,43 @@ namespace Soup.Editor.Views
             else if (m_draggingView)
             {
                 e.StopImmediatePropagation();
-                UpdateViewTransform(GetViewTransformPosition() + (Vector3)e.mouseDelta);
                 m_draggingView = false;
             }
         }
         
-        /// <summary>
-        /// Only to be called from outside the gesture (ex. undo/redo), after the observer has reconciled.
-        /// We want to hard cancel the drag because it's no longer operating in the correct world.
-        /// </summary>
         public void CancelActiveDrag()
         {
             m_elementDrags.KeepPositionsOnCancel();
             m_dragAndDrop.CancelActiveDrag();
         }
 
-        private void OnDropEnter(DropEnterEvent e)
+        private bool IsMarqueeDrag(DragOfferEvent e)
         {
-            if (e.GetUserData() is EdgeDragGesture)
-            {
-                e.StopImmediatePropagation();
-            }
+            return (MouseButton)e.button == MouseButton.LeftMouse
+                && (e.modifiers.IsNone() || e.modifiers.IsExclusiveShift() || e.modifiers.IsExclusiveActionKey());
         }
 
-        private void OnDrop(DropEvent e)
+        public bool IsViewDrag(DragOfferEvent e)
         {
-            if (e.GetUserData() is EdgeDragGesture edgeDrag)
-            {
-                e.StopImmediatePropagation();
-
-                bool candidateHookFired = false;
-
-                for (int i = edgeDrag.Edges.Count - 1; i >= 0; i--)
-                {
-                    EdgeView edge = edgeDrag.Edges[i];
-
-                    // A real edge dropped in space is disconnected from the model
-                    if (edge.HasModelIdentity)
-                    {
-                        RequestCommand(new DestroyEdgeCommand(new EdgeId(edge.FromNodeId, edge.OutportId)));
-                        edgeDrag.Take(edge);
-                    }
-                    else
-                    {
-                        PendingPortConnection? pending = null;
-                        PortView anchoredPort = edgeDrag.GetAnchoredPort(edge);
-                        if (anchoredPort != null)
-                        {
-                            pending = new PendingPortConnection(
-                                anchoredPort.NodeId,
-                                anchoredPort.OutportId,
-                                anchoredPort.Direction == Direction.Output);
-                        }
-
-                        edgeDrag.Take(edge);
-
-                        if (!candidateHookFired)
-                        {
-                            candidateHookFired = true;
-                            OpenNodeSearch(e.mousePosition, pending);
-                        }
-                    }
-                }
-            }
+            return e.modifiers.HasFlag(EventModifiers.Alt)
+                || ((MouseButton)e.button == MouseButton.MiddleMouse && e.modifiers.IsNone());
         }
 
-        private void OnDropExit(DropExitEvent e)
+
+        private static GraphSelectionMode GetMarqueeSelectionMode(EventModifiers modifiers)
         {
-            if (e.GetUserData() is EdgeDragGesture)
+            bool additive = modifiers.IsShift();
+            bool subtractive = modifiers.IsActionKey();
+            if (additive == subtractive)
             {
-                e.StopImmediatePropagation();
-            }
-        }
-
-        private bool IsMarqueeDrag<T>(DragAndDropEvent<T> e) where T : DragAndDropEvent<T>, new()
-        {
-            if ((MouseButton)e.button != MouseButton.LeftMouse)
-            {
-                return false;
+                return GraphSelectionMode.Replace;
             }
 
-            if (e.modifiers.IsNone() || e.modifiers.IsExclusiveShift() || e.modifiers.IsExclusiveActionKey())
-            {
-                return true;
-            }
-            
-            return false;
-        }
-
-        public bool IsViewDrag<T>(DragAndDropEvent<T> e) where T : DragAndDropEvent<T>, new()
-        {
-            if (e.modifiers.HasFlag(EventModifiers.Alt))
-            {
-                return true;
-            }
-
-            if ((MouseButton)e.button != MouseButton.MiddleMouse)
-            {
-                return false;
-            }
-
-            if (!e.modifiers.IsNone())
-            {
-                return false;
-            }
-
-            return true;
+            return additive ? GraphSelectionMode.Add : GraphSelectionMode.Remove;
         }
         #endregion
 
         #region Edit Commands
-        // Unity's Edit menu and its shortcuts reach the focused element as command events. F is Unity's "Frame Selected in
-        // Window under Cursor", which sends FrameSelected. Validate decides whether the menu item is enabled. Soup-only
-        // hotkeys live in GraphShortcuts.
         private const string COPY_COMMAND = "Copy";
         private const string CUT_COMMAND = "Cut";
         private const string PASTE_COMMAND = "Paste";
@@ -836,17 +597,28 @@ namespace Soup.Editor.Views
 
         internal bool IsMouseCaptured => panel?.GetCapturingElement(PointerId.mousePointerId) != null;
 
-        // Targeting the graph itself keeps a focused text field's Copy/Paste/Select All its own.
         private bool AcceptsEditCommand(EventBase evt) => evt.target == this && !IsMouseCaptured;
 
-        private bool CanExecuteEditCommand(string commandName) => commandName switch
+        private bool CanExecuteEditCommand(string commandName)
         {
-            COPY_COMMAND or CUT_COMMAND or DUPLICATE_COMMAND => CollectCopiableSelection(out _, out _),
-            PASTE_COMMAND => GraphClipboard.HasClipboardContent,
-            DELETE_COMMAND or SOFT_DELETE_COMMAND => CollectDeletableSelection(out _, out _, out _),
-            SELECT_ALL_COMMAND or FRAME_SELECTED_COMMAND => true,
-            _ => false,
-        };
+            switch (commandName)
+            {
+                case COPY_COMMAND:
+                case CUT_COMMAND:
+                case DUPLICATE_COMMAND:
+                    return CollectCopiableSelection(out _, out _);
+                case PASTE_COMMAND:
+                    return GraphClipboard.HasClipboardContent;
+                case DELETE_COMMAND:
+                case SOFT_DELETE_COMMAND:
+                    return CollectDeletableSelection(out _, out _, out _);
+                case SELECT_ALL_COMMAND:
+                case FRAME_SELECTED_COMMAND:
+                    return true;
+                default:
+                    return false;
+            }
+        }
 
         private bool ExecuteEditCommand(string commandName)
         {
@@ -869,7 +641,7 @@ namespace Soup.Editor.Views
                     return true;
                 case DELETE_COMMAND:
                 case SOFT_DELETE_COMMAND:
-                    RequestDeleteSelection();
+                    DeleteSelection();
                     return true;
                 case FRAME_SELECTED_COMMAND:
                     Frame();
@@ -889,100 +661,32 @@ namespace Soup.Editor.Views
         #region Framing
         public void Frame()
         {
-            if (focusController == null || focusController.focusedElement == null || !(focusController.focusedElement is IBindable)) // Is focused element null or not bindable?
+            if (!TryGetBounds(element => element.Selected, out Rect bounds) && !TryGetBounds(_ => true, out bounds))
             {
-                // Construct rect for selected and unselected elements
-                Rect rectToFitSelected = ContentContainer.layout;
-                Rect rectToFitUnselected = rectToFitSelected;
-                bool reachedFirstSelected = false;
-                bool reachedFirstUnselected = false;
-                foreach (GraphElement ge in ContentContainer.ElementsAll)
-                {
-                    if (ge.Selected)
-                    {
-                        if (!reachedFirstSelected)
-                        {
-                            rectToFitSelected = ge.ChangeCoordinatesTo(ContentContainer, ge.Rect());
-                            reachedFirstSelected = true;
-                        }
-                        else
-                        {
-                            rectToFitSelected = RectUtils.Encompass(rectToFitSelected,
-                                ge.ChangeCoordinatesTo(ContentContainer, ge.Rect()));
-                        }
-                    }
-                    else if (!reachedFirstSelected) // Don't bother if we already have at least one selected item
-                    {
-                        if (!reachedFirstUnselected)
-                        {
-                            rectToFitUnselected = ge.ChangeCoordinatesTo(ContentContainer, ge.Rect());
-                            reachedFirstUnselected = true;
-                        }
-                        else
-                        {
-                            rectToFitUnselected = RectUtils.Encompass(rectToFitUnselected,
-                                ge.ChangeCoordinatesTo(ContentContainer, ge.Rect()));
-                        }
-                    }
-                }
-
-                // Use selection only if possible, otherwise unselected. Failing both, use original content container rect
-                Vector3 frameScaling;
-                Vector3 frameTranslation;
-                if (reachedFirstSelected)
-                {
-                    CalculateFrameTransform(rectToFitSelected, layout, GraphViewConstants.FrameBorder, out frameTranslation,
-                        out frameScaling);
-                }
-                else if (reachedFirstUnselected)
-                {
-                    CalculateFrameTransform(rectToFitUnselected, layout, GraphViewConstants.FrameBorder, out frameTranslation,
-                        out frameScaling);
-                }
-                else
-                {
-                    // Note: rectToFitSelected will just be the container rect
-                    CalculateFrameTransform(rectToFitSelected, layout, GraphViewConstants.FrameBorder, out frameTranslation,
-                        out frameScaling);
-                }
-
-                // Update transform
-                UpdateViewTransform(frameTranslation, frameScaling);
+                bounds = ContentContainer.layout;
             }
-        }
 
-        private float ZoomRequiredToFrameRect(Rect rectToFit, Rect clientRect, int border)
-        {
-            Rect screenRect = new() { xMin = border, xMax = clientRect.width - border, yMin = border, yMax = clientRect.height - border };
-            Rect identity = GUIUtility.ScreenToGUIRect(screenRect);
-            return Math.Min(identity.width / rectToFit.width, identity.height / rectToFit.height);
-        }
-
-        private void CalculateFrameTransform(Rect rectToFit, Rect clientRect, int border, out Vector3 frameTranslation, out Vector3 frameScaling)
-        {
-            float zoomLevel = ZoomRequiredToFrameRect(rectToFit, clientRect, border);
-
-            zoomLevel = Mathf.Clamp(zoomLevel, MinScale, MaxScale);
-
-            Matrix4x4 transformMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new(zoomLevel, zoomLevel, 1.0f));
-            Vector2 edge = new(clientRect.width, clientRect.height);
-            Vector2 origin = new(0, 0);
-
-            Rect r = new() { min = origin, max = edge };
-
-            Vector3 parentScale = new(transformMatrix.GetColumn(0).magnitude, transformMatrix.GetColumn(1).magnitude, transformMatrix.GetColumn(2).magnitude);
-            Vector2 offset = r.center - rectToFit.center * parentScale.x;
-
-            frameTranslation = new(offset.x, offset.y, 0.0f);
-            frameScaling = parentScale;
+            float zoom = Mathf.Min((layout.width - 2 * FRAME_BORDER) / bounds.width, (layout.height - 2 * FRAME_BORDER) / bounds.height);
+            zoom = Mathf.Clamp(zoom, MinScale, MaxScale);
+            SetViewTransform(layout.size / 2 - bounds.center * zoom, zoom);
         }
         #endregion
 
         #region Context Menus
         private void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
-            VisualElement picked = evt.triggerEvent?.target as VisualElement ?? evt.target as VisualElement;
-            GraphElement element = picked as GraphElement ?? picked?.GetFirstAncestorOfType<GraphElement>();
+            VisualElement picked = evt.triggerEvent?.target as VisualElement;
+            if (picked == null)
+            {
+                picked = evt.target as VisualElement;
+            }
+
+            GraphElement element = picked as GraphElement;
+            if (element == null && picked != null)
+            {
+                element = picked.GetFirstAncestorOfType<GraphElement>();
+            }
+
             if (element != null)
             {
                 element.BuildContextMenu(evt, this);
@@ -999,26 +703,11 @@ namespace Soup.Editor.Views
             Vector2 screenPosition = GUIUtility.GUIToScreenPoint(panelPosition);
 
             evt.menu.AppendAction(GraphShortcuts.WithHint("Create Node", GraphShortcuts.CREATE_NODE), _ => OpenNodeSearch(screenPosition, panelPosition, null));
-
             evt.menu.AppendAction(GraphShortcuts.WithHint("Create Group", GraphShortcuts.GROUP_SELECTION), _ => CreateGroup(panelPosition));
-
-            evt.menu.AppendAction(GraphShortcuts.WithHint("Paste", GraphShortcuts.EDIT_PASTE), _ =>
-                PasteFromClipboard(panelPosition), GraphClipboard.HasClipboardContent ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-            
+            evt.menu.AppendAction(GraphShortcuts.WithHint("Paste", GraphShortcuts.EDIT_PASTE), _ => PasteFromClipboard(panelPosition), GraphClipboard.HasClipboardContent ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
             evt.menu.AppendSeparator();
-            
-            evt.menu.AppendAction("Ping FlowGraph", _ =>
-            {
-                // if (m_state is { IsLoaded: true })
-                // {
-                //     EditorGUIUtility.PingObject(m_state.GraphAsset);
-                // }
-            });
-            
-            evt.menu.AppendAction(GraphShortcuts.WithHint("Frame", GraphShortcuts.EDIT_FRAME), _ => { Frame(); });
-
+            evt.menu.AppendAction(GraphShortcuts.WithHint("Frame", GraphShortcuts.EDIT_FRAME), _ => Frame());
             evt.menu.AppendAction(GraphShortcuts.WithHint("Show MiniMap", GraphShortcuts.TOGGLE_MINIMAP), _ => MiniMapVisible = !MiniMapVisible, MiniMapVisible ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
-
             evt.menu.AppendAction("Snap to Grid", _ => SnapToGrid = !SnapToGrid, SnapToGrid ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
         }
 
@@ -1028,7 +717,7 @@ namespace Soup.Editor.Views
         public void AddGraphElement(GraphElement graphElement)
         {
             graphElement.Graph = this;
-            AddToViewLayer(graphElement);
+            GetViewLayer(graphElement.Layer).Add(graphElement);
             NotifyContentChanged();
         }
 
@@ -1040,61 +729,19 @@ namespace Soup.Editor.Views
         }
 
         internal void NotifyContentChanged() => OnContentChanged?.Invoke();
+        #endregion
 
-        public void IlluminateCompatiblePorts(PortView port)
-        {
-            foreach (PortView otherPort in ContentContainer.Ports)
-            {
-                otherPort.Dimmed = !port.CanConnectTo(otherPort);
-            }
-        }
-
-        public void IlluminateAllPorts()
-        {
-            foreach (PortView otherPort in ContentContainer.Ports)
-            {
-                otherPort.Dimmed = false;
-            }
-        }
-        
+        #region Node Search
         internal void OpenNodeSearchAtMouse() => OpenNodeSearch(m_mousePosition);
 
-        private void OpenNodeSearch(Vector2 panelPosition, PendingPortConnection? pending = null)
+        internal void OpenNodeSearch(Vector2 panelPosition, PendingPortConnection? pending = null)
         {
             OpenNodeSearch(GUIUtility.GUIToScreenPoint(panelPosition), panelPosition, pending);
         }
+
         private void OpenNodeSearch(Vector2 screenPosition, Vector2 panelPosition, PendingPortConnection? pending)
         {
             NodeSearchWindow.Open(screenPosition, GraphType, nodeType => CreateNode(nodeType, panelPosition, pending));
-        }
-        #endregion
-
-        #region Helpers
-        public bool MiniMapVisible
-        {
-            get
-            {
-                if (m_miniMapElement == null)
-                {
-                    return false;
-                }
-                return m_miniMapElement.style.display != DisplayStyle.None; // Unset reads as visible: the inline display only matches Flex once assigned.
-            }
-            set
-            {
-                if (MiniMapVisible == value)
-                {
-                    return;
-                }
-
-                m_miniMapElement.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
-                OnMiniMapVisibilityChanged?.Invoke(value);
-            }
-        }
-        
-        public List<GraphElement> GetGroupContents(GroupView group)
-        {
-            return ContentContainer.GetGroupContents(group);
         }
         #endregion
     }

@@ -26,8 +26,6 @@ namespace Soup.Editor.Views
         private VisualElement m_leftPanel;
         private VisualElement m_rightPanel;
         private Toolbar m_toolbar;
-        private ToolbarToggle m_snapToGridToggle;
-        private ToolbarToggle m_miniMapToggle;
 
         private GraphViewObserver m_observer;
         private GraphView m_graphView;
@@ -50,15 +48,11 @@ namespace Soup.Editor.Views
 
             m_graphView.OnCommandRequested += HandleCommandRequested;
             m_graphView.OnCommandBatchRequested += HandleCommandBatchRequested;
-            m_graphView.OnViewTransformChanged += _ => SaveViewTransformState();
+            m_graphView.OnViewTransformChanged += SaveViewTransformState;
             m_graphView.MiniMapVisible = m_state.MiniMapIsVisible;
             m_graphView.OnMiniMapVisibilityChanged += HandleMiniMapVisibilityChanged;
-            m_miniMapToggle.SetValueWithoutNotify(m_graphView.MiniMapVisible);
-            m_miniMapToggle.RegisterValueChangedCallback(HandleMiniMapToggleChanged);
             m_graphView.SnapToGrid = m_state.SnapToGridIsEnabled;
             m_graphView.OnSnapToGridChanged += HandleSnapToGridChanged;
-            m_snapToGridToggle.SetValueWithoutNotify(m_graphView.SnapToGrid);
-            m_snapToGridToggle.RegisterValueChangedCallback(HandleSnapToGridToggleChanged);
 
             m_observer = new GraphViewObserver(m_state, m_graphView);
             m_observer.OnFlowGraphReloaded += m_inspectorView.Refresh;
@@ -96,12 +90,6 @@ namespace Soup.Editor.Views
 
             m_breadcrumbsView = new BreadcrumbsView(HandleBreadcrumbClicked);
             m_toolbar.Add(m_breadcrumbsView);
-
-            m_toolbar.Add(new ToolbarSpacer { flex = true });
-            m_snapToGridToggle = new ToolbarToggle { text = "Snap to Grid", tooltip = "Snap nodes and groups to the grid" };
-            m_toolbar.Add(m_snapToGridToggle);
-            m_miniMapToggle = new ToolbarToggle { text = "Show MiniMap", tooltip = GraphShortcuts.WithHint("Show MiniMap", GraphShortcuts.TOGGLE_MINIMAP) };
-            m_toolbar.Add(m_miniMapToggle);
         }
 
         public void Dispose()
@@ -124,9 +112,7 @@ namespace Soup.Editor.Views
             m_observer.Dispose();
             m_observer = null;
 
-            m_miniMapToggle.UnregisterValueChangedCallback(HandleMiniMapToggleChanged);
             m_graphView.OnMiniMapVisibilityChanged -= HandleMiniMapVisibilityChanged;
-            m_snapToGridToggle.UnregisterValueChangedCallback(HandleSnapToGridToggleChanged);
             m_graphView.OnSnapToGridChanged -= HandleSnapToGridChanged;
             m_leftPanel.Remove(m_graphView);
             m_graphView = null;
@@ -259,23 +245,11 @@ namespace Soup.Editor.Views
         private void HandleMiniMapVisibilityChanged(bool visible)
         {
             m_state.MiniMapIsVisible = visible;
-            m_miniMapToggle.SetValueWithoutNotify(visible);
         }
-
-        private void HandleMiniMapToggleChanged(ChangeEvent<bool> evt)
-        {
-            m_graphView.MiniMapVisible = evt.newValue;
-        }
-
+        
         private void HandleSnapToGridChanged(bool enabled)
         {
             m_state.SnapToGridIsEnabled = enabled;
-            m_snapToGridToggle.SetValueWithoutNotify(enabled);
-        }
-
-        private void HandleSnapToGridToggleChanged(ChangeEvent<bool> evt)
-        {
-            m_graphView.SnapToGrid = evt.newValue;
         }
 
         private void LoadViewTransformState()
@@ -287,7 +261,7 @@ namespace Soup.Editor.Views
 
             if (m_state.TryGetCurrentViewTransformState(out Vector2 position, out float scale))
             {
-                m_graphView.UpdateViewTransform(position, new Vector3(scale, scale, 1f));
+                m_graphView.SetViewTransform(position, scale);
             }
             else
             {
@@ -302,7 +276,7 @@ namespace Soup.Editor.Views
                 return;
             }
 
-            m_state.SaveViewTransformState(m_graphView.GetViewTransformPosition(), m_graphView.CurrentScale);
+            m_state.SaveViewTransformState(m_graphView.ViewPosition, m_graphView.ViewScale);
         }
     }
 }

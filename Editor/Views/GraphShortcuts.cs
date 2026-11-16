@@ -58,10 +58,10 @@ namespace Soup.Editor.Views
         private static void GroupSelection() => Run(graph => graph.GroupSelection());
 
         [Shortcut(DELETE_SELECTION, typeof(GraphShortcutContext), KeyCode.Delete)]
-        private static void DeleteSelection() => Run(graph => graph.RequestDeleteSelection());
+        private static void DeleteSelection() => Run(graph => graph.DeleteSelection());
 
         [Shortcut(DELETE_SELECTION_BACKSPACE, typeof(GraphShortcutContext), KeyCode.Backspace)]
-        private static void DeleteSelectionBackspace() => Run(graph => graph.RequestDeleteSelection());
+        private static void DeleteSelectionBackspace() => Run(graph => graph.DeleteSelection());
 
         private static void Run(Action<GraphView> action)
         {

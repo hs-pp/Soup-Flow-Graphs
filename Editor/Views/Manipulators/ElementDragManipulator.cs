@@ -10,14 +10,26 @@ namespace Soup.Editor.Views.Manipulators
 {
     public class ElementDragManipulator : Manipulator
     {
+        private const float PAN_AREA_WIDTH = 100f;
+        private const float PAN_SPEED = 4f;
+        private const float MAX_PAN_SPEED = 2.5f * PAN_SPEED;
+        private const int PAN_INTERVAL = 10;
+
         private readonly GraphView m_graphView;
+        private readonly IVisualElementScheduledItem m_panSchedule;
         private DragGesture m_gesture;
         private bool m_begun;
         private bool m_keepPositionsOnCancel;
+        private Vector2 m_panOriginDiff;
 
         public ElementDragManipulator(GraphView graphView)
         {
             m_graphView = graphView;
+            m_panSchedule = graphView.schedule
+                .Execute(Pan)
+                .Every(PAN_INTERVAL)
+                .StartingIn(PAN_INTERVAL);
+            m_panSchedule.Pause();
         }
 
         protected override void RegisterCallbacksOnTarget()
@@ -97,7 +109,7 @@ namespace Soup.Editor.Views.Manipulators
             m_begun = true;
             if (m_gesture.PansView)
             {
-                m_graphView.StartPan();
+                StartPan();
             }
         }
 
@@ -121,7 +133,7 @@ namespace Soup.Editor.Views.Manipulators
             if (m_begun)
             {
                 // Only a cancel scrolls the view back.
-                m_graphView.StopPan(false);
+                StopPan(false);
 
                 if (m_gesture.IsStale())
                 {
@@ -140,7 +152,7 @@ namespace Soup.Editor.Views.Manipulators
         {
             e.StopImmediatePropagation();
 
-            m_graphView.StopPan(true);
+            StopPan(true);
             if (m_begun)
             {
                 m_gesture.Cancel(m_keepPositionsOnCancel);
@@ -158,8 +170,66 @@ namespace Soup.Editor.Views.Manipulators
         #endregion
 
         #region Auto-Pan
-        internal Vector2 PanAnchor => m_gesture.Dragged.GetGlobalCenter();
-        internal void ApplyPanDelta(Vector2 delta) => m_gesture.ApplyPanDelta(delta);
+        /// <summary>
+        /// Auto-pans while the dragged element nears the edges of the view, until StopPan.
+        /// </summary>
+        private void StartPan()
+        {
+            m_panOriginDiff = Vector2.zero;
+            m_panSchedule.Resume();
+        }
+
+        private void StopPan(bool resetView)
+        {
+            if (!m_panSchedule.isActive)
+            {
+                return;
+            }
+
+            m_panSchedule.Pause();
+            if (resetView)
+            {
+                m_graphView.SetViewTransform(m_graphView.ViewPosition + m_panOriginDiff, m_graphView.ViewScale);
+            }
+        }
+
+        /// <summary>
+        /// The pan speed along one axis of the given length: zero outside the pan areas, PAN_SPEED at the edge,
+        /// and faster past it.
+        /// </summary>
+        private static float GetPanSpeed(float position, float length)
+        {
+            if (position <= PAN_AREA_WIDTH)
+            {
+                return -(PAN_AREA_WIDTH - position) / PAN_AREA_WIDTH * PAN_SPEED;
+            }
+
+            if (position >= length - PAN_AREA_WIDTH)
+            {
+                return (position - (length - PAN_AREA_WIDTH)) / PAN_AREA_WIDTH * PAN_SPEED;
+            }
+
+            return 0f;
+        }
+
+        private void Pan()
+        {
+            // The pan areas are measured from the view's own edges, not the window's.
+            Vector2 position = m_graphView.WorldToLocal(m_gesture.Dragged.GetGlobalCenter());
+            Vector2 size = m_graphView.layout.size;
+            Vector2 speed = new(GetPanSpeed(position.x, size.x), GetPanSpeed(position.y, size.y));
+            speed = Vector2.ClampMagnitude(speed, MAX_PAN_SPEED);
+            if (Vector2.zero == speed)
+            {
+                return;
+            }
+
+            m_panOriginDiff += speed;
+
+            float scale = m_graphView.ViewScale;
+            m_graphView.SetViewTransform(m_graphView.ViewPosition - speed, scale);
+            m_gesture.ApplyPanDelta(speed / scale);
+        }
         #endregion
     }
 }

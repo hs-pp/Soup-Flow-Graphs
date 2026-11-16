@@ -81,6 +81,13 @@ namespace Soup.Editor.Views
             }
         }
 
+        /** Lit while dragged edges are over this port and can all connect to it. */
+        internal bool IsDropTarget
+        {
+            get => ClassListContains(DROP_TARGET_CLASS);
+            set => EnableInClassList(DROP_TARGET_CLASS, value);
+        }
+
         public event Action<VisualElement> OnPositionChanged;
 
         static PortView()
@@ -210,31 +217,14 @@ namespace Soup.Editor.Views
 
         public Vector2 GetGlobalCenter() => m_connectorBox.LocalToWorld(m_connectorBox.layout.size / 2f);
 
-        [EventInterest(typeof(DragOfferEvent), typeof(DropEnterEvent), typeof(DropEvent), typeof(DropExitEvent))]
+        [EventInterest(typeof(DragOfferEvent))]
         protected override void HandleEventBubbleUp(EventBase evt)
         {
             base.HandleEventBubbleUp(evt);
 
-            if (evt.target != this)
-            {
-                return;
-            }
-
-            if (evt.eventTypeId == DragOfferEvent.TypeId())
+            if (evt.target == this && evt.eventTypeId == DragOfferEvent.TypeId())
             {
                 OnDragOffer((DragOfferEvent)evt);
-            }
-            else if (evt.eventTypeId == DropEnterEvent.TypeId())
-            {
-                OnDropEnter((DropEnterEvent)evt);
-            }
-            else if (evt.eventTypeId == DropEvent.TypeId())
-            {
-                OnDrop((DropEvent)evt);
-            }
-            else if (evt.eventTypeId == DropExitEvent.TypeId())
-            {
-                OnDropExit((DropExitEvent)evt);
             }
         }
 
@@ -260,38 +250,7 @@ namespace Soup.Editor.Views
             return edge;
         }
 
-        private void OnDropEnter(DropEnterEvent e)
-        {
-            if (e.GetUserData() is EdgeDragGesture edgeDrag)
-            {
-                e.StopImmediatePropagation();
-                if (CanConnectAll(edgeDrag))
-                {
-                    AddToClassList(DROP_TARGET_CLASS);
-                }
-            }
-        }
-
-        private void OnDrop(DropEvent e)
-        {
-            if (e.GetUserData() is EdgeDragGesture edgeDrag)
-            {
-                e.StopImmediatePropagation();
-                RemoveFromClassList(DROP_TARGET_CLASS);
-                ConnectDraggedEdges(e, edgeDrag);
-            }
-        }
-
-        private void OnDropExit(DropExitEvent e)
-        {
-            if (e.GetUserData() is EdgeDragGesture)
-            {
-                e.StopImmediatePropagation();
-                RemoveFromClassList(DROP_TARGET_CLASS);
-            }
-        }
-
-        private bool CanConnectAll(EdgeDragGesture edgeDrag)
+        internal bool CanConnectAll(EdgeDragGesture edgeDrag)
         {
             foreach (EdgeView edge in edgeDrag.Edges)
             {
@@ -304,7 +263,7 @@ namespace Soup.Editor.Views
             return true;
         }
 
-        private void ConnectDraggedEdges(DropEvent e, EdgeDragGesture edgeDrag)
+        internal void ConnectDraggedEdges(EdgeDragGesture edgeDrag)
         {
             List<EdgeView> movedEdges = new();
             List<IGraphCommand> commands = new();
@@ -313,7 +272,6 @@ namespace Soup.Editor.Views
                 PortView anchoredPort = edgeDrag.GetAnchoredPort(edge);
                 if (!CanConnectTo(anchoredPort))
                 {
-                    e.CancelDrag();
                     return;
                 }
 
@@ -333,7 +291,6 @@ namespace Soup.Editor.Views
                 // An output port must carry an outport id for the model to address it.
                 if (outputPort.OutportId == null)
                 {
-                    e.CancelDrag();
                     return;
                 }
 
@@ -357,7 +314,6 @@ namespace Soup.Editor.Views
 
             if (movedEdges.Count == 0)
             {
-                e.CancelDrag();
                 return;
             }
 

@@ -59,7 +59,7 @@ namespace Soup.Editor.Views.Edges
             }
 
             // Wide enough for the hit band, not just the line, since UI Toolkit only picks inside an element's bounds.
-            float margin = Mathf.Max(INTERCEPT_WIDTH, MIN_EDGE_WIDTH / edge.Graph.CurrentScale);
+            float margin = Mathf.Max(INTERCEPT_WIDTH, MIN_EDGE_WIDTH / edge.Graph.ViewScale);
             edge.SetRenderBounds(new Rect(min.x - margin, min.y - margin, max.x - min.x + margin * 2, max.y - min.y + margin * 2));
         }
 
@@ -79,7 +79,7 @@ namespace Soup.Editor.Views.Edges
 
             UpdateLocalPoints(edge);
 
-            float scale = edge.Graph.CurrentScale;
+            float scale = edge.Graph.ViewScale;
             float width = EDGE_WIDTH;
             float alpha = 1f;
             if (width * scale < MIN_EDGE_WIDTH)

@@ -14,7 +14,7 @@ namespace Soup.Editor.Views.Nodes
 {
     public abstract class BaseNodeView : GraphElement
     {
-        private const float WIDTH_PROBE_BASIS = GraphViewConstants.DefaultSnapStep - 0.05f;
+        private const float WIDTH_PROBE_BASIS = GraphView.SNAP_STEP - 0.05f;
 
         public override int Layer => 0;
 
@@ -231,7 +231,7 @@ namespace Soup.Editor.Views.Nodes
 
         private void ApplyWidthLimits()
         {
-            float step = GraphViewConstants.DefaultSnapStep;
+            float step = GraphView.SNAP_STEP;
             float minWidth = Mathf.Max(0f, MinWidth);
             m_root.style.minWidth = minWidth;
 
@@ -261,7 +261,7 @@ namespace Soup.Editor.Views.Nodes
                 return;
             }
 
-            const float step = GraphViewConstants.DefaultSnapStep;
+            const float step = GraphView.SNAP_STEP;
             m_snappedWidth = Mathf.Ceil(contentWidth / step - 0.01f) * step; // Tolerance must exceed the probe's shortfall.
             style.minWidth = m_snappedWidth;
             m_widthProbe.style.flexBasis = Length.Percent(WIDTH_PROBE_BASIS / m_snappedWidth * 100f);

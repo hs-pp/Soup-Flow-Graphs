@@ -113,24 +113,19 @@ namespace Soup.Editor.Views.Manipulators
                 return;
             }
 
-            Vector3 position = graphView.GetViewTransformPosition();
-            Vector3 scale = graphView.GetViewTransformScale();
+            Vector2 position = graphView.ViewPosition;
+            float scale = graphView.ViewScale;
 
-            Vector2 zoomCenter = target.ChangeCoordinatesTo(graphView.ContentContainer, evt.localMousePosition);
-            float x = zoomCenter.x + graphView.ContentContainer.layout.x;
-            float y = zoomCenter.y + graphView.ContentContainer.layout.y;
+            Vector2 zoomCenter = target.ChangeCoordinatesTo(graphView.ContentContainer, evt.localMousePosition) + graphView.ContentContainer.layout.position;
 
-            position += Vector3.Scale(new(x, y, 0), scale);
+            position += zoomCenter * scale;
 
             // Apply the new zoom.
-            float zoom = CalculateNewZoom(scale.y, -evt.delta.y, ScaleStep, ReferenceScale, MinScale, MaxScale);
-            scale.x = zoom;
-            scale.y = zoom;
-            scale.z = 1;
+            float zoom = CalculateNewZoom(scale, -evt.delta.y, ScaleStep, ReferenceScale, MinScale, MaxScale);
 
-            position -= Vector3.Scale(new(x, y, 0), scale);
+            position -= zoomCenter * zoom;
 
-            graphView.UpdateViewTransform(position, scale);
+            graphView.SetViewTransform(position, zoom);
 
             evt.StopPropagation();
         }

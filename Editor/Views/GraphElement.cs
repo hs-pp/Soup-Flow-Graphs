@@ -131,7 +131,7 @@ namespace Soup.Editor.Views
         {
             if (graph != null && graph.IsViewDrag(e))
             {
-                graph.OnDragOffer(e, true);
+                graph.OnDragOffer(e);
             }
             else if (canDrag && (MouseButton)e.button == MouseButton.LeftMouse && e.modifiers.IsNone())
             {

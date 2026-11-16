@@ -34,10 +34,3 @@
 .conditionalInspectorAddButton {
     align-self: flex-end;
 }
-
-.conditionalInspectorElseNote {
-    -unity-font-style: italic;
-    color: rgb(153, 153, 153);
-    margin-left: 3px;
-    margin-top: 2px;
-}

@@ -254,9 +254,7 @@ namespace Soup.Editor.Core
         private void HandleUndoRedoPerformed()
         {
             ClearExternalEdits(); // An undo flushes held-back writes just before it runs, and the reload covers them.
-            RefreshSerializedObjects();
-            m_workingChangeSet.Clear();
-            OnFlowGraphReloaded?.Invoke();
+            Reload(validate: false);
         }
 
         private bool ApplyGraphChanges() => IsGraphAlive && m_serializedGraph.ApplyModifiedProperties();

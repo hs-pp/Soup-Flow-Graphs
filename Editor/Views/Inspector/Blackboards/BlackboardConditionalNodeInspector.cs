@@ -20,7 +20,6 @@ namespace Soup.Editor.Views.Inspector.Blackboards
         private const string ENTRY_LABEL_CLASS = "conditionalInspectorEntryLabel";
         private const string ENTRY_BUTTON_CLASS = "conditionalInspectorEntryButton";
         private const string ADD_BUTTON_CLASS = "conditionalInspectorAddButton";
-        private const string ELSE_NOTE_CLASS = "conditionalInspectorElseNote";
 
         protected override bool UseDefaultHeader => true;
 
@@ -58,10 +57,6 @@ namespace Soup.Editor.Views.Inspector.Blackboards
             m_addButton = new Button(HandleAddClicked) { text = "Add Condition" };
             m_addButton.AddToClassList(ADD_BUTTON_CLASS);
             layout.Add(m_addButton);
-
-            Label elseNote = new("Else is taken when no condition holds.");
-            elseNote.AddToClassList(ELSE_NOTE_CLASS);
-            layout.Add(elseNote);
             return layout;
         }
 

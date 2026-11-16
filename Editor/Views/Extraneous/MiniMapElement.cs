@@ -69,7 +69,7 @@ namespace Soup.Editor.Views.Extraneous
             RegisterCallback<MouseUpEvent>(StopPropagation);
 
             // Repaint triggers
-            graphView.OnViewTransformChanged += _ => RequestRepaint();
+            graphView.OnViewTransformChanged += RequestRepaint;
             graphView.OnContentChanged += RequestRepaint;
             graphView.RegisterCallback<GeometryChangedEvent>(_ => RequestRepaint());
         }
@@ -144,14 +144,14 @@ namespace Soup.Editor.Views.Extraneous
         private bool TryGetViewportRect(out Rect viewport)
         {
             Vector2 size = m_graphView.layout.size;
-            float scale = m_graphView.CurrentScale;
+            float scale = m_graphView.ViewScale;
             if (float.IsNaN(size.x) || float.IsNaN(size.y) || size.x <= 0f || size.y <= 0f || scale <= 0f)
             {
                 viewport = default;
                 return false;
             }
 
-            viewport = new Rect(-(Vector2)m_graphView.GetViewTransformPosition() / scale, size / scale);
+            viewport = new Rect(-m_graphView.ViewPosition / scale, size / scale);
             return true;
         }
 
@@ -314,13 +314,13 @@ namespace Soup.Editor.Views.Extraneous
 
         private void CenterViewportOn(Vector2 miniMapPosition)
         {
-            CenterView(ToContent(miniMapPosition), m_graphView.CurrentScale);
+            CenterView(ToContent(miniMapPosition), m_graphView.ViewScale);
         }
 
         private void CenterView(Vector2 contentPosition, float scale)
         {
             Vector2 translation = m_graphView.layout.size * 0.5f - contentPosition * scale;
-            m_graphView.UpdateViewTransform(translation, new(scale, scale, 1f));
+            m_graphView.SetViewTransform(translation, scale);
         }
 
         private void OnWheel(WheelEvent evt)
@@ -332,7 +332,7 @@ namespace Soup.Editor.Views.Extraneous
                 return;
             }
 
-            float zoom = ZoomManipulator.CalculateNewZoom(m_graphView.CurrentScale, -evt.delta.y, m_graphView.ScaleStep, m_graphView.ReferenceScale, m_graphView.MinScale, m_graphView.MaxScale);
+            float zoom = ZoomManipulator.CalculateNewZoom(m_graphView.ViewScale, -evt.delta.y, m_graphView.ScaleStep, m_graphView.ReferenceScale, m_graphView.MinScale, m_graphView.MaxScale);
             CenterView(viewport.center, zoom);
         }
 

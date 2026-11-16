@@ -47,7 +47,7 @@ namespace Soup.Editor.Views.Manipulators.Gestures
 
         public override void Drag(DragEvent e)
         {
-            MoveBy(e.mouseDelta / Graph.CurrentScale);
+            MoveBy(e.mouseDelta / Graph.ViewScale);
         }
 
         public override void ApplyPanDelta(Vector2 delta)

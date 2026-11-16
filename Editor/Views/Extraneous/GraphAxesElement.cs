@@ -123,15 +123,13 @@ namespace Soup.Editor.Views.Extraneous
 
         private void OnAttachToPanel(AttachToPanelEvent evt)
         {
-            m_graphView.OnViewTransformChanged += OnViewTransformChanged;
+            m_graphView.OnViewTransformChanged += Refresh;
         }
 
         private void OnDetachFromPanel(DetachFromPanelEvent evt)
         {
-            m_graphView.OnViewTransformChanged -= OnViewTransformChanged;
+            m_graphView.OnViewTransformChanged -= Refresh;
         }
-
-        private void OnViewTransformChanged(GraphElementContainer contentContainer) => Refresh();
 
         private void OnGeometryChanged(GeometryChangedEvent evt) => Refresh();
 
@@ -156,8 +154,8 @@ namespace Soup.Editor.Views.Extraneous
             }
 
             Vector2 size = contentRect.size;
-            float scale = m_graphView.GetViewTransformScale().x;
-            Vector2 translate = m_graphView.GetViewTransformPosition();
+            float scale = m_graphView.ViewScale;
+            Vector2 translate = m_graphView.ViewPosition;
             Vector2 offset = m_graphView.ContentContainer.layout.position;
 
             if (!float.IsFinite(size.x) || !float.IsFinite(size.y) || size.x <= 0f || size.y <= 0f || !float.IsFinite(scale) || scale <= 0f || !float.IsFinite(translate.x) || !float.IsFinite(translate.y))

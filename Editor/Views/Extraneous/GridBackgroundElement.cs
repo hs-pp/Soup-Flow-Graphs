@@ -73,16 +73,14 @@ namespace Soup.Editor.Views.Extraneous
         private void OnAttachEvent(AttachToPanelEvent evt)
         {
             // Listen for Zoom/Pan Changes
-            m_graphView.OnViewTransformChanged += RequestRepaint;
+            m_graphView.OnViewTransformChanged += MarkDirtyRepaint;
         }
 
         private void DetachFromPanelEvent(DetachFromPanelEvent evt)
         {
             // Stop Listening for Zoom/Pan Changes
-            m_graphView.OnViewTransformChanged -= RequestRepaint;
+            m_graphView.OnViewTransformChanged -= MarkDirtyRepaint;
         }
-
-        private void RequestRepaint(GraphElementContainer contentContainer) => MarkDirtyRepaint();
 
         private void OnGenerateVisualContent(MeshGenerationContext ctx)
         {
@@ -92,38 +90,36 @@ namespace Soup.Editor.Views.Extraneous
             }
 
             Vector2 size = contentRect.size;
-            Vector2 translate = m_graphView.GetViewTransformPosition();
-            Vector2 scale = m_graphView.GetViewTransformScale();
+            Vector2 translate = m_graphView.ViewPosition;
+            float scale = m_graphView.ViewScale;
             Vector2 offset = m_graphView.ContentContainer.layout.position;
 
             // Screen-space position of the graph origin, so dots stay aligned to it while panning.
             Vector2 origin = offset * scale + translate;
 
             // Dots shrink with zoom, down to a floor that keeps them visible when fully zoomed out.
-            float dotSize = Mathf.Max(m_minDotSize, m_dotSize * scale.x);
+            float dotSize = Mathf.Max(m_minDotSize, m_dotSize * scale);
 
             float minScreenSpacing = Mathf.Max(m_minDotSpacing, dotSize * 2f);
-            float stepX = m_spacing * scale.x;
-            float stepY = m_spacing * scale.y;
-            if (stepX <= 0f || stepY <= 0f)
+            float step = m_spacing * scale;
+            if (step <= 0f)
             {
                 return;
             }
 
-            while (Mathf.Min(stepX, stepY) < minScreenSpacing)
+            while (step < minScreenSpacing)
             {
-                stepX *= 2f;
-                stepY *= 2f;
+                step *= 2f;
             }
 
             float halfSize = dotSize * 0.5f;
-            float firstX = FirstDotPosition(origin.x, stepX, halfSize);
-            float firstY = FirstDotPosition(origin.y, stepY, halfSize);
-            int columns = Mathf.CeilToInt((size.x + halfSize - firstX) / stepX);
-            int rows = Mathf.CeilToInt((size.y + halfSize - firstY) / stepY);
+            float firstX = FirstDotPosition(origin.x, step, halfSize);
+            float firstY = FirstDotPosition(origin.y, step, halfSize);
+            int columns = Mathf.CeilToInt((size.x + halfSize - firstX) / step);
+            int rows = Mathf.CeilToInt((size.y + halfSize - firstY) / step);
 
-            int originColumn = Mathf.RoundToInt((origin.x - firstX) / stepX);
-            int originRow = Mathf.RoundToInt((origin.y - firstY) / stepY);
+            int originColumn = Mathf.RoundToInt((origin.x - firstX) / step);
+            int originRow = Mathf.RoundToInt((origin.y - firstY) / step);
             bool skipColumn = originColumn >= 0 && originColumn < columns;
             bool skipRow = originRow >= 0 && originRow < rows;
             int drawnColumns = skipColumn ? columns - 1 : columns;
@@ -157,8 +153,8 @@ namespace Soup.Editor.Views.Extraneous
                         row++;
                     }
 
-                    float x = firstX + column * stepX - halfSize;
-                    float y = firstY + row * stepY - halfSize;
+                    float x = firstX + column * step - halfSize;
+                    float y = firstY + row * step - halfSize;
                     float left = Mathf.Floor(x * pixelsPerPoint + 0.5f) / pixelsPerPoint;
                     float top = Mathf.Floor(y * pixelsPerPoint + 0.5f) / pixelsPerPoint;
                     float right = left + snappedSize;

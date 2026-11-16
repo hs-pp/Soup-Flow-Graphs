@@ -10,14 +10,10 @@ using Soup.Runtime.BuiltInNodes;
 using UnityEditor;
 using UnityEngine.Serialization;
 
-// Claude generated.
 namespace Soup.Editor.Core
 {
     /// <summary>
-    /// External edits are writes made outside a command: inspector bindings, IMGUI drawers, Unity's own Inspector. Unity reports
-    /// every undoable write through Undo.postprocessModifications, once per write however many windows show the graph. Each one is
-    /// reduced to node ids and flags as it arrives, while its managed reference still resolves, and handled on the next editor tick,
-    /// since the callback runs in the middle of the write.
+    /// External edits are writes made outside a command: inspector bindings, IMGUI drawers, Unity's own Inspector.
     /// </summary>
     public partial class LoadedFlowGraph
     {
@@ -36,17 +32,18 @@ namespace Soup.Editor.Core
         private const string GRAPH_BLACKBOARD_PREFIX = AFlowGraph.BLACKBOARD_FIELD_NAME + ".";
         private const string BLACKBOARD_VALUE_PREFIX = ABlackboardVariable.VALUE_FIELD_NAME + ".";
         private const string GRAPH_SUBGRAPH_PREFIX = SubGraphNode.SUBGRAPH_FIELD_NAME + ".";
-        private const string METADATA_ROOT_PREFIX = FlowGraphMetaData.ROOT_COLLECTION_FIELD_NAME + ".";
-        private const string METADATA_SUBGRAPH_PREFIX = SubGraphNodeMetaData.SUBGRAPH_FIELD_NAME + ".";
-        private const string METADATA_GROUPS_PREFIX = NodeCollectionMetaData.GROUPS_FIELD_NAME + ".";
+        private const string META_DATA_ROOT_PREFIX = FlowGraphMetaData.ROOT_COLLECTION_FIELD_NAME + ".";
+        private const string META_DATA_SUBGRAPH_PREFIX = SubGraphNodeMetaData.SUBGRAPH_FIELD_NAME + ".";
+        private const string META_DATA_GROUPS_PREFIX = NodeCollectionMetaData.GROUPS_FIELD_NAME + ".";
 
         private readonly HashSet<string> m_externalNodeEdits = new();
         private readonly HashSet<string> m_externalMetaDataEdits = new();
         private bool m_externalGroupsEdited;
         private bool m_externalBlackboardEdited;
         private bool m_externalStructureEdited;
-        private bool m_isExternalEditProcessingScheduled;
-        private Dictionary<long, string> m_nestedReferenceOwners; // Node id by reference id, built when one batch first needs it.
+
+        /** Node id by reference id for references nested inside a node.*/
+        private Dictionary<long, string> m_nestedReferenceOwners;
 
         private UndoPropertyModification[] HandlePostprocessModifications(UndoPropertyModification[] modifications)
         {
@@ -55,10 +52,16 @@ namespace Soup.Editor.Core
                 return modifications;
             }
 
-            m_nestedReferenceOwners = null; // Each batch can follow writes that added or removed references.
+            m_nestedReferenceOwners = null;
+
             foreach (UndoPropertyModification modification in modifications)
             {
-                PropertyModification property = modification.currentValue ?? modification.previousValue;
+                PropertyModification property = modification.currentValue;
+                if (property == null)
+                {
+                    property = modification.previousValue;
+                }
+
                 if (property == null)
                 {
                     continue;
@@ -74,7 +77,7 @@ namespace Soup.Editor.Core
                 }
             }
 
-            return modifications; // A filter hook: anything not returned is dropped from the undo record.
+            return modifications;
         }
 
         private ExternalEditType ClassifyGraphEdit(string path, out string nodeId)
@@ -82,49 +85,41 @@ namespace Soup.Editor.Core
             nodeId = null;
             if (!TrySplitManagedReference(path, out long referenceId, out string localPath))
             {
-                // Outside any node, only the root collection's own lists can change: a node added, removed or swapped.
+                // Outside any node, only the root collection's own lists can change
                 if (path.StartsWith(GRAPH_ROOT_PREFIX, StringComparison.Ordinal))
                 {
                     return ExternalEditType.Structure;
                 }
 
-                // Or the blackboard's variable list: a variable added, removed, reordered or swapped.
+                // Or the blackboard's variable list
                 return path.StartsWith(GRAPH_BLACKBOARD_PREFIX, StringComparison.Ordinal) ? ExternalEditType.Blackboard : ExternalEditType.None;
             }
 
             if (localPath.Length == 0)
             {
-                return ExternalEditType.Structure; // The reference itself changed.
+                return ExternalEditType.Structure; // The reference itself changed
             }
 
             switch (ManagedReferenceUtility.GetManagedReference(GraphAsset, referenceId))
             {
                 case SubGraphNode when localPath.StartsWith(GRAPH_SUBGRAPH_PREFIX, StringComparison.Ordinal):
-                    return ExternalEditType.Structure; // The subgraph's own lists. Its nodes report under their own references.
+                    return ExternalEditType.Structure; // The subgraph's own lists
                 case ANode when localPath == ANode.ID_FIELD_NAME:
-                    return ExternalEditType.Structure; // Views are keyed by id, so only a rebuild finds the node under its new one.
+                    return ExternalEditType.Structure; // Views are keyed by id so only a rebuild finds the node under its new one.
                 case ANode node:
                     nodeId = node.Id;
                     return ExternalEditType.Node;
                 case ABlackboardVariable when localPath == ABlackboardVariable.VALUE_FIELD_NAME || localPath.StartsWith(BLACKBOARD_VALUE_PREFIX, StringComparison.Ordinal):
-                    return ExternalEditType.None; // Default values are plain bindings that nothing on the canvas reads.
+                    return ExternalEditType.None;
                 case ABlackboardVariable:
                     return ExternalEditType.Blackboard; // Its name or id, which node views show and look up.
                 default:
-                    // Graph properties and blackboard values are plain bindings that nothing on the canvas reads, even through a
-                    // reference nested inside them.
-                    if (IsReferenceUnder(AFlowGraph.GRAPH_PROPERTIES_FIELD_NAME, referenceId) || IsReferenceUnder(AFlowGraph.BLACKBOARD_FIELD_NAME, referenceId))
-                    {
-                        return ExternalEditType.None;
-                    }
-
-                    // A reference nested inside a node, like a strategy a node holds, is an edit to that node.
                     if (TryGetNestedReferenceOwner(referenceId, out nodeId))
                     {
                         return ExternalEditType.Node;
                     }
 
-                    return ExternalEditType.Structure; // Swapped out, or nested where nothing leads back to its owner.
+                    return ExternalEditType.Structure;
             }
         }
 
@@ -134,12 +129,11 @@ namespace Soup.Editor.Core
             {
                 m_nestedReferenceOwners = new Dictionary<long, string>();
 
-                // A fresh SerializedObject: this runs in the middle of a write the document's own may not have read back yet.
                 using SerializedObject serializedGraph = new(GraphAsset);
                 CollectNestedReferenceOwners(new NodeCollectionRef(serializedGraph.FindProperty(AFlowGraph.ROOT_COLLECTION_FIELD_NAME)), m_nestedReferenceOwners);
             }
 
-            return m_nestedReferenceOwners.TryGetValue(referenceId, out nodeId) && !string.IsNullOrEmpty(nodeId);
+            return m_nestedReferenceOwners.TryGetValue(referenceId, out nodeId);
         }
 
         private static void CollectNestedReferenceOwners(NodeCollectionRef collection, Dictionary<long, string> owners)
@@ -151,7 +145,6 @@ namespace Soup.Editor.Core
                     continue;
                 }
 
-                // The nodes of a subgraph own what they hold, so the walk skips the subgraph here and recurses into it below.
                 string subGraphPath = nodeRef.NodeSP.propertyPath + "." + SubGraphNode.SUBGRAPH_FIELD_NAME;
                 SerializedProperty iterator = nodeRef.NodeSP.Copy();
                 SerializedProperty endProperty = nodeRef.NodeSP.GetEndProperty();
@@ -174,37 +167,13 @@ namespace Soup.Editor.Core
             }
         }
 
-        private bool IsReferenceUnder(string rootPropertyPath, long referenceId)
-        {
-            SerializedProperty root = IsGraphAlive ? m_serializedGraph.FindProperty(rootPropertyPath) : null;
-            if (root == null)
-            {
-                return false;
-            }
-
-            SerializedProperty iterator = root.Copy();
-            SerializedProperty endProperty = root.GetEndProperty();
-            bool enterChildren = true;
-            while (iterator.Next(enterChildren) && !SerializedProperty.EqualContents(iterator, endProperty))
-            {
-                if (iterator.propertyType == SerializedPropertyType.ManagedReference && iterator.managedReferenceId == referenceId)
-                {
-                    return true;
-                }
-
-                enterChildren = iterator.propertyType is SerializedPropertyType.Generic or SerializedPropertyType.ManagedReference;
-            }
-
-            return false;
-        }
-
         private ExternalEditType ClassifyMetaDataEdit(string path, out string nodeId)
         {
             nodeId = null;
             if (!TrySplitManagedReference(path, out long referenceId, out string localPath))
             {
-                return path.StartsWith(METADATA_ROOT_PREFIX, StringComparison.Ordinal)
-                    ? ClassifyCollectionMetaDataEdit(path.Substring(METADATA_ROOT_PREFIX.Length))
+                return path.StartsWith(META_DATA_ROOT_PREFIX, StringComparison.Ordinal)
+                    ? ClassifyCollectionMetaDataEdit(path.Substring(META_DATA_ROOT_PREFIX.Length))
                     : ExternalEditType.None;
             }
 
@@ -215,10 +184,10 @@ namespace Soup.Editor.Core
 
             switch (ManagedReferenceUtility.GetManagedReference(m_metaData, referenceId))
             {
-                case SubGraphNodeMetaData when localPath.StartsWith(METADATA_SUBGRAPH_PREFIX, StringComparison.Ordinal):
-                    return ClassifyCollectionMetaDataEdit(localPath.Substring(METADATA_SUBGRAPH_PREFIX.Length));
+                case SubGraphNodeMetaData when localPath.StartsWith(META_DATA_SUBGRAPH_PREFIX, StringComparison.Ordinal):
+                    return ClassifyCollectionMetaDataEdit(localPath.Substring(META_DATA_SUBGRAPH_PREFIX.Length));
                 case NodeMetaData when localPath == NodeMetaData.NODE_ID_FIELD_NAME:
-                    return ExternalEditType.Structure; // Re-keyed to another node, or to none.
+                    return ExternalEditType.Structure; // Re-keyed to another node or to none.
                 case NodeMetaData nodeMetaData:
                     nodeId = nodeMetaData.NodeId;
                     return ExternalEditType.MetaData;
@@ -227,10 +196,9 @@ namespace Soup.Editor.Core
             }
         }
 
-        // Groups are plain fields, so their edits arrive by path rather than by reference. Anything else is the node list itself.
         private static ExternalEditType ClassifyCollectionMetaDataEdit(string collectionPath)
         {
-            return collectionPath.StartsWith(METADATA_GROUPS_PREFIX, StringComparison.Ordinal) ? ExternalEditType.Groups : ExternalEditType.Structure;
+            return collectionPath.StartsWith(META_DATA_GROUPS_PREFIX, StringComparison.Ordinal) ? ExternalEditType.Groups : ExternalEditType.Structure;
         }
 
         private static bool TrySplitManagedReference(string path, out long referenceId, out string localPath)
@@ -242,13 +210,13 @@ namespace Soup.Editor.Core
                 return false;
             }
 
-            int close = path.IndexOf(']', MANAGED_REFERENCES_PREFIX.Length);
-            if (close < 0 || !long.TryParse(path.Substring(MANAGED_REFERENCES_PREFIX.Length, close - MANAGED_REFERENCES_PREFIX.Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out referenceId))
+            int closeIndex = path.IndexOf(']', MANAGED_REFERENCES_PREFIX.Length);
+            if (closeIndex < 0 || !long.TryParse(path.Substring(MANAGED_REFERENCES_PREFIX.Length, closeIndex - MANAGED_REFERENCES_PREFIX.Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out referenceId))
             {
                 return false;
             }
 
-            localPath = close + 2 <= path.Length ? path.Substring(close + 2) : string.Empty; // Skips "].".
+            localPath = closeIndex + 2 <= path.Length ? path.Substring(closeIndex + 2) : string.Empty; // Skips "].".
             return true;
         }
 
@@ -270,28 +238,23 @@ namespace Soup.Editor.Core
                 case ExternalEditType.Blackboard:
                     m_externalBlackboardEdited = true;
                     break;
-                default: // Structural, or a node with no id to report it by.
+                default:
                     m_externalStructureEdited = true;
                     break;
             }
 
-            if (!m_isExternalEditProcessingScheduled)
-            {
-                m_isExternalEditProcessingScheduled = true;
-                EditorApplication.delayCall += ProcessExternalEdits;
-            }
+            EditorApplication.delayCall -= ProcessExternalEdits;
+            EditorApplication.delayCall += ProcessExternalEdits;
         }
 
         private void ProcessExternalEdits()
         {
-            m_isExternalEditProcessingScheduled = false;
-
             bool structureEdited = m_externalStructureEdited;
             bool groupsEdited = m_externalGroupsEdited;
             bool blackboardEdited = m_externalBlackboardEdited;
             List<string> nodeEdits = new(m_externalNodeEdits);
             List<string> metaDataEdits = new(m_externalMetaDataEdits);
-            ClearExternalEdits(); // Before anything runs: the command's opening flush can record new ones, which schedule their own pass.
+            ClearExternalEdits();
 
             if (!IsGraphAlive)
             {
@@ -300,25 +263,28 @@ namespace Soup.Editor.Core
 
             if (structureEdited)
             {
-                // Like an undo, this can leave anything stale, the subgraph a window is inside of included. Validation repairs
-                // whatever the other edits would have.
-                RefreshSerializedObjects();
-                ValidateAll();
-                m_workingChangeSet.Clear();
-                OnFlowGraphReloaded?.Invoke();
+                Reload(validate: true);
                 return;
             }
 
             if (nodeEdits.Count > 0 || metaDataEdits.Count > 0 || groupsEdited || blackboardEdited)
             {
-                // No undo name, so its writes join the current undo step instead of opening their own.
                 ExecuteCommands(new[] { new ApplyExternalEditsCommand(nodeEdits, metaDataEdits, groupsEdited, blackboardEdited) }, null, null);
             }
         }
 
-        /// <summary>
-        /// A reimport rewrote the asset from disk, which no undo record reports, so it goes through the structural path.
-        /// </summary>
+        private void Reload(bool validate)
+        {
+            RefreshSerializedObjects();
+            if (validate)
+            {
+                ValidateAll();
+            }
+
+            m_workingChangeSet.Clear();
+            OnFlowGraphReloaded?.Invoke();
+        }
+
         internal void HandleReimported()
         {
             if (!IsGraphAlive)
@@ -326,20 +292,10 @@ namespace Soup.Editor.Core
                 return;
             }
 
-            // Forced rather than left to RefreshSerializedObjects, which only updates when it sees the object as modified.
             m_serializedGraph.Update();
 
-            // A reimport can add or replace the meta data sub-asset. Holding on to the old one would let the next command create a second.
-            FlowGraphMetaData metaData = GetMetaDataSubAsset(AssetDatabase.GetAssetPath(GraphAsset));
-            if (metaData != m_metaData)
-            {
-                m_metaData = metaData;
-                m_serializedMetaData = metaData != null ? new SerializedObject(metaData) : null;
-            }
-            else if (IsMetaDataAlive)
-            {
-                m_serializedMetaData.Update();
-            }
+            m_metaData = GetMetaDataSubAsset(AssetDatabase.GetAssetPath(GraphAsset));
+            m_serializedMetaData = m_metaData != null ? new SerializedObject(m_metaData) : null;
 
             RecordExternalEdit(ExternalEditType.Structure, null);
         }
