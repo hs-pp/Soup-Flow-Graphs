@@ -276,7 +276,7 @@ namespace Soup.Editor.Views.Nodes
                 graphView.RequestCommand(new DeleteGraphElementsCommand(new[] { Id })), IsDeletable() ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
 
             evt.menu.AppendSeparator();
-            SoupScriptCreator.AppendNodeMenuItems(evt.menu, NodeType);
+            SoupScriptCreator.AppendNodeScriptMenuItems(evt.menu, NodeType);
         }
 
         [EventInterest(typeof(DragOfferEvent))]

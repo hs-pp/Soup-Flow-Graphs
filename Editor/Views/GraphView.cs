@@ -241,7 +241,8 @@ namespace Soup.Editor.Views
 
         private void PasteFromClipboard(Vector2 panelPosition)
         {
-            RequestCommand(new PasteFromClipboardCommand(ContentContainer.WorldToLocal(panelPosition)));
+            float snapStep = SnapToGrid ? GraphViewConstants.DefaultSnapStep : 0f;
+            RequestCommand(new PasteFromClipboardCommand(ContentContainer.WorldToLocal(panelPosition), snapStep));
         }
 
         private void DuplicateSelection()

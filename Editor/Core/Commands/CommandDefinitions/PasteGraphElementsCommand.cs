@@ -15,26 +15,17 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
         private ClipboardPayload m_payload;
         private Vector2? m_centerPosition;
+        private float m_snapStep;
 
-        public PasteGraphElementsCommand(ClipboardPayload payload, Vector2? centerPosition)
+        public PasteGraphElementsCommand(ClipboardPayload payload, Vector2? centerPosition, float snapStep)
         {
             m_payload = payload;
             m_centerPosition = centerPosition;
+            m_snapStep = snapStep;
         }
 
         public void ExecuteCommand(LoadedFlowGraph.CommandScope scope)
         {
-            if (m_payload == null)
-            {
-                return;
-            }
-
-            if (!scope.Collection.IsValid)
-            {
-                Debug.LogError($"[Soup] {nameof(PasteGraphElementsCommand)}: the current collection could not be resolved, so nothing was pasted.");
-                return;
-            }
-
             Type graphType = scope.GraphType;
             List<ANode> pastedNodes = new();
             List<string> disallowedNodes = new();
@@ -76,14 +67,11 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             }
 
             Dictionary<string, NodeMetaData> metaDataById = new();
-            if (m_payload.NodeMetaDatas != null)
+            foreach (NodeMetaData entry in m_payload.NodeMetaDatas)
             {
-                foreach (NodeMetaData entry in m_payload.NodeMetaDatas)
+                if (entry != null && !string.IsNullOrEmpty(entry.NodeId))
                 {
-                    if (entry != null && !string.IsNullOrEmpty(entry.NodeId))
-                    {
-                        metaDataById[entry.NodeId] = entry;
-                    }
+                    metaDataById[entry.NodeId] = entry;
                 }
             }
 
@@ -92,7 +80,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             List<string> newIds = new List<string>();
             List<NodeMetaData> pastedMetaDatas = new List<NodeMetaData>(pastedNodes.Count);
 
-            // Fresh IDs for the pasted nodes, edges between them are remapped, edges to anything else are dropped.
             foreach (ANode node in pastedNodes)
             {
                 string newId = Guid.NewGuid().ToString("N");
@@ -108,14 +95,13 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
                 Type nodeType = node.GetType();
                 NodeMetaData metaData = oldId != null && metaDataById.TryGetValue(oldId, out NodeMetaData found) ? found : null;
-                if (!EditorTypesFactory.IsUsingCorrectMetaDataType(metaData, nodeType))
-                {
-                    metaData = EditorTypesFactory.ConvertMetaDataToCorrectType(metaData, nodeType, newId);
-                }
-
                 if (metaData == null)
                 {
                     metaData = EditorTypesFactory.CreateMetaDataInstance(nodeType, newId);
+                }
+                else if (!EditorTypesFactory.IsUsingCorrectMetaDataType(metaData, nodeType))
+                {
+                    metaData = EditorTypesFactory.ConvertMetaDataToCorrectType(metaData, nodeType, newId);
                 }
 
                 metaData.NodeId = newId;
@@ -126,14 +112,12 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             {
                 RemapOutportTargets(node, collectionIdMap);
 
-                // Nested subgraph collections get fresh internal ids too
                 if (node is SubGraphNode subGraph && subGraph.SubGraph != null)
                 {
                     RemapCollectionIds(subGraph.SubGraph, allCollectionsIdMap);
                 }
             }
 
-            // Now that every level has contributed its pairs, rewrite the subtrees.
             foreach (NodeMetaData entry in pastedMetaDatas)
             {
                 if (entry is SubGraphNodeMetaData subGraphEntry)
@@ -142,9 +126,16 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 }
             }
 
-            // Pasting at a position centers everything there; otherwise (duplicate) it moves slightly over. Nodes and groups share one offset.
-            Vector2 delta = m_centerPosition.HasValue && TryGetBounds(pastedMetaDatas, pastedGroups, out Rect bounds)
-                ? m_centerPosition.Value - bounds.center : DUPLICATE_POSITION_OFFSET;
+            Vector2 delta = DUPLICATE_POSITION_OFFSET;
+            if (m_centerPosition.HasValue && TryGetBounds(pastedMetaDatas, pastedGroups, out Rect bounds))
+            {
+                delta = m_centerPosition.Value - bounds.center;
+                if (m_snapStep > 0f)
+                {
+                    Vector2 corner = bounds.min + delta;
+                    delta += SnapToGrid(corner, m_snapStep) - corner;
+                }
+            }
 
             foreach (NodeMetaData entry in pastedMetaDatas)
             {
@@ -158,14 +149,11 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                     scope.AddNode(node);
                 }
 
-                // The clipboard outlives code changes, so pasted outports can be stale.
                 scope.RepairOutports(newIds);
             }
 
             if (scope.TryGetOrCreateCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData))
             {
-                // Inserted as-is rather than created fresh: a pasted subgraph node's meta data carries its whole nested layout.
-                // Each entry was already retyped to match its node above.
                 foreach (NodeMetaData entry in pastedMetaDatas)
                 {
                     AddNodeMetaData(collectionMetaData, entry);
@@ -208,7 +196,9 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             return false;
         }
 
-        // Nodes contribute their positions and groups both corners, so a group-only paste centers the frames themselves.
+        /// <summary>
+        /// Nodes contribute their positions and groups both corners, so a group-only paste centers the frames themselves.
+        /// </summary>
         private static bool TryGetBounds(List<NodeMetaData> nodes, List<GroupMetaData> groups, out Rect bounds)
         {
             bool found = false;
@@ -237,6 +227,11 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             return found;
         }
 
+        private static Vector2 SnapToGrid(Vector2 position, float step)
+        {
+            return new Vector2(Mathf.Round(position.x / step) * step, Mathf.Round(position.y / step) * step);
+        }
+
         private void RemapOutportTargets(ANode node, Dictionary<string, string> collectionIdMap)
         {
             foreach (OutportEdge outport in node.Outports)
@@ -261,7 +256,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 }
             }
 
-            // Scoped to this collection on purpose.
             Dictionary<string, string> collectionIdMap = new();
             foreach (ANode node in nodes)
             {
@@ -275,7 +269,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
                 node.SetId(newId);
             }
 
-            // Skip new id for the EntryNode.
             if (collection.EntryNode != null)
             {
                 nodes.Add(collection.EntryNode);
@@ -320,11 +313,6 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
         private static void AddNodeMetaData(NodeCollectionMetaDataRef collectionMetaData, NodeMetaData nodeMetaData)
         {
-            if (!collectionMetaData.IsValid || nodeMetaData == null)
-            {
-                return;
-            }
-
             int index = collectionMetaData.NodesSP.arraySize;
             collectionMetaData.NodesSP.arraySize++;
             SerializedProperty metaDataSP = collectionMetaData.NodesSP.GetArrayElementAtIndex(index);
@@ -334,11 +322,13 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
 
     public sealed class PasteFromClipboardCommand : IGraphCommand
     {
-        public readonly Vector2? CenterPosition;
+        private Vector2? m_centerPosition;
+        private float m_snapStep;
 
-        public PasteFromClipboardCommand(Vector2? centerPosition)
+        public PasteFromClipboardCommand(Vector2? centerPosition, float snapStep)
         {
-            CenterPosition = centerPosition;
+            m_centerPosition = centerPosition;
+            m_snapStep = snapStep;
         }
 
         public void ExecuteCommand(LoadedFlowGraph.CommandScope scope)
@@ -346,29 +336,38 @@ namespace Soup.Editor.Core.Commands.CommandDefinitions
             ClipboardPayload payload = GraphClipboard.Paste();
             if (payload != null)
             {
-                new PasteGraphElementsCommand(payload, CenterPosition).ExecuteCommand(scope);
+                new PasteGraphElementsCommand(payload, m_centerPosition, m_snapStep).ExecuteCommand(scope);
             }
         }
     }
 
     public sealed class DuplicateGraphElementsCommand : IGraphCommand
     {
-        public readonly IReadOnlyList<string> NodeIds;
-        public readonly IReadOnlyList<string> GroupIds;
+        private IReadOnlyList<string> m_nodeIds;
+        private IReadOnlyList<string> m_groupIds;
 
         public DuplicateGraphElementsCommand(IReadOnlyList<string> nodeIds, IReadOnlyList<string> groupIds = null)
         {
-            NodeIds = nodeIds ?? Array.Empty<string>();
-            GroupIds = groupIds ?? Array.Empty<string>();
+            m_nodeIds = nodeIds;
+            if (m_nodeIds == null)
+            {
+                m_nodeIds = Array.Empty<string>();
+            }
+
+            m_groupIds = groupIds;
+            if (m_groupIds == null)
+            {
+                m_groupIds = Array.Empty<string>();
+            }
         }
 
         public void ExecuteCommand(LoadedFlowGraph.CommandScope scope)
         {
             scope.TryGetCollectionMetaData(out NodeCollectionMetaDataRef collectionMetaData);
-            ClipboardPayload payload = GraphClipboard.Clone(scope.Collection, collectionMetaData, NodeIds, GroupIds);
+            ClipboardPayload payload = GraphClipboard.Clone(scope.Collection, collectionMetaData, m_nodeIds, m_groupIds);
             if (payload != null)
             {
-                new PasteGraphElementsCommand(payload, null).ExecuteCommand(scope);
+                new PasteGraphElementsCommand(payload, null, 0f).ExecuteCommand(scope);
             }
         }
     }

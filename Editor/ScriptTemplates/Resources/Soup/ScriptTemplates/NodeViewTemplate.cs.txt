@@ -3,7 +3,7 @@ using Soup.Editor.Core.DataRefs;
 using Soup.Editor.Views.Nodes;
 using UnityEngine.UIElements;
 
-#ROOTNAMESPACEBEGIN#
+    #ROOTNAMESPACEBEGIN#
 [CustomNodeView(typeof(#NODETYPE#))]
 public class #SCRIPTNAME# : BaseHorizontalNodeView
 {
