@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
-    <Style src="project://database/Assets/Soup-Flow-Graphs/Editor/Views/Resources/Soup/BaseHorizontalNodeView.uss?fileID=7433441132597879392&amp;guid=c2190dc5a35749c2b8a460d99b8d1abe&amp;type=3#BaseHorizontalNodeView"/>
+    <Style src="BaseHorizontalNodeView.uss"/>
     <ui:VisualElement name="title-container" picking-mode="Ignore" class="nodeTitle">
         <ui:Label name="title-label" picking-mode="Ignore" class="nodeTitleLabel"/>
     </ui:VisualElement>
