@@ -47,6 +47,12 @@
     -unity-background-image-tint-color: rgb(185, 189, 196);
 }
 
+.subGraphNodeName {
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
 /* Amber, like the unreachable-node warnings in the visual direction. */
 .nodeWarningLabel {
     color: rgb(240, 180, 60);

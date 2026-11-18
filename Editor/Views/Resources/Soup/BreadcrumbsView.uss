@@ -1,9 +1,17 @@
-/* Subgraph path in the window toolbar, per board S: earlier levels muted and clickable,
-   the current level bright and bold, separated by a dim chevron. */
+/* Subgraph path overlaid on the graph canvas's top-left corner, per board S: earlier levels muted and clickable,
+   the current level bright and bold, separated by a dim chevron. Backed like the minimap (same inset and frame)
+   so nodes scrolling underneath don't fight the text. */
 .breadcrumbView {
+    position: absolute;
+    top: 10px;
+    left: 10px;
     flex-direction: row;
     align-items: center;
-    padding: 0 4px;
+    padding: 3px 4px;
+    background-color: rgba(25, 25, 25, 0.85);
+    border-width: 1px;
+    border-color: black;
+    border-radius: 6px;
 }
 
 .breadcrumbSegment {

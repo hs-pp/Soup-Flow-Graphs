@@ -16,12 +16,20 @@ namespace Soup.Editor.Views.Breadcrumbs
             m_onBreadcrumbClicked = onBreadcrumbClicked;
             styleSheets.Add(Resources.Load<StyleSheet>(STYLESHEET_PATH));
             AddToClassList("breadcrumbView");
+
+            RegisterCallback<MouseDownEvent>(StopPropagation);
+            RegisterCallback<MouseMoveEvent>(StopPropagation);
+            RegisterCallback<MouseUpEvent>(StopPropagation);
+            RegisterCallback<ContextualMenuPopulateEvent>(StopPropagation);
         }
+
+        private static void StopPropagation(EventBase evt) => evt.StopPropagation();
 
         public void SetPath(List<string> path)
         {
             Clear();
-            
+            style.display = path.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None; // No graph loaded: no empty pill.
+
             for (int i = 0; i < path.Count; i++)
             {
                 BreadcrumbSegment segment = new BreadcrumbSegment(m_onBreadcrumbClicked);

@@ -15,6 +15,10 @@ namespace Soup.Runtime.BuiltInNodes
             public GraphRunner ChildRunner;
         }
         
+        /** Shown on the node and in its inspector, to tell subgraphs apart. Empty by default. */
+        [SerializeField]
+        private string m_name;
+
         [SerializeField]
         private NodeCollection m_subGraph = new();
         public NodeCollection SubGraph => m_subGraph;
@@ -47,6 +51,7 @@ namespace Soup.Runtime.BuiltInNodes
 
         /** For editor use. */
 #if UNITY_EDITOR
+        internal const string NAME_FIELD_NAME = nameof(m_name);
         internal const string SUBGRAPH_FIELD_NAME = nameof(m_subGraph);
 #endif
     }

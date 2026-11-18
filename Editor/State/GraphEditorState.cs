@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Soup.Editor.Core;
 using Soup.Editor.Core.DataRefs;
 using Soup.Editor.Views.Inspector;
+using Soup.Runtime.BuiltInNodes;
 using UnityEditor;
 using UnityEngine;
 
@@ -261,8 +262,17 @@ namespace Soup.Editor.State
                     break;
                 }
 
-                Type nodeType = nodeRef.GetNodeType();
-                titles.Add(nodeType != null ? EditorTypesFactory.GetNodeDisplayName(nodeType) : ObjectNames.NicifyVariableName(nameof(SubGraphPath)));
+                string subGraphName = nodeRef.NodeSP.FindPropertyRelative(SubGraphNode.NAME_FIELD_NAME)?.stringValue;
+                if (!string.IsNullOrEmpty(subGraphName))
+                {
+                    titles.Add(subGraphName);
+                }
+                else
+                {
+                    Type nodeType = nodeRef.GetNodeType();
+                    titles.Add(nodeType != null ? EditorTypesFactory.GetNodeDisplayName(nodeType) : ObjectNames.NicifyVariableName(nameof(SubGraphPath)));
+                }
+
                 collection = next;
             }
 

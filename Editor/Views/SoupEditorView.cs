@@ -7,7 +7,6 @@ using Soup.Editor.State;
 using Soup.Editor.Views.Breadcrumbs;
 using Soup.Editor.Views.Extraneous;
 using Soup.Editor.Views.Inspector;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -19,13 +18,11 @@ namespace Soup.Editor.Views
         private const string SPLITVIEW_TAG = "splitview";
         private const string LEFT_PANEL_TAG = "main-panel-left";
         private const string RIGHT_PANEL_TAG = "main-panel-right";
-        private const string TOOLBAR_TAG = "toolbar";
         private const string DIRTY_MARKER = "*";
 
         private TwoPaneSplitView m_splitView;
         private VisualElement m_leftPanel;
         private VisualElement m_rightPanel;
-        private Toolbar m_toolbar;
 
         private GraphViewObserver m_observer;
         private GraphView m_graphView;
@@ -76,7 +73,6 @@ namespace Soup.Editor.Views
             m_splitView = this.Q<TwoPaneSplitView>(SPLITVIEW_TAG);
             m_leftPanel = this.Q<VisualElement>(LEFT_PANEL_TAG);
             m_rightPanel = this.Q<VisualElement>(RIGHT_PANEL_TAG);
-            m_toolbar = this.Q<Toolbar>(TOOLBAR_TAG);
 
             m_graphView = new GraphView();
             m_leftPanel.Add(m_graphView);
@@ -89,7 +85,7 @@ namespace Soup.Editor.Views
             m_rightPanel.Add(m_inspectorView);
 
             m_breadcrumbsView = new BreadcrumbsView(HandleBreadcrumbClicked);
-            m_toolbar.Add(m_breadcrumbsView);
+            m_graphView.Add(m_breadcrumbsView);
         }
 
         public void Dispose()
@@ -214,6 +210,12 @@ namespace Soup.Editor.Views
 
         private void HandleFlowGraphChanged(GraphChangeSet changeSet)
         {
+            if (changeSet.ChangedNodes.Overlaps(m_state.SubGraphPath)) // A subgraph on the path may have been renamed.
+            {
+                RefreshBreadcrumbs(); // Also updates the dirty marker.
+                return;
+            }
+
             RefreshDirtyMarker();
         }
 
