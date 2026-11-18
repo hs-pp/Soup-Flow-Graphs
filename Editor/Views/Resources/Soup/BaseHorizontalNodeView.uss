@@ -51,6 +51,7 @@
     -unity-text-align: middle-center;
     -unity-font-style: bold;
     margin-bottom: 4px;
+    white-space: normal;
 }
 
 /* Amber, like the unreachable-node warnings in the visual direction. */

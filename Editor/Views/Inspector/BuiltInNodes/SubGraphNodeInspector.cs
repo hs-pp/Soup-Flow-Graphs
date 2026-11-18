@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Soup.Editor.Core.Commands.CommandDefinitions;
 using Soup.Editor.Core.DataRefs;
 using Soup.Runtime.BuiltInNodes;
@@ -77,32 +76,7 @@ namespace Soup.Editor.Views.Inspector
                 return;
             }
 
-            HashSet<string> nodeIds = new(collection.GetNodesById().Keys);
-            int connectionCount = 0;
-            int subGraphCount = 0;
-            foreach (NodeRef node in collection.GetNodes())
-            {
-                if (!node.IsEntryNode && node.TryGetSubGraphCollection(out _))
-                {
-                    subGraphCount++;
-                }
-
-                foreach (OutportRef outport in node.EnumerateOutports())
-                {
-                    if (IsConnected(outport, nodeIds))
-                    {
-                        connectionCount++;
-                    }
-                }
-            }
-
             m_nodeCountLabel.text = collection.NodesSP.arraySize.ToString();
-        }
-
-        private static bool IsConnected(OutportRef outport, HashSet<string> nodeIds)
-        {
-            string targetId = outport.ConnectedNodeId;
-            return !string.IsNullOrEmpty(targetId) && nodeIds.Contains(targetId);
         }
 
         private void HandlePreviewClicked()

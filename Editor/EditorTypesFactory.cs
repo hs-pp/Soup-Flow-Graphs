@@ -132,7 +132,7 @@ namespace Soup.Editor
 
         private static Color? ReadDefaultNodeColor(Type viewType)
         {
-            DefaultNodeColorAttribute attribute = (DefaultNodeColorAttribute)Attribute.GetCustomAttribute(viewType, typeof(DefaultNodeColorAttribute), true);
+            CustomNodeColorAttribute attribute = (CustomNodeColorAttribute)Attribute.GetCustomAttribute(viewType, typeof(CustomNodeColorAttribute), true);
             if (attribute == null)
             {
                 return null;

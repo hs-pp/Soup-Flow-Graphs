@@ -7,10 +7,13 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
 {
     [CustomNodeView(typeof(SubGraphNode))]
     [CustomNodeName("SubGraph")]
+    [CustomNodeColor("#C6813D")]
     public class SubGraphNodeView : BaseHorizontalNodeView
     {
         private const string ICON_CLASS = "subGraphNodeIcon";
         private const string NAME_CLASS = "subGraphNodeName";
+
+        protected override float MaxWidth => 200;
 
         private Label m_nameLabel;
 

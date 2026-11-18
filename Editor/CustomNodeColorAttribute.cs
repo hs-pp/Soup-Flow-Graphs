@@ -8,7 +8,7 @@ namespace Soup.Editor
     /// Add this to a class inheriting BaseNodeView.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = true)]
-    public sealed class DefaultNodeColorAttribute : Attribute
+    public sealed class CustomNodeColorAttribute : Attribute
     {
         public string Hex { get; }
         public Color Color { get; }
@@ -17,7 +17,7 @@ namespace Soup.Editor
         /// <summary>
         /// "#RRGGBB" or "#RRGGBBAA" format.
         /// </summary>
-        public DefaultNodeColorAttribute(string hex)
+        public CustomNodeColorAttribute(string hex)
         {
             Hex = hex;
             if (hex != null && hex.StartsWith("#", StringComparison.Ordinal) && ColorUtility.TryParseHtmlString(hex, out Color color))

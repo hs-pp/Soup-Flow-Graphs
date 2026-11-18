@@ -9,11 +9,14 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
     [CustomNodeView(typeof(LogNode))]
     public class LogNodeView : BaseHorizontalNodeView
     {
+        protected override float MaxWidth => 260;
+        
         private Label m_logLabel;
         
         protected override void OnAddExtensionsContents() 
         {
             m_logLabel = new Label();
+            m_logLabel.style.whiteSpace = WhiteSpace.Normal;
             ExtensionContainer.Add(m_logLabel);
         }
 
