@@ -33,8 +33,7 @@ namespace Soup.Editor.Views.Extraneous
             public readonly Page Parent;
             public readonly List<Page> Folders = new();
             public readonly List<NodeUtils.MenuEntry> Entries = new();
-
-            /** The highlighted row. Folders come first, then entries. It's kept so that going back returns to it. */
+            
             public int HighlightedIndex;
 
             public Page(string title, Page parent)
