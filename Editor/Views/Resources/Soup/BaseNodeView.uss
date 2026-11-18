@@ -12,8 +12,6 @@
     border-right-width: .5px;
 }
 
-/* Sits behind the node body (earlier in BaseNodeView.uxml) so pins straddling the edge draw over it;
-   only the ring outside the node shows. */
 .nodeSelectionOutline {
     display: none;
     position: absolute;

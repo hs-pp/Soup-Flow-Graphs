@@ -9,7 +9,7 @@
 }
 
 .groupTitle {
-    min-height: 28px; /* Keep in sync with GroupView.TITLE_HEIGHT. */
+    min-height: 28px;
     flex-direction: row;
     align-items: center;
     padding-left: 10px;

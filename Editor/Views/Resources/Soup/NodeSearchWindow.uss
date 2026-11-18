@@ -1,5 +1,3 @@
-/* The node search dropdown: a search field, a header with the page title and a back arrow, then the page's rows.
-   Colors come from the editor theme, so the window follows the light and dark skins. */
 .nodeSearchWindow {
     background-color: var(--unity-colors-window-background);
     border-width: 1px;

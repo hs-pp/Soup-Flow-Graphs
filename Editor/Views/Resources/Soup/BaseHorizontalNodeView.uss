@@ -13,7 +13,6 @@
     padding-left: 2px;
     -unity-text-align: middle-left;
     -unity-font-style: bold;
-    /* Only kicks in when a view's MaxWidth caps the node. */
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -37,8 +36,6 @@
     padding-left: 4px;
 }
 
-/* Stacked-cards icon in the sub graph node. The PNG is white on transparent (4x, mipmapped), so the tint sets its color
-   and the node body shows through. */
 .subGraphNodeIcon {
     width: 54px;
     height: 38px;
@@ -54,7 +51,6 @@
     white-space: normal;
 }
 
-/* Amber, like the unreachable-node warnings in the visual direction. */
 .nodeWarningLabel {
     color: rgb(240, 180, 60);
 }

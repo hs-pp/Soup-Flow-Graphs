@@ -1,6 +1,3 @@
-/* Subgraph path overlaid on the graph canvas's top-left corner, per board S: earlier levels muted and clickable,
-   the current level bright and bold, separated by a dim chevron. Backed like the minimap (same inset and frame)
-   so nodes scrolling underneath don't fight the text. */
 .breadcrumbView {
     position: absolute;
     top: 10px;
@@ -10,8 +7,7 @@
     padding: 3px 4px;
     background-color: rgba(25, 25, 25, 0.85);
     border-width: 1px;
-    border-color: black;
-    border-radius: 6px;
+    border-radius: 4px;
 }
 
 .breadcrumbSegment {
