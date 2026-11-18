@@ -5,16 +5,16 @@ using UnityEngine.UIElements;
 namespace Soup.Editor.Views.Nodes.BuiltInNodes
 {
     [CustomNodeView(typeof(SubGraphNode))]
-    [CustomNodeName("Sub Graph")]
+    [CustomNodeName("SubGraph")]
     public class SubGraphNodeView : BaseHorizontalNodeView
     {
         private const string ICON_CLASS = "subGraphNodeIcon";
 
-        protected override void OnAddExtensionsContents(VisualElement extensionsContainer)
+        protected override void OnAddExtensionsContents()
         {
             VisualElement icon = new() { pickingMode = PickingMode.Ignore };
             icon.AddToClassList(ICON_CLASS);
-            extensionsContainer.Add(icon);
+            ExtensionContainer.Add(icon);
         }
 
         protected override void AddManipulators()

@@ -350,7 +350,7 @@ namespace Soup.Editor.Views
             image.name = $"PortChevron_{(filled ? "Fill" : "Outline")}_s{size}_w{lineWidth}";
             image.hideFlags = HideFlags.HideAndDontSave;
 
-            Painter2D painter = new();
+            using Painter2D painter = new();
             float scale = size / CHEVRON_GRID;
 
             painter.fillColor = Color.clear;

@@ -40,6 +40,8 @@
     --coordinate-label-height: 14;
     /* Space between the axis and its numbers. */
     --coordinate-label-gap: 3;
+    /* Closer than this to the view's top or left edge, an axis moves its numbers to the other side. */
+    --coordinate-label-flip-distance: 20;
     --coordinate-tick-length: 5;
     --coordinate-tick-thickness: 1;
     position: absolute;

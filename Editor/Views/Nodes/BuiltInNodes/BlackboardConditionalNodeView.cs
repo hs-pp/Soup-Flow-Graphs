@@ -1,20 +1,25 @@
 using Soup.Editor.Core.DataRefs;
 using Soup.Runtime.BuiltInNodes.Blackboards;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Nodes.BuiltInNodes
 {
     [CustomNodeView(typeof(BlackboardConditionalNode))]
+    [CustomNodeName("BlackboardConditional")]
     public class BlackboardConditionalNodeView : BaseHorizontalNodeView
     {
         private const string WARNING_CLASS = "nodeWarningLabel";
         
         private Label m_summaryLabel;
 
-        protected override void OnAddExtensionsContents(VisualElement extensionsContainer)
+        protected override void OnAddExtensionsContents()
         {
             m_summaryLabel = new Label { pickingMode = PickingMode.Ignore };
-            extensionsContainer.Add(m_summaryLabel);
+            m_summaryLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+            m_summaryLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            m_summaryLabel.style.flexGrow = 1;
+            InbetweenPortsContainer.Add(m_summaryLabel);
         }
 
         protected override void OnNodeDataChanged(NodeRef nodeRef)

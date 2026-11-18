@@ -10,22 +10,24 @@ namespace Soup.Editor.Views.Nodes
         private const string TITLE_CONTAINER_TAG = "title-container";
         private const string TITLE_LABEL_TAG = "title-label";
         private const string INPUT_CONTAINER_TAG = "input-container";
+        private const string INBETWEEN_PORTS_CONTAINER_TAG = "inbetween-ports-container";
         private const string OUTPUT_CONTAINER_TAG = "output-container";
         private const string EXTENSION_CONTAINER_TAG = "extension-container";
 
         protected VisualElement TitleContainer { get; set; }
         protected VisualElement InputContainer { get; set; }
+        protected VisualElement InbetweenPortsContainer { get; set; }
         protected VisualElement OutputContainer { get; set; }
         protected VisualElement ExtensionContainer { get; set; }
         
         protected Label m_titleLabel;
         
-        protected virtual void OnAddExtensionsContents(VisualElement extensionsContainer) { }
+        protected virtual void OnAddExtensionsContents() { }
         
         protected override void OnInitializeView(VisualElement root)
         {
             CreateLayout(root);
-            OnAddExtensionsContents(ExtensionContainer);
+            OnAddExtensionsContents();
             ExtensionContainer.style.display = ExtensionContainer.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
@@ -37,6 +39,7 @@ namespace Soup.Editor.Views.Nodes
             TitleContainer = this.Q<VisualElement>(TITLE_CONTAINER_TAG);
             m_titleLabel =  this.Q<Label>(TITLE_LABEL_TAG);
             InputContainer = this.Q<VisualElement>(INPUT_CONTAINER_TAG);
+            InbetweenPortsContainer = this.Q<VisualElement>(INBETWEEN_PORTS_CONTAINER_TAG);
             OutputContainer = this.Q<VisualElement>(OUTPUT_CONTAINER_TAG);
             ExtensionContainer = this.Q<VisualElement>(EXTENSION_CONTAINER_TAG);
         }

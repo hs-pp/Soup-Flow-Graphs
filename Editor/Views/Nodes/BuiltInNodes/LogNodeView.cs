@@ -5,15 +5,16 @@ using UnityEngine.UIElements;
 
 namespace Soup.Editor.Views.Nodes.BuiltInNodes
 {
+    [CustomNodeName("DebugLog")]
     [CustomNodeView(typeof(LogNode))]
     public class LogNodeView : BaseHorizontalNodeView
     {
         private Label m_logLabel;
         
-        protected override void OnAddExtensionsContents(VisualElement extensionsContainer) 
+        protected override void OnAddExtensionsContents() 
         {
             m_logLabel = new Label();
-            extensionsContainer.Add(m_logLabel);
+            ExtensionContainer.Add(m_logLabel);
         }
 
         protected override void OnPropertyBound(NodeRef nodeRef, NodeMetaDataRef metaDataRef)

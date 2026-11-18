@@ -12,7 +12,7 @@ namespace Soup.Runtime.BuiltInNodes.Blackboards
     [CustomNode(typeof(AFlowGraph), "Blackboard/Conditional")]
     public sealed class BlackboardConditionalNode : ANode
     {
-        public const string ELSE_OUTPORT = "Else";
+        public const string ELSE_OUTPORT = "else";
         public const string NO_CONDITION_LABEL = "(no condition)";
 
         [SerializeField]

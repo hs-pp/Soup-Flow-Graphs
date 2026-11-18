@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -18,6 +19,11 @@ namespace Soup.Editor.Views.Extraneous
         private const int GRADIENT_RESOLUTION = 32;
 
         private static readonly Dictionary<Edge, Texture2D> s_gradients = new();
+
+        static PanelEdgeShadowElement()
+        {
+            AssemblyReloadEvents.beforeAssemblyReload += DestroyGradients;
+        }
 
         public PanelEdgeShadowElement(Edge edge)
         {
@@ -68,6 +74,19 @@ namespace Soup.Editor.Views.Extraneous
             gradient.Apply();
             s_gradients[edge] = gradient;
             return gradient;
+        }
+
+        private static void DestroyGradients()
+        {
+            foreach (Texture2D gradient in s_gradients.Values)
+            {
+                if (gradient != null)
+                {
+                    Object.DestroyImmediate(gradient);
+                }
+            }
+
+            s_gradients.Clear();
         }
     }
 }

@@ -15,6 +15,7 @@ namespace Soup.Editor.Views.Extraneous
         private static readonly CustomStyleProperty<float> LABEL_WIDTH_PROPERTY = new("--coordinate-label-width");
         private static readonly CustomStyleProperty<float> LABEL_HEIGHT_PROPERTY = new("--coordinate-label-height");
         private static readonly CustomStyleProperty<float> LABEL_GAP_PROPERTY = new("--coordinate-label-gap");
+        private static readonly CustomStyleProperty<float> LABEL_FLIP_DISTANCE_PROPERTY = new("--coordinate-label-flip-distance");
         private static readonly CustomStyleProperty<float> TICK_LENGTH_PROPERTY = new("--coordinate-tick-length");
         private static readonly CustomStyleProperty<float> TICK_THICKNESS_PROPERTY = new("--coordinate-tick-thickness");
 
@@ -30,6 +31,7 @@ namespace Soup.Editor.Views.Extraneous
         private float m_labelWidth;
         private float m_labelHeight;
         private float m_labelGap;
+        private float m_labelFlipDistance;
         private float m_tickLength;
         private float m_tickThickness;
 
@@ -93,6 +95,11 @@ namespace Soup.Editor.Views.Extraneous
             if (customStyle.TryGetValue(LABEL_GAP_PROPERTY, out float labelGap))
             {
                 m_labelGap = labelGap;
+            }
+
+            if (customStyle.TryGetValue(LABEL_FLIP_DISTANCE_PROPERTY, out float labelFlipDistance))
+            {
+                m_labelFlipDistance = labelFlipDistance;
             }
 
             if (customStyle.TryGetValue(TICK_LENGTH_PROPERTY, out float tickLength))
@@ -190,10 +197,10 @@ namespace Soup.Editor.Views.Extraneous
 
             float increment = ChooseIncrement(scale);
 
-            CoordinateLabel.Direction verticalDirection = pinnedX >= m_labelGap + m_labelWidth ? CoordinateLabel.Direction.Left : CoordinateLabel.Direction.Right;
+            CoordinateLabel.Direction verticalDirection = pinnedX >= m_labelFlipDistance ? CoordinateLabel.Direction.Left : CoordinateLabel.Direction.Right;
             PlaceTicks(true, graphMin.y, graphMax.y, increment, offset.y, scale, translate.y, pinnedX + m_axisThickness * 0.5f, verticalDirection, !verticalPinned);
 
-            CoordinateLabel.Direction horizontalDirection = pinnedY >= m_labelGap + m_labelHeight ? CoordinateLabel.Direction.Up : CoordinateLabel.Direction.Down;
+            CoordinateLabel.Direction horizontalDirection = pinnedY >= m_labelFlipDistance ? CoordinateLabel.Direction.Up : CoordinateLabel.Direction.Down;
             PlaceTicks(false, graphMin.x, graphMax.x, increment, offset.x, scale, translate.x, pinnedY + m_axisThickness * 0.5f, horizontalDirection, !horizontalPinned);
 
             HideSurplusLabels(m_activeLabels);
