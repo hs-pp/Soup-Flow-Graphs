@@ -223,6 +223,12 @@ namespace Soup.Editor
                     continue;
                 }
 
+                if (string.IsNullOrEmpty(attribute.MenuPath))
+                {
+                    Debug.LogError($"[Soup] {type.Name}: its [CustomNode] has no menu path. Leaving it out of the node search.");
+                    continue;
+                }
+
                 entries.Add(new MenuEntry(type, attribute.MenuPath));
             }
 

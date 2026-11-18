@@ -7,7 +7,7 @@ namespace Soup.Runtime.BuiltInNodes
     /// Very simple logger node. Logs its message to the Unity console when it enters, then leaves.
     /// </summary>
     [Serializable]
-    [CustomNode(typeof(AFlowGraph), "Debug/Log Message")]
+    [CustomNode(typeof(AFlowGraph), "Debug/DebugLog")]
     public sealed class LogNode : ANode
     {
         [SerializeField]
