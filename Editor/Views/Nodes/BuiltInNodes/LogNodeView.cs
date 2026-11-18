@@ -7,6 +7,7 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
 {
     [CustomNodeName("DebugLog")]
     [CustomNodeView(typeof(LogNode))]
+    [CustomNodeColor("#D9377F")]
     public class LogNodeView : BaseHorizontalNodeView
     {
         protected override float MaxWidth => 260;

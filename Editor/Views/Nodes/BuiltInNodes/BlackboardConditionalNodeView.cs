@@ -7,6 +7,7 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
 {
     [CustomNodeView(typeof(BlackboardConditionalNode))]
     [CustomNodeName("BlackboardConditional")]
+    [CustomNodeColor("#70BC3F")]
     public class BlackboardConditionalNodeView : BaseHorizontalNodeView
     {
         private const string WARNING_CLASS = "nodeWarningLabel";

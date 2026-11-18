@@ -7,6 +7,7 @@ namespace Soup.Editor.Views.Nodes.BuiltInNodes
 {
     [CustomNodeName("BlackboardSetter")]
     [CustomNodeView(typeof(BlackboardSetterNode))]
+    [CustomNodeColor("#327E1C")]
     public class BlackboardSetterNodeView : BaseHorizontalNodeView
     {
         private const string WARNING_CLASS = "nodeWarningLabel";
