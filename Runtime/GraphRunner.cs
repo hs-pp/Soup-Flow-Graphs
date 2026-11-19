@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Soup.Runtime.Blackboards;
 using Soup.Runtime.BuiltInNodes;
 using UnityEngine;
@@ -33,6 +34,9 @@ namespace Soup.Runtime
         /** The transition waiting for the next tick. Null when not transitioning, or equals STOP_GRAPH_EDGE if we're at the end of the graph.*/
         private OutportEdge m_pendingEdge;
         private static readonly OutportEdge STOP_GRAPH_EDGE = new();
+
+        /** Edges nodes pushed with PushEdgeToReturnStack. A dead end takes the newest edge from the stack instead of ending the run. */
+        private readonly Stack<OutportEdge> m_returnStack = new();
 
         public event Action OnGraphStart = null;
         public event Action OnGraphStop = null;
@@ -134,9 +138,32 @@ namespace Soup.Runtime
             }
         }
 
+        private void PushEdgeToReturnStack(NodeExecutionContext context, OutportEdge edge)
+        {
+            if (context != m_activeContext)
+            {
+                Debug.LogError($"'{context.Node.GetType().Name}' pushed an edge from an old context. Ignoring.");
+                return;
+            }
+
+            // Don't add non-existent edges
+            if (string.IsNullOrEmpty(edge.ConnectedNodeId))
+            {
+                return;
+            }
+            
+            m_returnStack.Push(edge);
+        }
+
         private void CommitPendingTransition()
         {
-            ANode nextNode = FindTargetNode(m_pendingEdge);
+            OutportEdge edge = m_pendingEdge;
+            if (edge != STOP_GRAPH_EDGE && string.IsNullOrEmpty(edge.ConnectedNodeId) && m_returnStack.Count > 0) // if the transition leads to a dead end, pop from the return stack.
+            {
+                edge = m_returnStack.Pop();
+            }
+
+            ANode nextNode = FindTargetNode(edge);
 
             DeactivateNode();
             if (nextNode == null || m_stopRequested)
@@ -172,7 +199,7 @@ namespace Soup.Runtime
             try
             {
                 // We create a new context for every node we enter.
-                m_activeContext = new NodeExecutionContext(node, GraphProperties, Blackboard, RequestTransition);
+                m_activeContext = new NodeExecutionContext(node, GraphProperties, Blackboard, RequestTransition, PushEdgeToReturnStack);
                 node.OnNodeEnter(m_activeContext);
             }
             catch (Exception exception)

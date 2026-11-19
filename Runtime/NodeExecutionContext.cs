@@ -10,19 +10,21 @@ namespace Soup.Runtime
     public sealed class NodeExecutionContext
     {
         private readonly Action<NodeExecutionContext, OutportEdge> m_requestTransition;
+        private readonly Action<NodeExecutionContext, OutportEdge> m_pushEdgeToReturnStack;
 
         public ANode Node { get; }
         public NodeRuntimeState RuntimeState { get; }
         public AGraphProperties GraphProperties { get; }
         public Blackboard Blackboard { get; }
 
-        internal NodeExecutionContext(ANode node, AGraphProperties graphProperties, Blackboard blackboard, Action<NodeExecutionContext, OutportEdge> requestTransition)
+        internal NodeExecutionContext(ANode node, AGraphProperties graphProperties, Blackboard blackboard, Action<NodeExecutionContext, OutportEdge> requestTransition, Action<NodeExecutionContext, OutportEdge> pushEdgeToReturnStack)
         {
             Node = node;
             RuntimeState = node.CreateRuntimeState() ?? new EmptyNodeRuntimeState();
             GraphProperties = graphProperties;
             Blackboard = blackboard;
             m_requestTransition = requestTransition;
+            m_pushEdgeToReturnStack = pushEdgeToReturnStack;
         }
 
         public void TraverseEdge(string outportId)
@@ -38,9 +40,21 @@ namespace Soup.Runtime
             m_requestTransition.Invoke(this, edge);
         }
 
+        public void PushEdgeToReturnStack(string outportId)
+        {
+            OutportEdge edge = Node.GetOutportEdge(outportId);
+            if (edge == null)
+            {
+                Debug.LogError($"'{Node.GetType().Name}' has no outport '{outportId}' to push. It must match an outport id from DefineOutports. Skipping.");
+                return;
+            }
+
+            m_pushEdgeToReturnStack.Invoke(this, edge);
+        }
+        
         public void StopGraph()
         {
-            m_requestTransition.Invoke(this, null); // returning null edge stops the graph.
+            m_requestTransition.Invoke(this, null);
         }
     }
 }
